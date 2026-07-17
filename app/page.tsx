@@ -4,48 +4,59 @@ import { useState } from "react"
 import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
 import { RecipeCard } from "@/components/recipe-card"
+import { DailyHabits } from "@/components/daily-habits"
 import { LockedPreview } from "@/components/locked-preview"
-import { TOTAL_DAYS, CURRENT_DAY } from "@/lib/schedule"
+import { useDiary } from "@/lib/use-diary"
 
 export default function Page() {
-  const [selectedDay, setSelectedDay] = useState(CURRENT_DAY)
-  // Day 1 ~ 11 은 이미 완수한 상태로 시작
-  const [completedDays, setCompletedDays] = useState<number[]>(
-    Array.from({ length: CURRENT_DAY - 1 }, (_, i) => i + 1),
-  )
+  const diary = useDiary()
+  const { currentDay, totalDays, completedDays } = diary
+
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [justStampedDay, setJustStampedDay] = useState<number | null>(null)
 
+  // 선택된 날이 없으면 오늘을 기본값으로 사용
+  const activeDay = selectedDay ?? currentDay
+
   function handleRecord() {
-    if (completedDays.includes(CURRENT_DAY)) return
-    setCompletedDays((prev) => [...prev, CURRENT_DAY])
-    setJustStampedDay(CURRENT_DAY)
-    setSelectedDay(CURRENT_DAY)
+    if (completedDays.includes(currentDay)) return
+    diary.complete(currentDay)
+    setJustStampedDay(currentDay)
+    setSelectedDay(currentDay)
   }
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
-      <ProgressHeader currentDay={CURRENT_DAY} totalDays={TOTAL_DAYS} completedCount={completedDays.length} />
+      <ProgressHeader currentDay={currentDay} totalDays={totalDays} completedCount={completedDays.length} />
 
       <CalendarGrid
-        totalDays={TOTAL_DAYS}
-        currentDay={CURRENT_DAY}
-        selectedDay={selectedDay}
+        totalDays={totalDays}
+        currentDay={currentDay}
+        selectedDay={activeDay}
         completedDays={completedDays}
         justStampedDay={justStampedDay}
         onSelect={setSelectedDay}
       />
 
       <RecipeCard
-        day={selectedDay}
-        currentDay={CURRENT_DAY}
-        isCompleted={completedDays.includes(selectedDay)}
+        day={activeDay}
+        currentDay={currentDay}
+        isCompleted={completedDays.includes(activeDay)}
         onRecord={handleRecord}
+      />
+
+      <DailyHabits
+        day={activeDay}
+        habit={diary.getHabit(activeDay)}
+        maxWater={diary.maxWater}
+        onToggleSunscreen={() => diary.toggleSunscreen(activeDay)}
+        onWater={(delta) => diary.setWater(activeDay, delta)}
       />
 
       <LockedPreview />
 
       <p className="pt-1 text-center text-[11px] text-muted-foreground">
-        호빵이 스킨 다이어리 · 무너진 장벽을 30일 동안 부드럽게 🐾
+        호빵이 스킨 다이어리 · 가입한 날부터 30일, 나만의 속도로 🐾
       </p>
     </main>
   )
