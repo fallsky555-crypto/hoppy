@@ -54,24 +54,32 @@ export const RECIPES: Record<RecipeType, Recipe> = {
   },
 }
 
+export const TOTAL_DAYS = 30
+
 /**
- * 주간 패턴 (Day 기준, 1부터 시작):
- * Day 1,3,6,7 -> 장벽 휴식 / Day 2 -> AHA / Day 4 -> 수분팩 / Day 5 -> 레티놀
+ * 1단계(30일) 액티브 도입 스케줄 — Day 기준(1부터 시작)
+ *
+ * - Day 1~9 : 액티브 없음. 장벽 휴식 / 수분팩만 번갈아 진행
+ * - Day 10~ : AHA 주 1회 도입  (Day 10, 17, 24)
+ * - Day 15~ : 레티놀 주 1회 추가 (Day 15, 22, 29)
+ *   → AHA와 레티놀은 항상 최소 2일 간격을 유지
+ * - 그 외의 날 : 장벽 휴식 / 수분팩 (홀수일=휴식, 짝수일=수분팩)
  */
-const WEEKLY_PATTERN: RecipeType[] = [
-  "rest", // Day 1
-  "aha", // Day 2
-  "rest", // Day 3
-  "moist", // Day 4
-  "retinol", // Day 5
-  "rest", // Day 6
-  "rest", // Day 7
-]
+export const AHA_DAYS = [10, 17, 24]
+export const RETINOL_DAYS = [15, 22, 29]
 
 export function recipeForDay(day: number): Recipe {
-  const idx = (day - 1) % 7
-  return RECIPES[WEEKLY_PATTERN[idx]]
+  if (AHA_DAYS.includes(day)) return RECIPES.aha
+  if (RETINOL_DAYS.includes(day)) return RECIPES.retinol
+  // 액티브가 없는 날은 장벽 휴식과 수분팩을 번갈아 진행
+  return day % 2 === 1 ? RECIPES.rest : RECIPES.moist
 }
 
-export const TOTAL_DAYS = 30
-export const CURRENT_DAY = 12
+/** 가입일(Day 1) 기준으로 오늘이 며칠 차인지 계산 (1 ~ TOTAL_DAYS 로 clamp) */
+export function dayFromJoinDate(joinISO: string, now: Date = new Date()): number {
+  const start = new Date(joinISO)
+  const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+  const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diffDays = Math.floor((nowMid.getTime() - startMid.getTime()) / 86_400_000)
+  return Math.min(Math.max(diffDays + 1, 1), TOTAL_DAYS)
+}

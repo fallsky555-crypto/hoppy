@@ -4,8 +4,6 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { recipeForDay, type RecipeType } from "@/lib/schedule"
 
-const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
-
 const CELL_TINT: Record<RecipeType, string> = {
   rest: "bg-rest-soft",
   aha: "bg-aha-soft",
@@ -41,24 +39,12 @@ export function CalendarGrid({
 
   return (
     <section className="rounded-4xl bg-card p-4 shadow-sm ring-1 ring-border" aria-label="1개월 차 디데이 스케줄러">
-      <div className="mb-2 flex items-center justify-between px-1">
+      <div className="mb-3 flex items-center justify-between px-1">
         <h2 className="font-display text-base font-bold text-foreground">1개월 차 리셋 캘린더</h2>
-        <span className="text-xs text-muted-foreground">Day 1 → Day {totalDays}</span>
+        <span className="text-xs text-muted-foreground">가입일부터 Day {totalDays}까지</span>
       </div>
 
       <div className="grid grid-cols-7 gap-1.5">
-        {WEEKDAYS.map((w, i) => (
-          <div
-            key={w}
-            className={cn(
-              "pb-1 text-center text-[11px] font-semibold",
-              i >= 5 ? "text-primary" : "text-muted-foreground",
-            )}
-          >
-            {w}
-          </div>
-        ))}
-
         {days.map((day) => {
           const recipe = recipeForDay(day)
           const isToday = day === currentDay
