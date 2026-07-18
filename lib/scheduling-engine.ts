@@ -1,0 +1,371 @@
+/**
+ * Hoppy 스케줄링 엔진 (scheduling-engine-spec.md v1.2 구현)
+ *
+ * lib/schedule.ts의 고정 30일 스케줄(recipeForDay)을 대체하는 개인화 캘린더 생성기.
+ * Tier(강도) × Type(유형) 조합으로 캘린더를 만들고, 장벽 점수·인시던트 오버라이드·
+ * 자극 지연·2단계 잠금 해제 판정까지 같은 상태 기계 원칙을 공유한다.
+ */
+import { RECIPES, type Recipe, type RecipeType, TOTAL_DAYS } from "@/lib/schedule"
+
+// ── 2. Tier(강도) × Type(유형) ──────────────────────────────
+
+/** X = 의료 상담 필요 (9-2). 캘린더를 생성하지 않는다. */
+export type Tier = 0 | 1 | 2 | "X"
+export type SkinType = "A" | "B" | "C"
+
+export interface DiagnosisInput {
+  /** 진단 시점에 겹쳐 쓰고 있던 액티브 성분 개수 (checker.html strong.length) */
+  overlapCount: number
+  irritationReported: boolean
+  skinType: SkinType
+  /** checker.html symptom 값. 'bad'면 액티브 개수와 무관하게 Tier X로 분기 (9-2) */
+  symptom?: string
+}
+
+interface TierRule {
+  /** 마지막 휴식일. Day 1~restEndDay는 액티브 없이 휴식/보습만 진행 */
+  restEndDay: number
+  /** 첫 액티브 도입일 */
+  firstActiveDay: number
+}
+
+const TIER_RULES: Record<0 | 1 | 2, TierRule> = {
+  0: { restEndDay: 9, firstActiveDay: 10 },
+  1: { restEndDay: 13, firstActiveDay: 14 },
+  2: { restEndDay: 20, firstActiveDay: 21 },
+}
+
+/** 2-1. Tier 배정 + 9-2. Tier X 우선 분기 */
+export function assignTier(diagnosis: Pick<DiagnosisInput, "overlapCount" | "irritationReported" | "symptom">): Tier {
+  if (diagnosis.symptom === "bad") return "X"
+  if (diagnosis.overlapCount >= 3) return 2
+  if (diagnosis.overlapCount === 2 || diagnosis.irritationReported) return 1
+  return 0
+}
+
+/** 9-1. checker.html symptom → 자극 보고 여부 매핑 */
+const IRRITATION_SYMPTOMS = ["dry", "flush", "flaky", "trouble", "bad"]
+export function isIrritationSymptom(symptom: string | undefined): boolean {
+  return !!symptom && IRRITATION_SYMPTOMS.includes(symptom)
+}
+
+/**
+ * 9-3. A/B/C 유형 판별 임시 휴리스틱.
+ * checker.html에 유형 판별 전용 문항이 생기면 이 함수를 대체한다.
+ */
+export interface SkinTypeHeuristicInput {
+  symptom?: string
+  resetGroupSymptoms: string[]
+  selectedActiveIds: string[]
+  bhaOrBenzoylPeroxideIds: string[]
+  ahaOrTonerPadIds: string[]
+}
+
+export function inferSkinType({
+  symptom,
+  resetGroupSymptoms,
+  selectedActiveIds,
+  bhaOrBenzoylPeroxideIds,
+  ahaOrTonerPadIds,
+}: SkinTypeHeuristicInput): SkinType {
+  if (symptom === "bad" || (symptom && resetGroupSymptoms.includes(symptom))) return "A"
+  if (selectedActiveIds.some((id) => bhaOrBenzoylPeroxideIds.includes(id))) return "C"
+  if (selectedActiveIds.some((id) => ahaOrTonerPadIds.includes(id))) return "B"
+  return "B"
+}
+
+/**
+ * 2-2. Type별 매칭 루틴.
+ * A유형(장벽 붕괴형)은 이번 코스에서 액티브를 도입하지 않고 휴식/보습만 반복한다.
+ */
+const TYPE_ACTIVE_CATEGORY: Record<SkinType, RecipeType | null> = {
+  A: null,
+  B: "aha",
+  C: "bha",
+}
+
+// ── 3~4. 캘린더 생성 ─────────────────────────────────────────
+
+export interface CalendarEntry {
+  day: number
+  date: string // ISO
+  category: RecipeType
+  recipe: Recipe
+  completed: boolean | null
+  reactionFlag: boolean | null
+}
+
+export interface GenerateCalendarParams {
+  diagnosis: DiagnosisInput
+  signupDate: string // ISO
+  totalDays?: number
+}
+
+export type GenerateCalendarResult =
+  | { status: "medical_referral" }
+  | { status: "ok"; tier: 0 | 1 | 2; skinType: SkinType; calendar: CalendarEntry[] }
+
+function addDays(iso: string, amount: number): string {
+  const date = new Date(iso)
+  date.setDate(date.getDate() + amount)
+  return date.toISOString()
+}
+
+/**
+ * 3. 캘린더 생성 규칙 + 2. Tier×Type 조합.
+ *
+ * 이 코스에서는 Type당 액티브 카테고리를 하나만 도입하므로 "동시 도입 금지"·
+ * "일일 최대 1개" 규칙은 항상 자동으로 만족된다. 레티놀은 이 30일 코스가 아니라
+ * 2단계 코스에서 다루므로(3번 항목 "다음 단계" 참고) AHA/BHA와의 최소 2일 간격
+ * 규칙도 여기서는 해당 사항이 없다.
+ */
+export function generateCalendar({ diagnosis, signupDate, totalDays = TOTAL_DAYS }: GenerateCalendarParams): GenerateCalendarResult {
+  const tier = assignTier(diagnosis)
+  if (tier === "X") return { status: "medical_referral" }
+
+  const { restEndDay, firstActiveDay } = TIER_RULES[tier]
+  const activeCategory = TYPE_ACTIVE_CATEGORY[diagnosis.skinType]
+
+  // 초기 빈도: 주 1회로 시작 (firstActiveDay부터 7일 간격)
+  const activeDays = new Set<number>()
+  if (activeCategory) {
+    for (let day = firstActiveDay; day <= totalDays; day += 7) {
+      activeDays.add(day)
+    }
+  }
+
+  const calendar: CalendarEntry[] = []
+  for (let day = 1; day <= totalDays; day++) {
+    const category: RecipeType =
+      activeCategory && day > restEndDay && activeDays.has(day) ? activeCategory : day % 2 === 1 ? "rest" : "moist"
+
+    calendar.push({
+      day,
+      date: addDays(signupDate, day - 1),
+      category,
+      recipe: RECIPES[category],
+      completed: null,
+      reactionFlag: null,
+    })
+  }
+
+  return { status: "ok", tier, skinType: diagnosis.skinType, calendar }
+}
+
+// ── 4. 4주 Lock-in 주차 라벨 (감정적 마일스톤 오버레이) ─────────
+
+export interface WeekLabel {
+  week: 1 | 2 | 3 | 4
+  name: string
+  purpose: string
+}
+
+const WEEK_LABELS: readonly WeekLabel[] = [
+  { week: 1, name: "Skin Detox", purpose: "빠른 진정 체감 (Quick Win)" },
+  { week: 2, name: "Barrier Build-up", purpose: "회복 과정의 시각화" },
+  { week: 3, name: "Mild Turnover Test", purpose: "다음 단계 기대감 형성" },
+  { week: 4, name: "Recovery Report", purpose: "전환 유도" },
+]
+
+export function weekLabelForDay(day: number): WeekLabel {
+  const week = Math.min(Math.max(Math.ceil(day / 7), 1), 4) as 1 | 2 | 3 | 4
+  return WEEK_LABELS[week - 1]
+}
+
+// ── 4-1. 장벽 점수 ───────────────────────────────────────────
+
+export interface BarrierScoreInput {
+  /** 경과일 수 — 인시던트 오버라이드 기간은 제외하고 전달 */
+  elapsedDays: number
+  recordedDays: number
+  irritationDays: number
+}
+
+/** 장벽 점수 = (완료율 × 0.5) + (자극 없는 날 비율 × 0.5), 0~100 스케일 */
+export function calculateBarrierScore({ elapsedDays, recordedDays, irritationDays }: BarrierScoreInput): number {
+  if (elapsedDays <= 0) return 0
+  const completionRate = recordedDays / elapsedDays
+  const irritationFreeRate = (elapsedDays - irritationDays) / elapsedDays
+  return Math.round((completionRate * 0.5 + irritationFreeRate * 0.5) * 100)
+}
+
+// ── 5. 스킨 인시던트 — 비상 재생 주기 ─────────────────────────
+
+export type IncidentType = "period" | "sunburn" | "treatment"
+
+export interface IncidentLogEntry {
+  day: number
+  incidentType: IncidentType
+  startedAt: string
+  overrideRoutine: RecipeType
+  resumesNormalAtDay: number
+}
+
+/** period 5~7일의 기본값. sunburn/treatment는 48시간 쿨링 + 5일 복구 = 7일 */
+const DEFAULT_INCIDENT_DURATION_DAYS: Record<IncidentType, number> = {
+  period: 6,
+  sunburn: 7,
+  treatment: 7,
+}
+
+/** 인시던트 기간 동안 전면 대체되는 루틴. 기능성 성분은 전부 배제한다 */
+const INCIDENT_OVERRIDE_ROUTINE: Record<IncidentType, RecipeType> = {
+  period: "moist", // 피지 조절 + 장벽 진정
+  sunburn: "rest", // 세라마이드·판테놀 계열 진정, 기능성 성분 전면 차단
+  treatment: "rest",
+}
+
+/**
+ * atDay 위치에 count일만큼 새 일정을 끼워 넣고, atDay 이후의 기존 일정은 전부
+ * count일만큼 뒤로 밀어낸다. atDay 이전 일정은 그대로 유지된다.
+ *
+ * "기존 항목을 그 자리에서 재색칠"하는 방식 대신 항상 새 슬롯을 삽입하기 때문에,
+ * 인시던트·자극 지연을 몇 번을 적용해도 캘린더에 빈 Day가 생기거나 두 일정이
+ * 같은 Day를 두고 충돌하는 일이 구조적으로 발생하지 않는다.
+ */
+function insertDays(
+  calendar: CalendarEntry[],
+  atDay: number,
+  count: number,
+  categoryForInsertedDay: (day: number) => RecipeType,
+): CalendarEntry[] {
+  const past = calendar.filter((entry) => entry.day < atDay)
+  const baseDate = calendar.find((entry) => entry.day === atDay)?.date ?? calendar[calendar.length - 1]?.date ?? new Date().toISOString()
+
+  const inserted: CalendarEntry[] = Array.from({ length: count }, (_, i) => {
+    const day = atDay + i
+    const category = categoryForInsertedDay(day)
+    return { day, date: addDays(baseDate, i), category, recipe: RECIPES[category], completed: null, reactionFlag: null }
+  })
+
+  const shiftedFuture = calendar
+    .filter((entry) => entry.day >= atDay)
+    .map((entry) => ({ ...entry, day: entry.day + count, date: addDays(entry.date, count) }))
+
+  return [...past, ...inserted, ...shiftedFuture]
+}
+
+/**
+ * 5. 인시던트 오버라이드. 지난 일정은 유지하고, 트리거된 날부터 durationDays만큼
+ * 응급 루틴 일정을 새로 끼워 넣는다. 원래 그 자리에 있던 미래 일정은 그만큼
+ * 통째로 뒤로 밀린다("종료 시 NORMAL로 복귀, 미래 일정만 뒤로 밀림").
+ */
+export function startIncidentOverride(
+  calendar: CalendarEntry[],
+  day: number,
+  incidentType: IncidentType,
+  durationDays: number = DEFAULT_INCIDENT_DURATION_DAYS[incidentType],
+): { calendar: CalendarEntry[]; incident: IncidentLogEntry } {
+  const overrideCategory = INCIDENT_OVERRIDE_ROUTINE[incidentType]
+  const startedAt = calendar.find((entry) => entry.day === day)?.date ?? new Date().toISOString()
+
+  const next = insertDays(calendar, day, durationDays, () => overrideCategory)
+
+  return {
+    calendar: next,
+    incident: {
+      day,
+      incidentType,
+      startedAt,
+      overrideRoutine: overrideCategory,
+      resumesNormalAtDay: day + durationDays,
+    },
+  }
+}
+
+// ── 반응 피드백 루프 — 자극 신고 시 7일 연기 (8번 엣지 케이스) ─────
+
+export interface ReactionLogEntry {
+  day: number
+  category: RecipeType
+  flag: boolean
+  delayedToDay: number
+}
+
+const REACTION_DELAY_DAYS = 7
+
+/**
+ * 자극이 신고된 날의 기록은 그대로 두되(reactionFlag만 표시), 그 다음 날부터
+ * 7일간의 휴식/보습 버퍼를 끼워 넣어 이후 일정 전체를 7일 뒤로 미룬다.
+ * 이 코스는 Type당 액티브 카테고리를 하나만 도입하므로(2-2), "해당 카테고리만
+ * 개별 연기"와 "전체 일정을 7일 미루기"는 실질적으로 동일한 결과를 낸다.
+ */
+export function delayForReaction(
+  calendar: CalendarEntry[],
+  day: number,
+  category: RecipeType,
+): { calendar: CalendarEntry[]; reaction: ReactionLogEntry } {
+  const flagged = calendar.map((entry) => (entry.day === day ? { ...entry, reactionFlag: true } : entry))
+  const next = insertDays(flagged, day + 1, REACTION_DELAY_DAYS, (d) => (d % 2 === 1 ? "rest" : "moist"))
+
+  return {
+    calendar: next,
+    reaction: { day, category, flag: true, delayedToDay: day + REACTION_DELAY_DAYS },
+  }
+}
+
+// ── 4-1(연속). 장벽 점수 시계열 ────────────────────────────────
+
+export interface BarrierScorePoint {
+  day: number
+  score: number
+}
+
+/**
+ * fromDay~toDay 구간의 장벽 점수 시계열을 계산한다. 인시던트 오버라이드 기간은
+ * (4-1 규칙대로) 완료율·자극 계산에서 통째로 제외한다.
+ */
+export function buildBarrierScoreLog(
+  calendar: CalendarEntry[],
+  incidentLog: IncidentLogEntry[],
+  completedDays: number[],
+  fromDay: number,
+  toDay: number,
+): BarrierScorePoint[] {
+  const isIncidentDay = (day: number) => incidentLog.some((entry) => day >= entry.day && day < entry.resumesNormalAtDay)
+  const entryByDay = new Map(calendar.map((entry) => [entry.day, entry]))
+  const completedSet = new Set(completedDays)
+
+  const log: BarrierScorePoint[] = []
+  for (let day = fromDay; day <= toDay; day++) {
+    let elapsedDays = 0
+    let recordedDays = 0
+    let irritationDays = 0
+    for (let d = 1; d <= day; d++) {
+      if (isIncidentDay(d)) continue
+      elapsedDays++
+      if (completedSet.has(d)) recordedDays++
+      if (entryByDay.get(d)?.reactionFlag) irritationDays++
+    }
+    log.push({ day, score: calculateBarrierScore({ elapsedDays, recordedDays, irritationDays }) })
+  }
+  return log
+}
+
+// ── 6. 완주 및 2단계 잠금 해제 판정 ────────────────────────────
+
+export interface UnlockCheckInput {
+  totalDays: number
+  recordedDays: number
+  /** 인시던트 오버라이드 기간 — 분모·분자 모두 제외 */
+  incidentDays: number
+  irritationReportsLast2Weeks: number
+}
+
+export type UnlockResult = { unlocked: true } | { unlocked: false; extendLastDays: number }
+
+/** 80% 이상 완료 + 최근 2주 자극 신고 1회 이하 → 미충족 시 마지막 2주 반복 후 재평가 */
+export function checkStage2Unlock({
+  totalDays,
+  recordedDays,
+  incidentDays,
+  irritationReportsLast2Weeks,
+}: UnlockCheckInput): UnlockResult {
+  const effectiveDays = totalDays - incidentDays
+  const completionRate = effectiveDays > 0 ? recordedDays / effectiveDays : 0
+
+  if (completionRate >= 0.8 && irritationReportsLast2Weeks <= 1) {
+    return { unlocked: true }
+  }
+  return { unlocked: false, extendLastDays: 14 }
+}

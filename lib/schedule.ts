@@ -1,4 +1,4 @@
-export type RecipeType = "rest" | "aha" | "moist" | "retinol"
+export type RecipeType = "rest" | "aha" | "moist" | "retinol" | "bha"
 
 export interface Recipe {
   type: RecipeType
@@ -51,6 +51,16 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     guide:
       "저녁 세안 후, 평소 쓰던 수분 크림에 레티놀을 딱 쌀알 반 만큼만 섞어서 발라주세요. 주 1회로 천천히 적응하는 단계예요.",
     caution: "눈가·입가는 피해주세요. 다음 날 아침 자외선 차단제는 필수랍니다!",
+  },
+  bha: {
+    type: "bha",
+    color: "bha",
+    emoji: "🧴",
+    tag: "BHA 모공 케어",
+    title: "BHA 모공 케어 데이",
+    guide:
+      "세안 후 BHA 토너를 화장솜에 적셔 T존과 모공이 두드러지는 부위 위주로 가볍게 닦아내듯 발라주세요. 이어서 유수분 밸런스를 잡아주는 수분 크림으로 마무리해요.",
+    caution: "따갑거나 붉어지면 바로 멈추고 보습만 해주세요. 다음 날 아침 자외선 차단제는 필수랍니다!",
   },
 }
 
