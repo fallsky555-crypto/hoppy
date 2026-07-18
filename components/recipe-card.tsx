@@ -1,15 +1,19 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { recipeForDay, type RecipeType } from "@/lib/schedule"
+import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, Check } from "lucide-react"
+import { AlertTriangle, Check, ShieldAlert } from "lucide-react"
+
+/** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
+const REACTIVE_CATEGORIES: RecipeType[] = ["aha", "bha", "retinol"]
 
 const ACCENT_BG: Record<RecipeType, string> = {
   rest: "bg-rest-soft",
   aha: "bg-aha-soft",
   moist: "bg-moist-soft",
   retinol: "bg-retinol-soft",
+  bha: "bg-bha-soft",
 }
 
 const ACCENT_TAG: Record<RecipeType, string> = {
@@ -17,6 +21,7 @@ const ACCENT_TAG: Record<RecipeType, string> = {
   aha: "bg-aha text-white",
   moist: "bg-moist text-white",
   retinol: "bg-retinol text-white",
+  bha: "bg-bha text-white",
 }
 
 interface RecipeCardProps {
@@ -24,12 +29,26 @@ interface RecipeCardProps {
   currentDay: number
   isCompleted: boolean
   onRecord: () => void
+  /** 진단이 있으면 개인화 캘린더, 없으면 기본 30일 스케줄(recipeForDay)을 사용 */
+  getRecipe?: (day: number) => Recipe
+  /** 오늘 이미 이 성분에 대한 자극을 신고했는지 */
+  hasReportedReaction?: boolean
+  onReportReaction?: () => void
 }
 
-export function RecipeCard({ day, currentDay, isCompleted, onRecord }: RecipeCardProps) {
-  const recipe = recipeForDay(day)
+export function RecipeCard({
+  day,
+  currentDay,
+  isCompleted,
+  onRecord,
+  getRecipe = recipeForDay,
+  hasReportedReaction = false,
+  onReportReaction,
+}: RecipeCardProps) {
+  const recipe = getRecipe(day)
   const isToday = day === currentDay
   const isFuture = day > currentDay
+  const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)
 
   return (
     <section
@@ -89,6 +108,28 @@ export function RecipeCard({ day, currentDay, isCompleted, onRecord }: RecipeCar
           <p className="text-center text-xs font-medium text-muted-foreground">지나간 날의 루틴이에요.</p>
         )}
       </div>
+
+      {canReportReaction && (
+        <div className="mt-2.5">
+          {hasReportedReaction ? (
+            <p className="flex items-center justify-center gap-1.5 rounded-full bg-card/70 py-2 text-xs font-bold text-foreground/70">
+              <ShieldAlert className="size-3.5" aria-hidden />
+              오늘 자극을 신고했어요. 이 성분은 7일 뒤로 미뤄져요.
+            </p>
+          ) : (
+            <Button
+              type="button"
+              onClick={onReportReaction}
+              variant="outline"
+              size="sm"
+              className="w-full rounded-full text-xs font-bold"
+            >
+              <ShieldAlert className="size-3.5" aria-hidden />
+              오늘 이 성분에 자극이 있었어요
+            </Button>
+          )}
+        </div>
+      )}
     </section>
   )
 }

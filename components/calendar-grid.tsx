@@ -2,13 +2,14 @@
 
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { recipeForDay, type RecipeType } from "@/lib/schedule"
+import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
 
 const CELL_TINT: Record<RecipeType, string> = {
   rest: "bg-rest-soft",
   aha: "bg-aha-soft",
   moist: "bg-moist-soft",
   retinol: "bg-retinol-soft",
+  bha: "bg-bha-soft",
 }
 
 const DOT_COLOR: Record<RecipeType, string> = {
@@ -16,6 +17,7 @@ const DOT_COLOR: Record<RecipeType, string> = {
   aha: "bg-aha",
   moist: "bg-moist",
   retinol: "bg-retinol",
+  bha: "bg-bha",
 }
 
 interface CalendarGridProps {
@@ -25,6 +27,8 @@ interface CalendarGridProps {
   completedDays: number[]
   justStampedDay: number | null
   onSelect: (day: number) => void
+  /** 진단이 있으면 개인화 캘린더, 없으면 기본 30일 스케줄(recipeForDay)을 사용 */
+  getRecipe?: (day: number) => Recipe
 }
 
 export function CalendarGrid({
@@ -34,6 +38,7 @@ export function CalendarGrid({
   completedDays,
   justStampedDay,
   onSelect,
+  getRecipe = recipeForDay,
 }: CalendarGridProps) {
   const days = Array.from({ length: totalDays }, (_, i) => i + 1)
 
@@ -46,7 +51,7 @@ export function CalendarGrid({
 
       <div className="grid grid-cols-7 gap-1.5">
         {days.map((day) => {
-          const recipe = recipeForDay(day)
+          const recipe = getRecipe(day)
           const isToday = day === currentDay
           const isSelected = day === selectedDay
           const isCompleted = completedDays.includes(day)
@@ -113,6 +118,7 @@ export function CalendarGrid({
         <Legend emoji="🧼" label="AHA 스케일링" />
         <Legend emoji="💦" label="수분팩" />
         <Legend emoji="🧪" label="레티놀 재생" />
+        <Legend emoji="🧴" label="BHA 모공 케어" />
       </div>
     </section>
   )
