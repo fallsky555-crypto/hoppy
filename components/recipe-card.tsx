@@ -2,8 +2,9 @@
 
 import { cn } from "@/lib/utils"
 import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
+import { getCategoryCopy } from "@/lib/routine-copy"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, Check, ShieldAlert } from "lucide-react"
+import { Check, ShieldAlert } from "lucide-react"
 
 /** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
 const REACTIVE_CATEGORIES: RecipeType[] = ["aha", "bha", "retinol"]
@@ -46,6 +47,7 @@ export function RecipeCard({
   onReportReaction,
 }: RecipeCardProps) {
   const recipe = getRecipe(day)
+  const copy = getCategoryCopy(recipe.type, day)
   const isToday = day === currentDay
   const isFuture = day > currentDay
   const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)
@@ -71,20 +73,9 @@ export function RecipeCard({
         </span>
       </div>
 
-      <h3 className="mt-3 font-display text-lg font-bold text-foreground text-balance">
-        {isToday ? "오늘은 " : ""}
-        <span className="text-primary">[{recipe.title}]</span>
-        {isToday ? " 입니다!" : ""}
-      </h3>
+      <h3 className="mt-3 font-display text-lg font-bold text-foreground text-balance">{copy.title}</h3>
 
-      <p className="mt-1.5 text-sm leading-relaxed text-foreground/80">{recipe.guide}</p>
-
-      {recipe.caution && (
-        <div className="mt-3 flex items-start gap-2 rounded-2xl bg-card/70 p-3">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-          <p className="text-xs leading-relaxed text-foreground/75">{recipe.caution}</p>
-        </div>
-      )}
+      <p className="mt-1.5 text-sm leading-relaxed text-foreground/80">{copy.detail}</p>
 
       <div className="mt-4">
         {isCompleted ? (

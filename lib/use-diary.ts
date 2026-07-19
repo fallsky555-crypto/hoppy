@@ -123,8 +123,7 @@ interface URLDiagnosisPayload {
 }
 
 /**
- * 9-4. 외부 진단 화면(checker.html 등) 또는 앱 내 /diagnosis 화면에서 넘어올 때 쓰는
- * URL 파라미터를 읽는다.
+ * 9-4. 외부 진단 화면(myroutinediet.com의 checker.html)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
  * ?overlap={number}&irritation={true/false}&type={A/B/C}&symptom={string}&preg={0/1}&rx={0/1}
  * tier는 이 앱이 assignTier()로 직접 재계산하므로 URL의 tier 파라미터는 참고하지 않는다.
  */
@@ -166,7 +165,7 @@ export function useDiary() {
 
   useEffect(() => {
     const loaded = loadState()
-    // URL로 진단 결과가 넘어왔으면(checker.html 또는 앱 내 /diagnosis 화면) 저장된 값보다 우선한다
+    // URL로 진단 결과가 넘어왔으면(myroutinediet.com checker.html) 저장된 값보다 우선한다
     const fromURL = diagnosisFromURL()
     setState(
       fromURL
