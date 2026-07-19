@@ -98,6 +98,8 @@ export default function Page() {
         getRecipe={diary.getRecipeForDay}
         hasReportedReaction={hasReportedReactionToday}
         onReportReaction={handleReportReaction}
+        concern={diary.concern}
+        supportOwned={diary.supportOwned}
       />
 
       <DailyHabits

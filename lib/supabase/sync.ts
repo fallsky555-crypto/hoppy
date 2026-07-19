@@ -10,6 +10,7 @@ import type {
   SkinType,
   Tier,
 } from "@/lib/scheduling-engine"
+import type { Concern, SupportId } from "@/lib/routine-copy"
 
 /**
  * Supabase 연동. 이 모듈의 모든 함수는 실패해도(오프라인, 마이그레이션 미적용 등)
@@ -43,6 +44,8 @@ interface RemoteProfile {
   diagnosis: DiagnosisInput | null
   pregnant: boolean
   prescriptionMeds: boolean
+  concern: Concern
+  supportOwned: SupportId[]
 }
 
 /** 진단 결과 + 가입일을 diary_profiles에 upsert한다 */
@@ -75,6 +78,18 @@ export async function saveContextFlags(userId: string, signupDate: string, pregn
     { onConflict: "user_id" },
   )
   if (error) console.warn("[supabase] saveContextFlags failed:", error.message)
+}
+
+/** rest/moist 문구에 강조할 관심사 + 보유 성분을 diary_profiles에 반영한다 */
+export async function saveConcern(userId: string, signupDate: string, concern: Concern, supportOwned: SupportId[]): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), concern, support_owned: supportOwned },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveConcern failed:", error.message)
 }
 
 /** 현재 계산된 캘린더 전체를 calendar_entries에 반영한다 (일정이 통째로 밀리는 경우가 있어 매번 upsert) */
@@ -168,7 +183,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
   try {
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
-      .select("signup_date, overlap_count, irritation_reported, skin_type, symptom, pregnant, prescription_meds")
+      .select("signup_date, overlap_count, irritation_reported, skin_type, symptom, pregnant, prescription_meds, concern, support_owned")
       .eq("user_id", userId)
       .maybeSingle()
 
@@ -216,6 +231,8 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
         diagnosis,
         pregnant: profile.pregnant ?? false,
         prescriptionMeds: profile.prescription_meds ?? false,
+        concern: (profile.concern as Concern) ?? "none",
+        supportOwned: (profile.support_owned as SupportId[] | null) ?? [],
       },
       completedDays,
       events,
