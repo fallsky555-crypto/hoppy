@@ -38,6 +38,10 @@ interface DiaryState {
   /** 진단 결과. 아직 진단을 받지 않았으면 null → 기본 30일 스케줄(schedule.ts) 사용 */
   diagnosis: DiagnosisInput | null
   events: ScheduleEvent[]
+  /** 9-1. 임신/수유 중 — 레티놀 슬롯 잠금 안내에 사용 (Tier·Type과 무관한 공통 규칙) */
+  pregnant: boolean
+  /** 9-1. 처방약 사용 중 — "처방 지도가 앱 가이드보다 우선" 고지에 사용 */
+  prescriptionMeds: boolean
 }
 
 const STORAGE_KEY = "hoppy-skin-diary-v1"
@@ -48,7 +52,15 @@ function todayISO() {
 }
 
 function loadState(): DiaryState {
-  const fresh: DiaryState = { joinDate: todayISO(), completedDays: [], habits: {}, diagnosis: null, events: [] }
+  const fresh: DiaryState = {
+    joinDate: todayISO(),
+    completedDays: [],
+    habits: {},
+    diagnosis: null,
+    events: [],
+    pregnant: false,
+    prescriptionMeds: false,
+  }
   if (typeof window === "undefined") return fresh
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
@@ -60,6 +72,8 @@ function loadState(): DiaryState {
       habits: parsed.habits ?? {},
       diagnosis: parsed.diagnosis ?? null,
       events: parsed.events ?? [],
+      pregnant: parsed.pregnant ?? false,
+      prescriptionMeds: parsed.prescriptionMeds ?? false,
     }
   } catch {
     return fresh
@@ -92,12 +106,19 @@ function applyEvents(baseCalendar: CalendarEntry[], events: ScheduleEvent[]) {
   return { calendar, incidentLog, reactionLog }
 }
 
+interface URLDiagnosisPayload {
+  diagnosis: DiagnosisInput
+  pregnant: boolean
+  prescriptionMeds: boolean
+}
+
 /**
- * 9-4. 외부 진단 화면(checker.html 등)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
- * ?overlap={number}&irritation={true/false}&type={A/B/C}&symptom={string}
+ * 9-4. 외부 진단 화면(checker.html 등) 또는 앱 내 /diagnosis 화면에서 넘어올 때 쓰는
+ * URL 파라미터를 읽는다.
+ * ?overlap={number}&irritation={true/false}&type={A/B/C}&symptom={string}&preg={0/1}&rx={0/1}
  * tier는 이 앱이 assignTier()로 직접 재계산하므로 URL의 tier 파라미터는 참고하지 않는다.
  */
-function diagnosisFromURL(): DiagnosisInput | null {
+function diagnosisFromURL(): URLDiagnosisPayload | null {
   if (typeof window === "undefined") return null
   const params = new URLSearchParams(window.location.search)
   const overlap = params.get("overlap")
@@ -109,10 +130,14 @@ function diagnosisFromURL(): DiagnosisInput | null {
   if (!Number.isFinite(overlapCount)) return null
 
   return {
-    overlapCount,
-    irritationReported: params.get("irritation") === "true",
-    skinType: type as SkinType,
-    symptom: params.get("symptom") ?? undefined,
+    diagnosis: {
+      overlapCount,
+      irritationReported: params.get("irritation") === "true",
+      skinType: type as SkinType,
+      symptom: params.get("symptom") ?? undefined,
+    },
+    pregnant: params.get("preg") === "1",
+    prescriptionMeds: params.get("rx") === "1",
   }
 }
 
@@ -124,14 +149,20 @@ export function useDiary() {
     habits: {},
     diagnosis: null,
     events: [],
+    pregnant: false,
+    prescriptionMeds: false,
   })
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     const loaded = loadState()
-    // URL로 진단 결과가 넘어왔으면(checker.html 연동) 저장된 값보다 우선한다
+    // URL로 진단 결과가 넘어왔으면(checker.html 또는 앱 내 /diagnosis 화면) 저장된 값보다 우선한다
     const fromURL = diagnosisFromURL()
-    setState(fromURL ? { ...loaded, diagnosis: fromURL } : loaded)
+    setState(
+      fromURL
+        ? { ...loaded, diagnosis: fromURL.diagnosis, pregnant: fromURL.pregnant, prescriptionMeds: fromURL.prescriptionMeds }
+        : loaded,
+    )
     setHydrated(true)
   }, [])
 
@@ -243,5 +274,7 @@ export function useDiary() {
     reportIncident,
     reportReaction,
     barrierScoreLog,
+    pregnant: state.pregnant,
+    prescriptionMeds: state.prescriptionMeds,
   }
 }
