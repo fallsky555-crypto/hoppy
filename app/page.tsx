@@ -1,8 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
-import { Sparkles } from "lucide-react"
 import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
 import { RecipeCard } from "@/components/recipe-card"
@@ -59,22 +57,6 @@ export default function Page() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
       <ProgressHeader currentDay={currentDay} totalDays={totalDays} completedCount={completedDays.length} />
-
-      {/* 아직 진단을 받지 않았으면 체크박스 진단 화면으로 안내한다 */}
-      {!diary.diagnosis && (
-        <Link
-          href="/diagnosis"
-          className="flex items-center gap-3 rounded-4xl bg-primary/10 p-4 ring-1 ring-primary/30 transition-colors hover:bg-primary/15"
-        >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <Sparkles className="size-4" aria-hidden />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-sm font-bold text-foreground">내 피부 진단하고 맞춤 캘린더 받기</span>
-            <span className="block text-xs text-muted-foreground">1분이면 끝나요. 지금은 기본 캘린더가 보이고 있어요.</span>
-          </span>
-        </Link>
-      )}
 
       {(diary.pregnant || diary.prescriptionMeds) && (
         <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
