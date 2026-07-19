@@ -1,9 +1,11 @@
-import type { RecipeType } from "@/lib/schedule"
+import type { Recipe, RecipeType } from "@/lib/schedule"
 
 /**
- * routine-copy-ko.md v1.0 문구 세트.
+ * routine-copy-ko.md v2.0 문구 세트 — 카테고리를 3개 그룹으로 묶어서 관리한다.
  * lib/scheduling-engine.ts는 건드리지 않는다 — 이 파일은 화면에 보여줄 문구만 담당하고,
- * 어떤 카테고리·주차인지는 기존 엔진(getRecipeForDay, dayFromJoinDate 등)이 그대로 정한다.
+ * 어떤 카테고리·날짜인지는 기존 엔진(getRecipeForDay, dayFromJoinDate 등)이 그대로 정한다.
+ *
+ * rest → BARRIER_GIPS, moist → BARRIER_LOCKING, aha/bha/retinol → ACTIVE_OPEN
  */
 
 export interface RoutineCopy {
@@ -11,74 +13,78 @@ export interface RoutineCopy {
   detail: string
 }
 
-const CATEGORY_COPY: Record<RecipeType, (day: number) => RoutineCopy> = {
-  rest: () => ({
-    title: "오늘은 장벽 휴식 데이예요",
-    detail:
-      "오늘은 아무것도 더하지 않아요. 순한 세안 후 평소 쓰던 보습제만 평소보다 도톰하게 발라, 장벽이 스스로 회복할 시간을 주세요. 각질 제거·기능성 성분은 오늘 쉬어갑니다. 자극 = 0이 오늘의 목표예요.",
-  }),
-  moist: () => ({
-    title: "오늘은 수분팩 데이예요",
-    detail:
-      "가볍게 만드는 토너를 3번 정도 나눠 두드려 수분을 채운 다음, 그 위에 보습제로 덮어 수분이 날아가지 않게 잡아주세요. 장벽이 회복되는 동안 촉촉함을 유지하는 게 오늘의 역할이에요.",
-  }),
-  aha: (day) => ({
-    title: `오늘은 AHA 도입 ${day}일차예요`,
-    detail:
-      "저농도 AHA를 딱 한 번, 소량만 발라주세요. 다른 기능성 성분과 같이 쓰면 자극이 겹칠 수 있어요. 오늘만큼은 AHA 외에 다른 액티브는 쉬어가는 게 안전해요. 다음날 아침 자외선차단제는 꼭 챙겨주세요.",
-  }),
-  bha: (day) => ({
-    title: `오늘은 BHA 도입 ${day}일차예요`,
-    detail:
-      "모공 속 노폐물을 정리하는 BHA를 소량 발라주세요. 따갑거나 붉어지면 양을 줄이거나 다음 회차로 미뤄도 괜찮아요. 피부가 보내는 신호를 스케줄보다 먼저 들어주세요.",
-  }),
-  retinol: (day) => ({
-    title: `오늘은 레티놀 도입 ${day}일차예요`,
-    detail:
-      "쌀알 반보다 적은 양을, 눈가와 입가는 피해서 발라주세요. 레티놀을 쓴 다음 날은 자외선에 더 예민해질 수 있어서, 아침 자외선차단제가 평소보다 중요한 날이에요.",
-  }),
+type CategoryGroup = "BARRIER_GIPS" | "BARRIER_LOCKING" | "ACTIVE_OPEN"
+
+function categoryGroup(category: RecipeType): CategoryGroup {
+  if (category === "rest") return "BARRIER_GIPS"
+  if (category === "moist") return "BARRIER_LOCKING"
+  return "ACTIVE_OPEN" // aha, bha, retinol
 }
 
-/** 오늘(또는 보고 있는 날)의 카테고리에 맞는 문구. {{day}}는 실제 day 값으로 채워진다 */
-export function getCategoryCopy(category: RecipeType, day: number): RoutineCopy {
-  return CATEGORY_COPY[category](day)
+/** ACTIVE_OPEN 문구의 "가이드에 지정된 활성 성분 제품" 자리에 들어갈 실제 성분 이름 */
+const ACTIVE_LABEL: Partial<Record<RecipeType, string>> = {
+  aha: "AHA",
+  bha: "BHA",
+  retinol: "레티놀",
 }
 
-const WEEK_COPY: Record<1 | 2 | 3 | 4, RoutineCopy> = {
-  1: {
-    title: "1주차 · 장벽부터 다지는 시간",
-    detail:
-      "이번 주는 아무것도 더하지 않는 게 목표예요. 순한 세안과 보습만으로, 지금 피부가 원래 상태를 되찾을 시간을 드릴게요. 1주 안에 눈에 띄게 편안해지는 걸 느끼실 수도 있어요.",
-  },
-  2: {
-    title: "2주차 · 다음을 위한 준비 시간",
-    detail:
-      "1주차 동안 장벽이 한결 편안해지셨을 거예요. 이번 주는 다음에 들어올 성분들을 잘 받아들일 수 있도록 보습 위주로 기초 체력을 다지는 구간이에요. 아직 액티브 성분은 도입하지 않아요.",
-  },
-  3: {
-    title: "3주차 · 첫 액티브 성분을 시작해요",
-    detail:
-      "이제 피부가 준비됐어요. 이번 주부터 진단 결과에 맞는 액티브 성분을 딱 주 1회씩만 조심스럽게 시작해요. 여러 개를 한꺼번에 쓰지 않는 게 이번 주 가장 중요한 규칙이에요.",
-  },
-  4: {
-    title: "4주차 · 지금까지의 변화를 지켜볼 시간",
-    detail:
-      "마지막 주예요. 지금 루틴을 유지하면서, 장벽 점수가 어떻게 변해왔는지 확인해보세요. 코스가 끝나면 지금까지 기록을 바탕으로 한 리포트를 보여드릴게요.",
-  },
-}
+/** 오늘(또는 보고 있는 날)의 카테고리에 맞는 루틴 문구 */
+export function getCategoryCopy(category: RecipeType): RoutineCopy {
+  const group = categoryGroup(category)
 
-/** 5주차 이후(Tier 1/2로 코스가 길어진 구간)는 이 문구를 계속 재사용한다 */
-function extendedWeekCopy(week: number): RoutineCopy {
+  if (group === "BARRIER_GIPS") {
+    return {
+      title: "보호막 형성을 위한 재생크림 레이어링",
+      detail:
+        "오늘 밤은 화장대에 있는 재생크림을 평소보다 조금 더 도톰하게 얹어주세요. 외부 자극을 물리적으로 막아주고, 장벽이 편안해질 시간을 만들어주는 과정이에요.",
+    }
+  }
+
+  if (group === "BARRIER_LOCKING") {
+    return {
+      title: "수분 보충 후 유수분 압착 잠금",
+      detail:
+        "자극이 없는 토너를 가볍게 수차례 두드려 속수분을 채우셨나요? 그 위에 재생크림을 가볍게 펴 발라, 채워진 수분이 날아가지 않도록 잡아주는 단계예요.",
+    }
+  }
+
+  // ACTIVE_OPEN — {{activeName}}을 오늘 실제 성분 이름으로 치환
+  const name = ACTIVE_LABEL[category] ?? "활성 성분"
   return {
-    title: `${week}주차 · 계속 이어가는 중이에요`,
-    detail: "표준 4주보다 조금 더 긴 코스를 진행 중이에요. 서두르지 않고 지금 속도 그대로 가는 게 가장 안전해요.",
+    title: `안전 구역 내 ${name} 슬롯 오픈`,
+    detail: `오늘 밤에는 ${name} 제품을 딱 한 방울만 루틴에 추가합니다. 다른 기능성 제품과 섞이지 않도록 단독으로 사용해주시고, 다음 날 아침에는 자외선 차단제를 꼭 챙겨주세요.`,
   }
 }
 
-/** day % 7 === 1 (Day 1/8/15/22/29...)에 노출할 주차 오리엔테이션 문구 */
-export function getWeekOrientationCopy(week: number): RoutineCopy {
-  if (week >= 1 && week <= 4) return WEEK_COPY[week as 1 | 2 | 3 | 4]
-  return extendedWeekCopy(week)
+/** BARRIER_LOCKING은 오리엔테이션(weekly_guide) 문구가 없다 — 정의된 그룹만 매핑 */
+const GROUP_WEEKLY_GUIDE: Partial<Record<CategoryGroup, RoutineCopy>> = {
+  BARRIER_GIPS: {
+    title: "반갑습니다, 당신의 피부 아군입니다.",
+    detail:
+      "이번 코스에서는 새로운 기능성 제품을 추가하기보다, 화장대에 있는 재생크림을 활용해 장벽의 기초 체력을 다지는 데 집중합니다.",
+  },
+  ACTIVE_OPEN: {
+    title: "장벽의 기초 체력이 다져졌어요.",
+    detail:
+      "이제 쌓여있는 각질과 피지를 정돈할 타이밍입니다. 성분 충돌을 막기 위해 이번 주부터는 맞춤형 활성 성분을 주 1회, 안전 구역 안에서만 시작해요.",
+  },
+}
+
+/**
+ * day % 7 === 1 (Day 1/8/15/22/29...)에 호출한다. 오늘 카테고리가 속한 그룹이
+ * 이전 주차 체크포인트(Day 1/8/15/22...)에서는 한 번도 나온 적 없는, 이번이 "처음
+ * 시작"하는 그룹일 때만 오리엔테이션 문구를 반환한다. 이미 어느 체크포인트에선가
+ * 보여준 적 있는 그룹이거나(BARRIER_LOCKING처럼) weekly_guide가 없는 그룹이면 null을 반환한다.
+ */
+export function getOrientationCopy(getRecipeForDay: (day: number) => Recipe, day: number): RoutineCopy | null {
+  const group = categoryGroup(getRecipeForDay(day).type)
+  const guide = GROUP_WEEKLY_GUIDE[group]
+  if (!guide) return null
+
+  for (let past = day - 7; past >= 1; past -= 7) {
+    if (categoryGroup(getRecipeForDay(past).type) === group) return null
+  }
+  return guide
 }
 
 /** 코스 마지막 날에 보여줄 완주 화면 문구 */

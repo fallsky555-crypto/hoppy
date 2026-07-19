@@ -11,7 +11,7 @@ import { LockedPreview } from "@/components/locked-preview"
 import { RoutineBanner } from "@/components/routine-banner"
 import { BARRIER_SCORE_START_DAY, useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
-import { getCompletionCopy, getWeekOrientationCopy } from "@/lib/routine-copy"
+import { getCompletionCopy, getOrientationCopy } from "@/lib/routine-copy"
 
 export default function Page() {
   const diary = useDiary()
@@ -24,9 +24,10 @@ export default function Page() {
   // 선택된 날이 없으면 오늘을 기본값으로 사용
   const activeDay = selectedDay ?? currentDay
 
-  // Day 1/8/15/22/29... 마다 그 주차 오리엔테이션을 한 번씩 보여준다
+  // Day 1/8/15/22/29... 마다, 오늘 카테고리 그룹이 처음 시작되는 경우에만 오리엔테이션을 보여준다
   const isOrientationDay = currentDay % 7 === 1
-  const showWeekOrientation = isOrientationDay && dismissedOrientationDay !== currentDay
+  const orientationCopy = isOrientationDay ? getOrientationCopy(diary.getRecipeForDay, currentDay) : null
+  const showWeekOrientation = orientationCopy !== null && dismissedOrientationDay !== currentDay
   const isCourseComplete = currentDay >= totalDays
 
   function handleRecord() {
@@ -68,11 +69,8 @@ export default function Page() {
 
       {isCourseComplete && <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />}
 
-      {showWeekOrientation && (
-        <RoutineBanner
-          copy={getWeekOrientationCopy(Math.ceil(currentDay / 7))}
-          onDismiss={() => setDismissedOrientationDay(currentDay)}
-        />
+      {showWeekOrientation && orientationCopy && (
+        <RoutineBanner copy={orientationCopy} onDismiss={() => setDismissedOrientationDay(currentDay)} />
       )}
 
       {(diary.pregnant || diary.prescriptionMeds) && (

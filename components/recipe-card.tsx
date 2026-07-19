@@ -47,7 +47,7 @@ export function RecipeCard({
   onReportReaction,
 }: RecipeCardProps) {
   const recipe = getRecipe(day)
-  const copy = getCategoryCopy(recipe.type, day)
+  const copy = getCategoryCopy(recipe.type)
   const isToday = day === currentDay
   const isFuture = day > currentDay
   const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)
