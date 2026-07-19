@@ -3,3 +3,6 @@ allowBuilds:
   sharp: true
   # shadcn CLI(스캐폴딩 툴)가 끌어온 개발용 의존성. 런타임 코드에서 쓰지 않아 스크립트 불필요
   msw: false
+
+overrides:
+  hono: 4.12.25
