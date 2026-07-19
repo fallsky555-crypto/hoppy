@@ -8,8 +8,10 @@ import { DailyHabits } from "@/components/daily-habits"
 import { BarrierScoreChart } from "@/components/barrier-score-chart"
 import { IncidentPanel } from "@/components/incident-panel"
 import { LockedPreview } from "@/components/locked-preview"
+import { RoutineBanner } from "@/components/routine-banner"
 import { BARRIER_SCORE_START_DAY, useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
+import { getCompletionCopy, getWeekOrientationCopy } from "@/lib/routine-copy"
 
 export default function Page() {
   const diary = useDiary()
@@ -17,9 +19,15 @@ export default function Page() {
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [justStampedDay, setJustStampedDay] = useState<number | null>(null)
+  const [dismissedOrientationDay, setDismissedOrientationDay] = useState<number | null>(null)
 
   // 선택된 날이 없으면 오늘을 기본값으로 사용
   const activeDay = selectedDay ?? currentDay
+
+  // Day 1/8/15/22/29... 마다 그 주차 오리엔테이션을 한 번씩 보여준다
+  const isOrientationDay = currentDay % 7 === 1
+  const showWeekOrientation = isOrientationDay && dismissedOrientationDay !== currentDay
+  const isCourseComplete = currentDay >= totalDays
 
   function handleRecord() {
     if (completedDays.includes(currentDay)) return
@@ -57,6 +65,15 @@ export default function Page() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
       <ProgressHeader currentDay={currentDay} totalDays={totalDays} completedCount={completedDays.length} />
+
+      {isCourseComplete && <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />}
+
+      {showWeekOrientation && (
+        <RoutineBanner
+          copy={getWeekOrientationCopy(Math.ceil(currentDay / 7))}
+          onDismiss={() => setDismissedOrientationDay(currentDay)}
+        />
+      )}
 
       {(diary.pregnant || diary.prescriptionMeds) && (
         <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
