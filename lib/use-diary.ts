@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { dayFromJoinDate, recipeForDay, TOTAL_DAYS, type Recipe, type RecipeType } from "@/lib/schedule"
 import {
   buildBarrierScoreLog,
@@ -16,6 +16,16 @@ import {
   type SkinType,
   type Tier,
 } from "@/lib/scheduling-engine"
+import {
+  appendIncidentLog,
+  appendReactionLog,
+  ensureAnonSession,
+  loadRemoteState,
+  saveBarrierScoreLog,
+  saveCalendar,
+  saveContextFlags,
+  saveDiagnosis,
+} from "@/lib/supabase/sync"
 
 /** 4번. 장벽 점수 그래프는 2주차(Day 8)부터 노출된다 */
 export const BARRIER_SCORE_START_DAY = 8
@@ -175,6 +185,43 @@ export function useDiary() {
     }
   }, [state, hydrated])
 
+  // Supabase 익명 세션 — localStorage가 여전히 1차 캐시이고, 이건 기기 간 복원용 백엔드다
+  const [userId, setUserId] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    ensureAnonSession().then((id) => {
+      if (!cancelled) setUserId(id)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // 이 기기/브라우저에 로컬 진단이 없을 때만, 같은 유저의 원격 진단 데이터를 복원한다
+  useEffect(() => {
+    if (!userId || !hydrated || state.diagnosis) return
+    let cancelled = false
+    loadRemoteState(userId).then((remote) => {
+      if (cancelled || !remote) return
+      setState((prev) => ({
+        ...prev,
+        joinDate: remote.profile.signupDate,
+        diagnosis: remote.profile.diagnosis,
+        pregnant: remote.profile.pregnant,
+        prescriptionMeds: remote.profile.prescriptionMeds,
+        completedDays: remote.completedDays,
+        events: remote.events.map((event) =>
+          event.kind === "incident"
+            ? { kind: "incident" as const, day: event.day, incidentType: event.incidentType!, durationDays: event.durationDays }
+            : { kind: "reaction" as const, day: event.day, category: event.category! },
+        ),
+      }))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [userId, hydrated, state.diagnosis])
+
   const currentDay = dayFromJoinDate(state.joinDate)
 
   const baseCalendarResult = useMemo(() => {
@@ -200,6 +247,46 @@ export function useDiary() {
     if (calendarResult?.status !== "ok" || currentDay < BARRIER_SCORE_START_DAY) return []
     return buildBarrierScoreLog(calendarResult.calendar, calendarResult.incidentLog, state.completedDays, BARRIER_SCORE_START_DAY, currentDay)
   }, [calendarResult, state.completedDays, currentDay])
+
+  // 진단 결과 + 캘린더 진행 상황(완료 여부 포함)을 diary_profiles / calendar_entries에 반영한다
+  useEffect(() => {
+    if (!userId || !state.diagnosis || calendarResult?.status !== "ok") return
+    saveDiagnosis(userId, state.joinDate, state.diagnosis, calendarResult.tier)
+    saveCalendar(
+      userId,
+      calendarResult.calendar.map((entry) => ({ ...entry, completed: state.completedDays.includes(entry.day) })),
+    )
+  }, [userId, state.diagnosis, state.joinDate, state.completedDays, calendarResult])
+
+  // 9-1. 임신/처방약 플래그
+  useEffect(() => {
+    if (!userId) return
+    saveContextFlags(userId, state.joinDate, state.pregnant, state.prescriptionMeds)
+  }, [userId, state.joinDate, state.pregnant, state.prescriptionMeds])
+
+  // incident_log / reaction_log는 append-only라, 새로 생긴 항목만 골라 반영한다
+  const syncedIncidentCount = useRef(0)
+  useEffect(() => {
+    if (!userId) return
+    const fresh = incidentLog.slice(syncedIncidentCount.current)
+    if (fresh.length === 0) return
+    fresh.forEach((entry) => appendIncidentLog(userId, entry))
+    syncedIncidentCount.current = incidentLog.length
+  }, [userId, incidentLog])
+
+  const syncedReactionCount = useRef(0)
+  useEffect(() => {
+    if (!userId) return
+    const fresh = reactionLog.slice(syncedReactionCount.current)
+    if (fresh.length === 0) return
+    fresh.forEach((entry) => appendReactionLog(userId, entry))
+    syncedReactionCount.current = reactionLog.length
+  }, [userId, reactionLog])
+
+  useEffect(() => {
+    if (!userId) return
+    saveBarrierScoreLog(userId, barrierScoreLog)
+  }, [userId, barrierScoreLog])
 
   /** 진단이 있으면 개인화 캘린더에서, 없으면 기본 30일 스케줄에서 레시피를 가져온다 */
   const getRecipeForDay = useCallback(
