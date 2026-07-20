@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
-import { getCategoryCopy } from "@/lib/routine-copy"
+import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-copy"
 import { Button } from "@/components/ui/button"
 import { Check, ShieldAlert } from "lucide-react"
 
@@ -35,6 +35,9 @@ interface RecipeCardProps {
   /** 오늘 이미 이 성분에 대한 자극을 신고했는지 */
   hasReportedReaction?: boolean
   onReportReaction?: () => void
+  /** rest/moist 문구에 강조할 관심사 + 보유 성분 */
+  concern?: Concern
+  supportOwned?: SupportId[]
 }
 
 export function RecipeCard({
@@ -45,9 +48,11 @@ export function RecipeCard({
   getRecipe = recipeForDay,
   hasReportedReaction = false,
   onReportReaction,
+  concern = "none",
+  supportOwned = [],
 }: RecipeCardProps) {
   const recipe = getRecipe(day)
-  const copy = getCategoryCopy(recipe.type, day)
+  const copy = getCategoryCopy(recipe.type, concern, supportOwned)
   const isToday = day === currentDay
   const isFuture = day > currentDay
   const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)

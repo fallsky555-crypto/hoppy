@@ -23,9 +23,11 @@ import {
   loadRemoteState,
   saveBarrierScoreLog,
   saveCalendar,
+  saveConcern,
   saveContextFlags,
   saveDiagnosis,
 } from "@/lib/supabase/sync"
+import type { Concern, SupportId } from "@/lib/routine-copy"
 
 /** 4번. 장벽 점수 그래프는 2주차(Day 8)부터 노출된다 */
 export const BARRIER_SCORE_START_DAY = 8
@@ -52,6 +54,10 @@ interface DiaryState {
   pregnant: boolean
   /** 9-1. 처방약 사용 중 — "처방 지도가 앱 가이드보다 우선" 고지에 사용 */
   prescriptionMeds: boolean
+  /** rest/moist 문구에 강조할 관심사. Tier·Type 계산과는 무관하고 문구에만 영향을 준다 */
+  concern: Concern
+  /** 유저가 이미 갖고 있다고 답한 성분 id 목록 */
+  supportOwned: SupportId[]
 }
 
 const STORAGE_KEY = "hoppy-skin-diary-v1"
@@ -70,6 +76,8 @@ function loadState(): DiaryState {
     events: [],
     pregnant: false,
     prescriptionMeds: false,
+    concern: "none",
+    supportOwned: [],
   }
   if (typeof window === "undefined") return fresh
   try {
@@ -84,6 +92,8 @@ function loadState(): DiaryState {
       events: parsed.events ?? [],
       pregnant: parsed.pregnant ?? false,
       prescriptionMeds: parsed.prescriptionMeds ?? false,
+      concern: parsed.concern ?? "none",
+      supportOwned: parsed.supportOwned ?? [],
     }
   } catch {
     return fresh
@@ -120,11 +130,29 @@ interface URLDiagnosisPayload {
   diagnosis: DiagnosisInput
   pregnant: boolean
   prescriptionMeds: boolean
+  concern: Concern
+  supportOwned: SupportId[]
+}
+
+const VALID_CONCERNS: Concern[] = ["dry", "flush", "flaky", "trouble", "none"]
+const VALID_SUPPORT_IDS: SupportId[] = ["hya", "cica", "nia", "cer"]
+
+function parseConcern(raw: string | null): Concern {
+  return VALID_CONCERNS.includes(raw as Concern) ? (raw as Concern) : "none"
+}
+
+function parseSupportOwned(raw: string | null): SupportId[] {
+  if (!raw) return []
+  return raw
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id): id is SupportId => VALID_SUPPORT_IDS.includes(id as SupportId))
 }
 
 /**
  * 9-4. 외부 진단 화면(myroutinediet.com의 checker.html)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
  * ?overlap={number}&irritation={true/false}&type={A/B/C}&symptom={string}&preg={0/1}&rx={0/1}
+ * &concern={dry/flush/flaky/trouble/none}&support={hya,cica,nia,cer 콤마 구분}
  * tier는 이 앱이 assignTier()로 직접 재계산하므로 URL의 tier 파라미터는 참고하지 않는다.
  */
 function diagnosisFromURL(): URLDiagnosisPayload | null {
@@ -147,6 +175,8 @@ function diagnosisFromURL(): URLDiagnosisPayload | null {
     },
     pregnant: params.get("preg") === "1",
     prescriptionMeds: params.get("rx") === "1",
+    concern: parseConcern(params.get("concern")),
+    supportOwned: parseSupportOwned(params.get("support")),
   }
 }
 
@@ -160,6 +190,8 @@ export function useDiary() {
     events: [],
     pregnant: false,
     prescriptionMeds: false,
+    concern: "none",
+    supportOwned: [],
   })
   const [hydrated, setHydrated] = useState(false)
 
@@ -169,7 +201,14 @@ export function useDiary() {
     const fromURL = diagnosisFromURL()
     setState(
       fromURL
-        ? { ...loaded, diagnosis: fromURL.diagnosis, pregnant: fromURL.pregnant, prescriptionMeds: fromURL.prescriptionMeds }
+        ? {
+            ...loaded,
+            diagnosis: fromURL.diagnosis,
+            pregnant: fromURL.pregnant,
+            prescriptionMeds: fromURL.prescriptionMeds,
+            concern: fromURL.concern,
+            supportOwned: fromURL.supportOwned,
+          }
         : loaded,
     )
     setHydrated(true)
@@ -208,6 +247,8 @@ export function useDiary() {
         diagnosis: remote.profile.diagnosis,
         pregnant: remote.profile.pregnant,
         prescriptionMeds: remote.profile.prescriptionMeds,
+        concern: remote.profile.concern,
+        supportOwned: remote.profile.supportOwned,
         completedDays: remote.completedDays,
         events: remote.events.map((event) =>
           event.kind === "incident"
@@ -223,10 +264,18 @@ export function useDiary() {
 
   const currentDay = dayFromJoinDate(state.joinDate)
 
+  // 2-3(v1.3) 빈도 상향 판정용 — 자극이 신고된 날짜만 뽑아둔다
+  const reactionDays = useMemo(() => state.events.filter((event) => event.kind === "reaction").map((event) => event.day), [state.events])
+
   const baseCalendarResult = useMemo(() => {
     if (!state.diagnosis) return null
-    return generateCalendar({ diagnosis: state.diagnosis, signupDate: state.joinDate })
-  }, [state.diagnosis, state.joinDate])
+    return generateCalendar({
+      diagnosis: state.diagnosis,
+      signupDate: state.joinDate,
+      completedDays: state.completedDays,
+      reactionDays,
+    })
+  }, [state.diagnosis, state.joinDate, state.completedDays, reactionDays])
 
   // 인시던트 오버라이드 / 자극 지연 이벤트를 기본 캘린더 위에 순차 적용한다
   const calendarResult = useMemo(() => {
@@ -262,6 +311,12 @@ export function useDiary() {
     if (!userId) return
     saveContextFlags(userId, state.joinDate, state.pregnant, state.prescriptionMeds)
   }, [userId, state.joinDate, state.pregnant, state.prescriptionMeds])
+
+  // rest/moist 문구에 강조할 관심사 + 보유 성분
+  useEffect(() => {
+    if (!userId) return
+    saveConcern(userId, state.joinDate, state.concern, state.supportOwned)
+  }, [userId, state.joinDate, state.concern, state.supportOwned])
 
   // incident_log / reaction_log는 append-only라, 새로 생긴 항목만 골라 반영한다
   const syncedIncidentCount = useRef(0)
@@ -362,5 +417,7 @@ export function useDiary() {
     barrierScoreLog,
     pregnant: state.pregnant,
     prescriptionMeds: state.prescriptionMeds,
+    concern: state.concern,
+    supportOwned: state.supportOwned,
   }
 }
