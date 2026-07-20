@@ -1,5 +1,5 @@
 /**
- * Hoppy 스케줄링 엔진 (scheduling-engine-spec.md v1.2 구현)
+ * Hoppy 스케줄링 엔진 (scheduling-engine-spec.md v1.3 구현)
  *
  * lib/schedule.ts의 고정 30일 스케줄(recipeForDay)을 대체하는 개인화 캘린더 생성기.
  * Tier(강도) × Type(유형) 조합으로 캘린더를 만들고, 장벽 점수·인시던트 오버라이드·
@@ -29,10 +29,11 @@ interface TierRule {
   firstActiveDay: number
 }
 
+/** v1.3 — 체감 효능 격차 수정으로 각 Tier 내에서 도입일을 앞당김 (Day 10/14/21 → 3/5/9) */
 const TIER_RULES: Record<0 | 1 | 2, TierRule> = {
-  0: { restEndDay: 9, firstActiveDay: 10 },
-  1: { restEndDay: 13, firstActiveDay: 14 },
-  2: { restEndDay: 20, firstActiveDay: 21 },
+  0: { restEndDay: 2, firstActiveDay: 3 },
+  1: { restEndDay: 4, firstActiveDay: 5 },
+  2: { restEndDay: 8, firstActiveDay: 9 },
 }
 
 /** 2-1. Tier 배정 + 9-2. Tier X 우선 분기 */
@@ -93,12 +94,25 @@ export interface CalendarEntry {
   recipe: Recipe
   completed: boolean | null
   reactionFlag: boolean | null
+  /**
+   * Type A(장벽 붕괴형)의 Tier별 첫 액티브 도입일(Day5/Day9)에만 true.
+   * 실제로 바르는 성분은 그대로 rest/moist고, UI에서 "장벽 집중 케어 데이"처럼
+   * 그 날만 다르게 표시하기 위한 이름표 용도의 플래그다.
+   */
+  milestone: boolean
 }
 
 export interface GenerateCalendarParams {
   diagnosis: DiagnosisInput
   signupDate: string // ISO
   totalDays?: number
+  /**
+   * 2-3(v1.3) 빈도 상향 판정에 쓰는 완료/자극 이력. 생략하면(예: 최초 생성 시점)
+   * 상향 조건을 판단할 데이터가 없는 것으로 보고 기존 주1회 간격을 유지한다.
+   */
+  completedDays?: number[]
+  /** 자극이 신고된 날짜 목록 — reportReaction()이 호출된 날 */
+  reactionDays?: number[]
 }
 
 export type GenerateCalendarResult =
@@ -111,6 +125,62 @@ function addDays(iso: string, amount: number): string {
   return date.toISOString()
 }
 
+/** 4일+3일=7일마다 2회 → 상향 후 평균 정확히 주 2회가 되는 간격 패턴 */
+const UPGRADED_GAP_PATTERN = [4, 3]
+
+/**
+ * 2-3(v1.3). 액티브 도입일 집합을 계산한다. eligibleForUpgrade가 아니면 기존
+ * 주1회(firstActiveDay부터 7일 간격) 그대로다.
+ *
+ * eligibleForUpgrade면, 원래 주1회 자리를 순서대로 훑다가 "자극 없이 완료"가
+ * 2번째로 채워지는 날(upgradeDay)을 찾는다. upgradeDay 이하는 손대지 않고 그대로
+ * 두고(8번 엣지케이스와 동일한 "지난 일정 유지" 원칙 — 이미 완료/기록된 날은
+ * 어떤 경우에도 재배치하지 않는다), upgradeDay 이후의 자리만 비운 뒤 더 촘촘한
+ * 간격(4일/3일 번갈아 = 평균 주 2회)으로 다시 채운다. 이때도 이미 completedDays·
+ * reactionDays에 기록된 날은 절대 건드리지 않고 건너뛴다.
+ */
+function computeActiveDays(
+  firstActiveDay: number,
+  totalDays: number,
+  eligibleForUpgrade: boolean,
+  completedDays: number[],
+  reactionDays: number[],
+): Set<number> {
+  const completedSet = new Set(completedDays)
+  const reactionSet = new Set(reactionDays)
+
+  const activeDays = new Set<number>()
+  let upgradeDay: number | null = null
+  let cleanCompletions = 0
+
+  for (let day = firstActiveDay; day <= totalDays; day += 7) {
+    activeDays.add(day)
+    if (!eligibleForUpgrade || upgradeDay !== null) continue
+    if (completedSet.has(day) && !reactionSet.has(day)) {
+      cleanCompletions++
+      if (cleanCompletions === 2) upgradeDay = day
+    }
+  }
+
+  if (upgradeDay === null) return activeDays // 상향 조건 미충족 — 기존 주1회 유지
+
+  for (const day of activeDays) {
+    if (day > upgradeDay) activeDays.delete(day)
+  }
+
+  let cursor = upgradeDay
+  let gapIndex = 0
+  while (cursor <= totalDays) {
+    cursor += UPGRADED_GAP_PATTERN[gapIndex % UPGRADED_GAP_PATTERN.length]
+    gapIndex++
+    if (cursor > totalDays) break
+    if (completedSet.has(cursor) || reactionSet.has(cursor)) continue // 이미 기록된 날은 건너뛴다
+    activeDays.add(cursor)
+  }
+
+  return activeDays
+}
+
 /**
  * 3. 캘린더 생성 규칙 + 2. Tier×Type 조합.
  *
@@ -119,20 +189,24 @@ function addDays(iso: string, amount: number): string {
  * 2단계 코스에서 다루므로(3번 항목 "다음 단계" 참고) AHA/BHA와의 최소 2일 간격
  * 규칙도 여기서는 해당 사항이 없다.
  */
-export function generateCalendar({ diagnosis, signupDate, totalDays = TOTAL_DAYS }: GenerateCalendarParams): GenerateCalendarResult {
+export function generateCalendar({
+  diagnosis,
+  signupDate,
+  totalDays = TOTAL_DAYS,
+  completedDays = [],
+  reactionDays = [],
+}: GenerateCalendarParams): GenerateCalendarResult {
   const tier = assignTier(diagnosis)
   if (tier === "X") return { status: "medical_referral" }
 
   const { restEndDay, firstActiveDay } = TIER_RULES[tier]
   const activeCategory = TYPE_ACTIVE_CATEGORY[diagnosis.skinType]
 
-  // 초기 빈도: 주 1회로 시작 (firstActiveDay부터 7일 간격)
-  const activeDays = new Set<number>()
-  if (activeCategory) {
-    for (let day = firstActiveDay; day <= totalDays; day += 7) {
-      activeDays.add(day)
-    }
-  }
+  // 2-3(v1.3): Tier 0·1의 B/C유형만 1단계 내 빈도 상향 대상. Type A·Tier 2는 예외 없음
+  const eligibleForUpgrade = (tier === 0 || tier === 1) && activeCategory !== null
+  const activeDays = activeCategory
+    ? computeActiveDays(firstActiveDay, totalDays, eligibleForUpgrade, completedDays, reactionDays)
+    : new Set<number>()
 
   const calendar: CalendarEntry[] = []
   for (let day = 1; day <= totalDays; day++) {
@@ -146,6 +220,8 @@ export function generateCalendar({ diagnosis, signupDate, totalDays = TOTAL_DAYS
       recipe: RECIPES[category],
       completed: null,
       reactionFlag: null,
+      // Type A는 액티브 카테고리가 없으니, 대신 Tier별 첫 액티브 도입일에 이름표만 붙인다
+      milestone: !activeCategory && day === firstActiveDay,
     })
   }
 
@@ -153,6 +229,11 @@ export function generateCalendar({ diagnosis, signupDate, totalDays = TOTAL_DAYS
 }
 
 // ── 4. 4주 Lock-in 주차 라벨 (감정적 마일스톤 오버레이) ─────────
+//
+// v1.3 우선순위 원칙: 액티브 성분의 실제 첫 도입일·빈도는 TIER_RULES(2-1)와
+// computeActiveDays(2-3)가 항상 우선한다. 아래 이름표는 generateCalendar()의
+// 계산 결과를 절대 읽거나 되돌리지 않는 순수 연출용 레이어라, "내러티브가
+// 실제 시작일을 3주차로 늦춘다"는 구조적 충돌이 애초에 발생할 수 없다.
 
 export interface WeekLabel {
   week: 1 | 2 | 3 | 4
@@ -161,7 +242,7 @@ export interface WeekLabel {
 }
 
 const WEEK_LABELS: readonly WeekLabel[] = [
-  { week: 1, name: "Skin Detox", purpose: "빠른 진정 체감 (Quick Win)" },
+  { week: 1, name: "Skin Detox", purpose: "빠른 진정 체감 (Quick Win) + 실제 변화 조기 시작" },
   { week: 2, name: "Barrier Build-up", purpose: "회복 과정의 시각화" },
   { week: 3, name: "Mild Turnover Test", purpose: "다음 단계 기대감 형성" },
   { week: 4, name: "Recovery Report", purpose: "전환 유도" },
@@ -235,7 +316,7 @@ function insertDays(
   const inserted: CalendarEntry[] = Array.from({ length: count }, (_, i) => {
     const day = atDay + i
     const category = categoryForInsertedDay(day)
-    return { day, date: addDays(baseDate, i), category, recipe: RECIPES[category], completed: null, reactionFlag: null }
+    return { day, date: addDays(baseDate, i), category, recipe: RECIPES[category], completed: null, reactionFlag: null, milestone: false }
   })
 
   const shiftedFuture = calendar

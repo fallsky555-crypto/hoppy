@@ -264,10 +264,18 @@ export function useDiary() {
 
   const currentDay = dayFromJoinDate(state.joinDate)
 
+  // 2-3(v1.3) 빈도 상향 판정용 — 자극이 신고된 날짜만 뽑아둔다
+  const reactionDays = useMemo(() => state.events.filter((event) => event.kind === "reaction").map((event) => event.day), [state.events])
+
   const baseCalendarResult = useMemo(() => {
     if (!state.diagnosis) return null
-    return generateCalendar({ diagnosis: state.diagnosis, signupDate: state.joinDate })
-  }, [state.diagnosis, state.joinDate])
+    return generateCalendar({
+      diagnosis: state.diagnosis,
+      signupDate: state.joinDate,
+      completedDays: state.completedDays,
+      reactionDays,
+    })
+  }, [state.diagnosis, state.joinDate, state.completedDays, reactionDays])
 
   // 인시던트 오버라이드 / 자극 지연 이벤트를 기본 캘린더 위에 순차 적용한다
   const calendarResult = useMemo(() => {
