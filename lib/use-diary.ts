@@ -152,8 +152,9 @@ function parseSupportOwned(raw: string | null): SupportId[] {
 /**
  * 9-4. 외부 진단 화면(myroutinediet.com의 checker.html)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
  * ?overlap={number}&irritation={true/false}&type={A/B/C}&symptom={string}&preg={0/1}&rx={0/1}
- * &concern={dry/flush/flaky/trouble/none}&support={hya,cica,nia,cer 콤마 구분}
+ * &concern={dry/flush/flaky/trouble/none}&support={hya,cica,nia,cer 콤마 구분}&unsure={0/1}
  * tier는 이 앱이 assignTier()로 직접 재계산하므로 URL의 tier 파라미터는 참고하지 않는다.
+ * unsure=1이면(11-5, v1.5) assignTier()가 계산된 Tier가 0일 때만 안전 하한 1로 올린다.
  */
 function diagnosisFromURL(): URLDiagnosisPayload | null {
   if (typeof window === "undefined") return null
@@ -172,6 +173,7 @@ function diagnosisFromURL(): URLDiagnosisPayload | null {
       irritationReported: params.get("irritation") === "true",
       skinType: type as SkinType,
       symptom: params.get("symptom") ?? undefined,
+      unsure: params.get("unsure") === "1",
     },
     pregnant: params.get("preg") === "1",
     prescriptionMeds: params.get("rx") === "1",

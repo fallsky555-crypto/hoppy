@@ -1,4 +1,14 @@
-export type RecipeType = "rest" | "aha" | "moist" | "retinol" | "bha"
+export type RecipeType =
+  | "rest"
+  | "aha"
+  | "moist"
+  | "retinol"
+  | "bha"
+  // v1.5 성분 로테이션(11번) — 방어일 3종 + SOS Rest. rest/moist는 미진단(기본 스케줄) 하위 호환용으로 유지한다
+  | "defense_barrier"
+  | "defense_toning"
+  | "defense_hydration"
+  | "sos_rest"
 
 export interface Recipe {
   type: RecipeType
@@ -61,6 +71,46 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     guide:
       "세안 후 BHA 토너를 화장솜에 적셔 T존과 모공이 두드러지는 부위 위주로 가볍게 닦아내듯 발라주세요. 이어서 유수분 밸런스를 잡아주는 수분 크림으로 마무리해요.",
     caution: "따갑거나 붉어지면 바로 멈추고 보습만 해주세요. 다음 날 아침 자외선 차단제는 필수랍니다!",
+  },
+  defense_barrier: {
+    type: "defense_barrier",
+    color: "defense_barrier",
+    emoji: "🛡️",
+    tag: "보호막 케어",
+    title: "보호막 케어 데이",
+    guide:
+      "순한 세안 후 세라마이드와 시카(마데카소사이드) 성분이 담긴 크림을 평소보다 도톰하게 발라주세요. 피부 보호막이 스스로 회복할 시간을 만들어주는 날이에요.",
+    caution: "각질 제거·기능성 성분은 오늘 쉬어갑니다.",
+  },
+  defense_toning: {
+    type: "defense_toning",
+    color: "defense_toning",
+    emoji: "🌤️",
+    tag: "톤 정돈 케어",
+    title: "톤 정돈 케어 데이",
+    guide:
+      "세안 후 비타민C와 나이아신아마이드 성분으로 톤과 유분 밸런스를 정돈해주세요. 마무리는 보습으로 가볍게 잡아주시면 돼요.",
+    caution: "비타민C 성분은 자외선에 민감할 수 있어요. 다음 날 아침 자외선 차단제를 꼭 챙겨주세요.",
+  },
+  defense_hydration: {
+    type: "defense_hydration",
+    color: "defense_hydration",
+    emoji: "💧",
+    tag: "속수분 케어",
+    title: "속수분 채움 케어 데이",
+    guide:
+      "히알루론산과 세라마이드 성분으로 속수분을 채워주세요. 수분감이 있는 제품을 결 따라 가볍게 덧발라, 당김 없이 편안한 상태를 유지해주세요.",
+    caution: "덧바른 뒤에는 가볍게 눌러 흡수시켜주세요.",
+  },
+  sos_rest: {
+    type: "sos_rest",
+    color: "sos_rest",
+    emoji: "🤍",
+    tag: "긴급 진정 케어",
+    title: "긴급 진정 케어 데이",
+    guide:
+      "오늘은 시카(마데카소사이드) 성분만 단독으로 사용해 피부를 쉬게 해주세요. 다른 기능성 제품은 잠시 쉬어가고, 순한 진정에만 집중하는 날이에요.",
+    caution: "다른 액티브 성분과는 겹치지 않게 오늘 하루는 쉬어가주세요.",
   },
 }
 

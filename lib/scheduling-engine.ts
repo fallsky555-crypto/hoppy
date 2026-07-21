@@ -1,9 +1,13 @@
 /**
- * Hoppy 스케줄링 엔진 (scheduling-engine-spec.md v1.3 구현)
+ * Hoppy 스케줄링 엔진 (scheduling-engine-spec.md v1.5 구현)
  *
  * lib/schedule.ts의 고정 30일 스케줄(recipeForDay)을 대체하는 개인화 캘린더 생성기.
  * Tier(강도) × Type(유형) 조합으로 캘린더를 만들고, 장벽 점수·인시던트 오버라이드·
  * 자극 지연·2단계 잠금 해제 판정까지 같은 상태 기계 원칙을 공유한다.
+ *
+ * v1.5(11번): 방어일(defense)/공격일(attack) 축을 도입해 하루 단위 순차 시뮬레이션으로
+ * 캘린더를 생성한다. 방어일은 3종 성분 로테이션을 돌고, 공격일은 Tier별 간격 규칙과
+ * 레티놀 합류 조건을 따른다. SOS Rest(가입일 기준 고정일)는 인시던트 다음으로 우선한다.
  */
 import { RECIPES, type Recipe, type RecipeType, TOTAL_DAYS } from "@/lib/schedule"
 
@@ -20,6 +24,8 @@ export interface DiagnosisInput {
   skinType: SkinType
   /** checker.html symptom 값. 'bad'면 액티브 개수와 무관하게 Tier X로 분기 (9-2) */
   symptom?: string
+  /** 11-5(v1.5). checker.html "성분을 잘 모르겠어요" 체크 — Tier 안전 하한을 1로 올린다(낮추지는 않음) */
+  unsure?: boolean
 }
 
 interface TierRule {
@@ -36,12 +42,21 @@ const TIER_RULES: Record<0 | 1 | 2, TierRule> = {
   2: { restEndDay: 8, firstActiveDay: 9 },
 }
 
-/** 2-1. Tier 배정 + 9-2. Tier X 우선 분기 */
-export function assignTier(diagnosis: Pick<DiagnosisInput, "overlapCount" | "irritationReported" | "symptom">): Tier {
+/** 2-1. Tier 배정 + 9-2. Tier X 우선 분기 + 11-5. unsure 안전 하한(v1.5) */
+export function assignTier(
+  diagnosis: Pick<DiagnosisInput, "overlapCount" | "irritationReported" | "symptom" | "unsure">,
+): Tier {
   if (diagnosis.symptom === "bad") return "X"
-  if (diagnosis.overlapCount >= 3) return 2
-  if (diagnosis.overlapCount === 2 || diagnosis.irritationReported) return 1
-  return 0
+
+  let tier: 0 | 1 | 2
+  if (diagnosis.overlapCount >= 3) tier = 2
+  else if (diagnosis.overlapCount === 2 || diagnosis.irritationReported) tier = 1
+  else tier = 0
+
+  // "성분을 잘 모르겠어요" — 계산된 Tier를 낮추지는 않고, 0이었을 때만 안전 하한 1로 올린다
+  if (diagnosis.unsure && tier === 0) tier = 1
+
+  return tier
 }
 
 /** 9-1. checker.html symptom → 자극 보고 여부 매핑 */
@@ -76,10 +91,10 @@ export function inferSkinType({
 }
 
 /**
- * 2-2. Type별 매칭 루틴.
- * A유형(장벽 붕괴형)은 이번 코스에서 액티브를 도입하지 않고 휴식/보습만 반복한다.
+ * 2-2. Type별 주력 액티브(공격일 콘텐츠).
+ * A유형(장벽 붕괴형)은 이번 코스에서 액티브를 도입하지 않고 방어일 로테이션만 반복한다.
  */
-const TYPE_ACTIVE_CATEGORY: Record<SkinType, RecipeType | null> = {
+const PRIMARY_ACTIVE_CATEGORY: Record<SkinType, "aha" | "bha" | null> = {
   A: null,
   B: "aha",
   C: "bha",
@@ -107,8 +122,8 @@ export interface GenerateCalendarParams {
   signupDate: string // ISO
   totalDays?: number
   /**
-   * 2-3(v1.3) 빈도 상향 판정에 쓰는 완료/자극 이력. 생략하면(예: 최초 생성 시점)
-   * 상향 조건을 판단할 데이터가 없는 것으로 보고 기존 주1회 간격을 유지한다.
+   * 11-4·2-3 클린 완료 판정에 쓰는 완료/자극 이력. 생략하면(예: 최초 생성 시점)
+   * 아직 완료된 날이 없는 것으로 보고 레티놀 합류 조건도 미충족 상태로 계산한다.
    */
   completedDays?: number[]
   /** 자극이 신고된 날짜 목록 — reportReaction()이 호출된 날 */
@@ -125,69 +140,31 @@ function addDays(iso: string, amount: number): string {
   return date.toISOString()
 }
 
-/** 4일+3일=7일마다 2회 → 상향 후 평균 정확히 주 2회가 되는 간격 패턴 */
-const UPGRADED_GAP_PATTERN = [4, 3]
+// ── 11. 7성분 로테이션 시스템(v1.5) ───────────────────────────
 
-/**
- * 2-3(v1.3). 액티브 도입일 집합을 계산한다. eligibleForUpgrade가 아니면 기존
- * 주1회(firstActiveDay부터 7일 간격) 그대로다.
- *
- * eligibleForUpgrade면, 원래 주1회 자리를 순서대로 훑다가 "자극 없이 완료"가
- * 2번째로 채워지는 날(upgradeDay)을 찾는다. upgradeDay 이하는 손대지 않고 그대로
- * 두고(8번 엣지케이스와 동일한 "지난 일정 유지" 원칙 — 이미 완료/기록된 날은
- * 어떤 경우에도 재배치하지 않는다), upgradeDay 이후의 자리만 비운 뒤 더 촘촘한
- * 간격(4일/3일 번갈아 = 평균 주 2회)으로 다시 채운다. 이때도 이미 completedDays·
- * reactionDays에 기록된 날은 절대 건드리지 않고 건너뛴다.
- */
-function computeActiveDays(
-  firstActiveDay: number,
-  totalDays: number,
-  eligibleForUpgrade: boolean,
-  completedDays: number[],
-  reactionDays: number[],
-): Set<number> {
-  const completedSet = new Set(completedDays)
-  const reactionSet = new Set(reactionDays)
+/** 11-1. 방어일(defense) 3종 로테이션 — 세라마이드+시카 → 비타민C+나이아신아마이드 → 히알루론산+세라마이드 */
+const DEFENSE_ROTATION: readonly RecipeType[] = ["defense_barrier", "defense_toning", "defense_hydration"]
 
-  const activeDays = new Set<number>()
-  let upgradeDay: number | null = null
-  let cleanCompletions = 0
-
-  for (let day = firstActiveDay; day <= totalDays; day += 7) {
-    activeDays.add(day)
-    if (!eligibleForUpgrade || upgradeDay !== null) continue
-    if (completedSet.has(day) && !reactionSet.has(day)) {
-      cleanCompletions++
-      if (cleanCompletions === 2) upgradeDay = day
-    }
-  }
-
-  if (upgradeDay === null) return activeDays // 상향 조건 미충족 — 기존 주1회 유지
-
-  for (const day of activeDays) {
-    if (day > upgradeDay) activeDays.delete(day)
-  }
-
-  let cursor = upgradeDay
-  let gapIndex = 0
-  while (cursor <= totalDays) {
-    cursor += UPGRADED_GAP_PATTERN[gapIndex % UPGRADED_GAP_PATTERN.length]
-    gapIndex++
-    if (cursor > totalDays) break
-    if (completedSet.has(cursor) || reactionSet.has(cursor)) continue // 이미 기록된 날은 건너뛴다
-    activeDays.add(cursor)
-  }
-
-  return activeDays
+function defenseCategoryForCount(count: number): RecipeType {
+  return DEFENSE_ROTATION[count % DEFENSE_ROTATION.length]
 }
 
+/** 11-4. SOS Rest — 가입일 기준 고정일(Day 7/14/22/29). 인시던트 다음으로 우선하는 캘린더 트리거형 오버라이드 */
+const SOS_REST_DAYS: ReadonlySet<number> = new Set([7, 14, 22, 29])
+
+/** 11-3. 레티놀 합류에 필요한 주력 액티브 클린 완료 횟수 — Tier2는 더 보수적으로 3회 */
+const CLEAN_COMPLETIONS_FOR_RETINOL: Record<0 | 1 | 2, number> = { 0: 2, 1: 2, 2: 3 }
+
 /**
- * 3. 캘린더 생성 규칙 + 2. Tier×Type 조합.
+ * 11-6. 하루 단위 순차 시뮬레이션으로 캘린더를 만든다. day 1부터 totalDays까지 훑으며
+ * 우선순위 순으로 그날의 카테고리를 정한다: SOS Rest > Type A(항상 방어 로테이션) >
+ * 액티브 도입 전(방어 로테이션) > 공격일 판정(Tier별 간격 규칙) > 레티놀 합류.
  *
- * 이 코스에서는 Type당 액티브 카테고리를 하나만 도입하므로 "동시 도입 금지"·
- * "일일 최대 1개" 규칙은 항상 자동으로 만족된다. 레티놀은 이 30일 코스가 아니라
- * 2단계 코스에서 다루므로(3번 항목 "다음 단계" 참고) AHA/BHA와의 최소 2일 간격
- * 규칙도 여기서는 해당 사항이 없다.
+ * 방어 로테이션 카운터는 캘린더 전체를 통틀어 누적되는 순번이며, SOS Rest·공격일로
+ * 소비된 날은 카운트를 올리지 않는다(그 자리를 건너뛰어도 로테이션 순서는 유지된다).
+ * 공격일 판정은 Tier0·1은 도입일부터 이어지는 날짜 기반 격일 패턴, Tier2는 직전
+ * 공격일로부터 최소 3일 간격이 되는 첫 날로 계산한다. 레티놀 합류 이후에는 직전
+ * 공격일 콘텐츠와 다른 것을 배정해 주력 액티브 ↔ 레티놀이 자연히 교대된다.
  */
 export function generateCalendar({
   diagnosis,
@@ -199,19 +176,48 @@ export function generateCalendar({
   const tier = assignTier(diagnosis)
   if (tier === "X") return { status: "medical_referral" }
 
-  const { restEndDay, firstActiveDay } = TIER_RULES[tier]
-  const activeCategory = TYPE_ACTIVE_CATEGORY[diagnosis.skinType]
-
-  // 2-3(v1.3): Tier 0·1의 B/C유형만 1단계 내 빈도 상향 대상. Type A·Tier 2는 예외 없음
-  const eligibleForUpgrade = (tier === 0 || tier === 1) && activeCategory !== null
-  const activeDays = activeCategory
-    ? computeActiveDays(firstActiveDay, totalDays, eligibleForUpgrade, completedDays, reactionDays)
-    : new Set<number>()
+  const { firstActiveDay } = TIER_RULES[tier]
+  const primary = PRIMARY_ACTIVE_CATEGORY[diagnosis.skinType]
+  const cleanThreshold = CLEAN_COMPLETIONS_FOR_RETINOL[tier]
+  const completedSet = new Set(completedDays)
+  const reactionSet = new Set(reactionDays)
 
   const calendar: CalendarEntry[] = []
+  let defenseCount = 0
+  let lastAttackDay = 0
+  let lastAttackContent: RecipeType | null = null
+  let primaryCleanCompletions = 0
+
   for (let day = 1; day <= totalDays; day++) {
-    const category: RecipeType =
-      activeCategory && day > restEndDay && activeDays.has(day) ? activeCategory : day % 2 === 1 ? "rest" : "moist"
+    let category: RecipeType
+
+    if (SOS_REST_DAYS.has(day)) {
+      category = "sos_rest"
+    } else if (!primary || day < firstActiveDay) {
+      // Type A는 액티브를 도입하지 않고, 그 외 유형도 도입일 전에는 방어 로테이션만 돈다
+      category = defenseCategoryForCount(defenseCount)
+      defenseCount++
+    } else {
+      const isAttackDay =
+        tier === 2
+          ? lastAttackDay === 0
+            ? day === firstActiveDay
+            : day - lastAttackDay >= 3
+          : (day - firstActiveDay) % 2 === 0
+
+      if (!isAttackDay) {
+        category = defenseCategoryForCount(defenseCount)
+        defenseCount++
+      } else {
+        lastAttackDay = day
+        const retinolEligible = primaryCleanCompletions >= cleanThreshold
+        category = retinolEligible ? (lastAttackContent === primary ? "retinol" : primary) : primary
+        lastAttackContent = category
+        if (category === primary && completedSet.has(day) && !reactionSet.has(day)) {
+          primaryCleanCompletions++
+        }
+      }
+    }
 
     calendar.push({
       day,
@@ -221,7 +227,7 @@ export function generateCalendar({
       completed: null,
       reactionFlag: null,
       // Type A는 액티브 카테고리가 없으니, 대신 Tier별 첫 액티브 도입일에 이름표만 붙인다
-      milestone: !activeCategory && day === firstActiveDay,
+      milestone: !primary && day === firstActiveDay,
     })
   }
 
@@ -231,8 +237,8 @@ export function generateCalendar({
 // ── 4. 4주 Lock-in 주차 라벨 (감정적 마일스톤 오버레이) ─────────
 //
 // v1.3 우선순위 원칙: 액티브 성분의 실제 첫 도입일·빈도는 TIER_RULES(2-1)와
-// computeActiveDays(2-3)가 항상 우선한다. 아래 이름표는 generateCalendar()의
-// 계산 결과를 절대 읽거나 되돌리지 않는 순수 연출용 레이어라, "내러티브가
+// generateCalendar()의 하루 단위 시뮬레이션(11-6)이 항상 우선한다. 아래 이름표는
+// 그 계산 결과를 절대 읽거나 되돌리지 않는 순수 연출용 레이어라, "내러티브가
 // 실제 시작일을 3주차로 늦춘다"는 구조적 충돌이 애초에 발생할 수 없다.
 
 export interface WeekLabel {

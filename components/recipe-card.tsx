@@ -15,6 +15,10 @@ const ACCENT_BG: Record<RecipeType, string> = {
   moist: "bg-moist-soft",
   retinol: "bg-retinol-soft",
   bha: "bg-bha-soft",
+  defense_barrier: "bg-defense-barrier-soft",
+  defense_toning: "bg-defense-toning-soft",
+  defense_hydration: "bg-defense-hydration-soft",
+  sos_rest: "bg-sos-rest-soft",
 }
 
 const ACCENT_TAG: Record<RecipeType, string> = {
@@ -23,6 +27,10 @@ const ACCENT_TAG: Record<RecipeType, string> = {
   moist: "bg-moist text-white",
   retinol: "bg-retinol text-white",
   bha: "bg-bha text-white",
+  defense_barrier: "bg-defense-barrier text-white",
+  defense_toning: "bg-defense-toning text-white",
+  defense_hydration: "bg-defense-hydration text-white",
+  sos_rest: "bg-sos-rest text-white",
 }
 
 interface RecipeCardProps {
@@ -59,7 +67,7 @@ export function RecipeCard({
 
   return (
     <section
-      className={cn("rounded-4xl p-5 shadow-sm ring-1 ring-border transition-colors", ACCENT_BG[recipe.color])}
+      className={cn("rounded-4xl p-6 shadow-sm ring-1 ring-border transition-colors", ACCENT_BG[recipe.color])}
       aria-label="오늘의 레시피 상세"
     >
       <div className="flex items-center justify-between">
@@ -78,9 +86,9 @@ export function RecipeCard({
         </span>
       </div>
 
-      <h3 className="mt-3 font-display text-lg font-bold text-foreground text-balance">{copy.title}</h3>
+      <h3 className="mt-3 font-display text-xl font-bold text-foreground text-balance">{copy.title}</h3>
 
-      <p className="mt-1.5 text-sm leading-relaxed text-foreground/80">{copy.detail}</p>
+      <p className="mt-1.5 text-base leading-relaxed text-foreground/80">{copy.detail}</p>
 
       <div className="mt-4">
         {isCompleted ? (
