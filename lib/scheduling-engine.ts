@@ -181,6 +181,14 @@ export function generateCalendar({
   const cleanThreshold = CLEAN_COMPLETIONS_FOR_RETINOL[tier]
   const completedSet = new Set(completedDays)
   const reactionSet = new Set(reactionDays)
+  /**
+   * 11-2/11-6 버그 수정(v1.7). 최초 생성 시점엔 completedDays/reactionDays가 둘 다
+   * 비어 있어 "자극 없이 N회 클린 완료"를 판정할 실제 데이터가 없다 — 이전엔 이 경우
+   * 조건이 항상 거짓으로 평가되어 레티놀이 30일 내내 한 번도 합류하지 못했다. 실제
+   * 기록이 하나라도 있으면(반응 우선 원칙) 이 낙관적 가정은 즉시 꺼지고, 아래 카운팅은
+   * completedSet/reactionSet 기반 실측치로만 판정한다.
+   */
+  const noRealDataYet = completedDays.length === 0 && reactionDays.length === 0
 
   const calendar: CalendarEntry[] = []
   let defenseCount = 0
@@ -213,8 +221,9 @@ export function generateCalendar({
         const retinolEligible = primaryCleanCompletions >= cleanThreshold
         category = retinolEligible ? (lastAttackContent === primary ? "retinol" : primary) : primary
         lastAttackContent = category
-        if (category === primary && completedSet.has(day) && !reactionSet.has(day)) {
-          primaryCleanCompletions++
+        if (category === primary) {
+          const countsAsClean = noRealDataYet || (completedSet.has(day) && !reactionSet.has(day))
+          if (countsAsClean) primaryCleanCompletions++
         }
       }
     }
