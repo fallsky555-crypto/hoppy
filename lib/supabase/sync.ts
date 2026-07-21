@@ -46,6 +46,8 @@ interface RemoteProfile {
   prescriptionMeds: boolean
   concern: Concern
   supportOwned: SupportId[]
+  /** 13-3(v1.7). 이 프로필이 마지막으로 확인된 엔진 버전 — null이면 이 필드가 생기기 전의 레거시 유저 */
+  engineVersion: string | null
 }
 
 /** 진단 결과 + 가입일을 diary_profiles에 upsert한다 */
@@ -90,6 +92,18 @@ export async function saveConcern(userId: string, signupDate: string, concern: C
     { onConflict: "user_id" },
   )
   if (error) console.warn("[supabase] saveConcern failed:", error.message)
+}
+
+/** 13-3(v1.7). 이 유저의 프로필이 확인된 엔진 버전을 diary_profiles에 반영한다 */
+export async function saveEngineVersion(userId: string, signupDate: string, engineVersion: string): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), engine_version: engineVersion },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveEngineVersion failed:", error.message)
 }
 
 /** 현재 계산된 캘린더 전체를 calendar_entries에 반영한다 (일정이 통째로 밀리는 경우가 있어 매번 upsert) */
@@ -183,7 +197,9 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
   try {
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
-      .select("signup_date, overlap_count, irritation_reported, skin_type, symptom, pregnant, prescription_meds, concern, support_owned")
+      .select(
+        "signup_date, overlap_count, irritation_reported, skin_type, symptom, pregnant, prescription_meds, concern, support_owned, engine_version",
+      )
       .eq("user_id", userId)
       .maybeSingle()
 
@@ -233,6 +249,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
         prescriptionMeds: profile.prescription_meds ?? false,
         concern: (profile.concern as Concern) ?? "none",
         supportOwned: (profile.support_owned as SupportId[] | null) ?? [],
+        engineVersion: profile.engine_version ?? null,
       },
       completedDays,
       events,

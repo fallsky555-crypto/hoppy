@@ -11,6 +11,13 @@
  */
 import { RECIPES, type Recipe, type RecipeType, TOTAL_DAYS } from "@/lib/schedule"
 
+/**
+ * 13-3(v1.7). 저장된 diary_profiles.engine_version과 비교해 캐시 무효화를 판단하는 기준값.
+ * 엔진 로직(특히 generateCalendar()의 카테고리 배정 규칙)이 바뀔 때마다 반드시 올린다 —
+ * 릴리스 체크리스트 항목. 올리지 않으면 이번에 고친 "세션 캐싱" 버그가 형태만 바뀌어 재발한다.
+ */
+export const CURRENT_ENGINE_VERSION = "1.7"
+
 // ── 2. Tier(강도) × Type(유형) ──────────────────────────────
 
 /** X = 의료 상담 필요 (9-2). 캘린더를 생성하지 않는다. */
