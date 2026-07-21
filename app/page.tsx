@@ -9,6 +9,7 @@ import { BarrierScoreChart } from "@/components/barrier-score-chart"
 import { IncidentPanel } from "@/components/incident-panel"
 import { LockedPreview } from "@/components/locked-preview"
 import { RoutineBanner } from "@/components/routine-banner"
+import { LoginBanner } from "@/components/login-banner"
 import { BARRIER_SCORE_START_DAY, useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { getCompletionCopy, getOrientationCopy } from "@/lib/routine-copy"
@@ -79,6 +80,8 @@ export default function Page() {
           {diary.prescriptionMeds && <p>💊 처방약을 사용 중이시군요. 담당 병원의 처방 지도가 이 앱의 가이드보다 항상 우선이에요.</p>}
         </div>
       )}
+
+      <LoginBanner />
 
       <CalendarGrid
         totalDays={totalDays}
