@@ -56,13 +56,14 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* 12-2(v1.6) — 카드/버튼 모서리 반경을 8~12px로 축소. 이전엔 --radius(1.1rem)에 곱해 최대 45px까지 커졌었다 */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 10px;
+  --radius-3xl: 12px;
+  --radius-4xl: 12px;
 }
 
 :root {
@@ -94,7 +95,6 @@
   --chart-3: oklch(0.75 0.1 230);
   --chart-4: oklch(0.72 0.13 20);
   --chart-5: oklch(0.85 0.08 90);
-  --radius: 1.1rem;
   --sidebar: #fbfcfb;
   --sidebar-foreground: #1e4532;
   --sidebar-primary: #2a5c43;
@@ -104,27 +104,27 @@
   --sidebar-border: oklch(0.88 0.02 90);
   --sidebar-ring: #2a5c43;
 
-  /* recipe category tints (기존 5종 — 하위 호환용, 색상은 그대로 유지) */
+  /* recipe category tints — rest/moist는 v1.5 이전 기본(미진단) 스케줄 하위 호환용이라 12-1 흙톤 교체 대상이 아니다 */
   --rest: oklch(0.83 0.08 150);
   --rest-soft: oklch(0.95 0.04 150);
-  --aha: oklch(0.75 0.1 300);
-  --aha-soft: oklch(0.95 0.035 320);
   --moist: oklch(0.72 0.1 235);
   --moist-soft: oklch(0.95 0.035 235);
-  --retinol: oklch(0.72 0.13 30);
-  --retinol-soft: oklch(0.95 0.04 40);
-  --bha: oklch(0.7 0.11 195);
-  --bha-soft: oklch(0.95 0.035 195);
 
-  /* v1.5(11번) 방어일 3종 + SOS Rest 신규 카테고리 tint — 파스텔/핑크 없이 Clinic Green 계열과 조화되는 톤 */
-  --defense-barrier: oklch(0.58 0.06 155);
-  --defense-barrier-soft: oklch(0.93 0.025 150);
-  --defense-toning: oklch(0.68 0.09 80);
-  --defense-toning-soft: oklch(0.93 0.03 80);
-  --defense-hydration: oklch(0.65 0.07 220);
-  --defense-hydration-soft: oklch(0.94 0.02 220);
-  --sos-rest: oklch(0.6 0.04 60);
-  --sos-rest-soft: oklch(0.93 0.015 60);
+  /* 12-1(v1.6) — 흙톤(Earth Tone) 팔레트로 전량 교체. SOS Rest만 경고 컬러로 고채도 유지 */
+  --defense-barrier: #7a9b85; /* 세이지 그린 */
+  --defense-barrier-soft: #ebf0ed;
+  --defense-toning: #b8925a; /* 머스터드 탄 */
+  --defense-toning-soft: #f4efe6;
+  --defense-hydration: #7c93a3; /* 더스티 블루 */
+  --defense-hydration-soft: #ebeff1;
+  --aha: #c17a5c; /* 클레이 테라코타 */
+  --aha-soft: #f6ebe7;
+  --bha: #a8664d; /* 클레이 테라코타(명도 차등) */
+  --bha-soft: #f2e8e4;
+  --retinol: #8b7355; /* 뉴트럴 브라운 */
+  --retinol-soft: #eeeae6;
+  --sos-rest: #a8442a; /* 경고 컬러 — 유일한 고채도 */
+  --sos-rest-soft: #eedad4;
 }
 
 .dark {
