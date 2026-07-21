@@ -1,20 +1,6 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Nunito, Gaegu } from 'next/font/google'
 import './globals.css'
-
-const nunito = Nunito({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-})
-
-const gaegu = Gaegu({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-display',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: '호빵이 스킨 다이어리 · 장벽 리셋 캘린더',
@@ -25,7 +11,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#fbe8d8',
+  themeColor: '#fbfcfb',
 }
 
 export default function RootLayout({
@@ -34,7 +20,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className={`light ${nunito.variable} ${gaegu.variable}`}>
+    <html lang="ko" className="light">
+      <head>
+        {/* section 12 디자인 토큰 — Pretendard. globals.css의 @import는 tailwindcss의 import 체인과
+            순서가 꼬여 CSS 파싱이 깨지므로, 별도 <link>로 로드한다 */}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable.css" />
+      </head>
       <body className="bg-background font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
