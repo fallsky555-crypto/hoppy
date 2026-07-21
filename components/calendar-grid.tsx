@@ -3,6 +3,20 @@
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
+import { RECIPE_ICON } from "@/components/recipe-icon"
+
+/** 12-1(v1.6). 아이콘 자체를 흙톤 팔레트로 칠한다 — 이모지는 플랫폼마다 고정 원색이라 CSS로 톤을 맞출 수 없었다 */
+const ICON_COLOR: Record<RecipeType, string> = {
+  rest: "text-rest",
+  aha: "text-aha",
+  moist: "text-moist",
+  retinol: "text-retinol",
+  bha: "text-bha",
+  defense_barrier: "text-defense-barrier",
+  defense_toning: "text-defense-toning",
+  defense_hydration: "text-defense-hydration",
+  sos_rest: "text-sos-rest",
+}
 
 const CELL_TINT: Record<RecipeType, string> = {
   rest: "bg-rest-soft",
@@ -89,9 +103,7 @@ export function CalendarGrid({
               >
                 {day}
               </span>
-              <span aria-hidden className="mt-0.5 text-lg leading-none">
-                {recipe.emoji}
-              </span>
+              <CalendarIcon type={recipe.type} className="mt-0.5 size-5" />
               <span aria-hidden className={cn("mt-1 size-2 rounded-full", DOT_COLOR[recipe.color])} />
 
               {isToday && (
@@ -122,22 +134,27 @@ export function CalendarGrid({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
-        <Legend emoji="🛡️" label="보호막 케어" />
-        <Legend emoji="🌤️" label="톤 정돈 케어" />
-        <Legend emoji="💧" label="속수분 케어" />
-        <Legend emoji="🤍" label="긴급 진정 케어" />
-        <Legend emoji="🧼" label="AHA 스케일링" />
-        <Legend emoji="🧴" label="BHA 모공 케어" />
-        <Legend emoji="🧪" label="레티놀 재생" />
+        <Legend type="defense_barrier" label="보호막 케어" />
+        <Legend type="defense_toning" label="톤 정돈 케어" />
+        <Legend type="defense_hydration" label="속수분 케어" />
+        <Legend type="sos_rest" label="긴급 진정 케어" />
+        <Legend type="aha" label="AHA 스케일링" />
+        <Legend type="bha" label="BHA 모공 케어" />
+        <Legend type="retinol" label="레티놀 재생" />
       </div>
     </section>
   )
 }
 
-function Legend({ emoji, label }: { emoji: string; label: string }) {
+function CalendarIcon({ type, className }: { type: RecipeType; className?: string }) {
+  const Icon = RECIPE_ICON[type]
+  return <Icon aria-hidden className={cn(ICON_COLOR[type], className)} />
+}
+
+function Legend({ type, label }: { type: RecipeType; label: string }) {
   return (
     <span className="inline-flex items-center gap-1">
-      <span aria-hidden>{emoji}</span>
+      <CalendarIcon type={type} className="size-3.5" />
       {label}
     </span>
   )
