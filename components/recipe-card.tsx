@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
 import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-copy"
 import { Button } from "@/components/ui/button"
+import { RECIPE_ICON } from "@/components/recipe-icon"
 import { Check, ShieldAlert } from "lucide-react"
 
 /** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
@@ -64,6 +65,7 @@ export function RecipeCard({
   const isToday = day === currentDay
   const isFuture = day > currentDay
   const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)
+  const TagIcon = RECIPE_ICON[recipe.type]
 
   return (
     <section
@@ -77,7 +79,7 @@ export function RecipeCard({
             ACCENT_TAG[recipe.color],
           )}
         >
-          <span aria-hidden>{recipe.emoji}</span>
+          <TagIcon aria-hidden className="size-3.5" />
           {recipe.tag}
         </span>
         <span className="font-display text-sm font-bold text-foreground/70">
