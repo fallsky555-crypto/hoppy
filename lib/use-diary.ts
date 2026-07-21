@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { dayFromJoinDate, recipeForDay, TOTAL_DAYS, type Recipe, type RecipeType } from "@/lib/schedule"
 import {
   buildBarrierScoreLog,
+  CURRENT_ENGINE_VERSION,
   delayForReaction,
   generateCalendar,
   startIncidentOverride,
@@ -26,6 +27,7 @@ import {
   saveConcern,
   saveContextFlags,
   saveDiagnosis,
+  saveEngineVersion,
 } from "@/lib/supabase/sync"
 import type { Concern, SupportId } from "@/lib/routine-copy"
 
@@ -58,6 +60,11 @@ interface DiaryState {
   concern: Concern
   /** 유저가 이미 갖고 있다고 답한 성분 id 목록 */
   supportOwned: SupportId[]
+  /**
+   * 13-3(v1.7). 이 유저의 데이터가 마지막으로 확인된 엔진 버전. null이면 이 필드가
+   * 생기기 전의 레거시 상태 — CURRENT_ENGINE_VERSION과 다르면 하이드레이션 직후 갱신한다.
+   */
+  engineVersion: string | null
 }
 
 const STORAGE_KEY = "hoppy-skin-diary-v1"
@@ -78,6 +85,7 @@ function loadState(): DiaryState {
     prescriptionMeds: false,
     concern: "none",
     supportOwned: [],
+    engineVersion: null,
   }
   if (typeof window === "undefined") return fresh
   try {
@@ -94,6 +102,7 @@ function loadState(): DiaryState {
       prescriptionMeds: parsed.prescriptionMeds ?? false,
       concern: parsed.concern ?? "none",
       supportOwned: parsed.supportOwned ?? [],
+      engineVersion: parsed.engineVersion ?? null,
     }
   } catch {
     return fresh
@@ -194,6 +203,7 @@ export function useDiary() {
     prescriptionMeds: false,
     concern: "none",
     supportOwned: [],
+    engineVersion: null,
   })
   const [hydrated, setHydrated] = useState(false)
 
@@ -251,6 +261,7 @@ export function useDiary() {
         prescriptionMeds: remote.profile.prescriptionMeds,
         concern: remote.profile.concern,
         supportOwned: remote.profile.supportOwned,
+        engineVersion: remote.profile.engineVersion,
         completedDays: remote.completedDays,
         events: remote.events.map((event) =>
           event.kind === "incident"
@@ -263,6 +274,25 @@ export function useDiary() {
       cancelled = true
     }
   }, [userId, hydrated, state.diagnosis])
+
+  /**
+   * 13-3(v1.7). 캐시 무효화. baseCalendarResult(아래)는 completedDays/reactionDays를
+   * 유일한 소스로 삼아 매 렌더마다 "지금 번들된" generateCalendar()로 다시 계산되므로,
+   * 이미 지난 날짜(completedDays/reactionDays에 실제로 기록된 날)는 그 값 자체가 재작성
+   * 근거가 되어 자연히 보존되고, 미래 일정만 최신 엔진 로직을 반영한다 — 그래서 여기서는
+   * 별도의 캘린더 재생성 호출 없이 태그만 최신으로 맞추면 된다. 이 태그가 하는 일은
+   * (1) 이 유저의 데이터가 어느 엔진으로 마지막 확인됐는지 기록해두는 것, (2) 다음 엔진
+   * 변경 때도 반드시 CURRENT_ENGINE_VERSION을 올리도록 강제하는 릴리스 체크포인트다.
+   */
+  useEffect(() => {
+    if (!hydrated || state.engineVersion === CURRENT_ENGINE_VERSION) return
+    setState((prev) => (prev.engineVersion === CURRENT_ENGINE_VERSION ? prev : { ...prev, engineVersion: CURRENT_ENGINE_VERSION }))
+  }, [hydrated, state.engineVersion])
+
+  useEffect(() => {
+    if (!userId || state.engineVersion !== CURRENT_ENGINE_VERSION) return
+    saveEngineVersion(userId, state.joinDate, CURRENT_ENGINE_VERSION)
+  }, [userId, state.joinDate, state.engineVersion])
 
   const currentDay = dayFromJoinDate(state.joinDate)
 
