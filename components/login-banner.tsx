@@ -94,10 +94,10 @@ export function LoginBanner() {
   if (identityConflict) {
     const label = PROVIDER_LABEL[identityConflict]
     return (
-      <section className="rounded-4xl bg-secondary/60 p-4 ring-1 ring-border" aria-label="이미 연결된 계정 안내">
+      <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label="이미 연결된 계정 안내">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="font-display text-sm font-bold text-foreground">이미 연결된 {label} 계정이에요</h2>
+            <h2 className="text-[13px] font-semibold text-foreground">이미 연결된 {label} 계정이에요</h2>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
               이 {label} 계정은 이미 다른 기기에서 연결돼 있어요. 그 계정으로 로그인하면 지금 이 브라우저의 기록
               대신 그 계정에 저장된 기록을 보게 돼요.
@@ -125,10 +125,10 @@ export function LoginBanner() {
   }
 
   return (
-    <section className="rounded-4xl bg-secondary/60 p-4 ring-1 ring-border" aria-label="계정 연결 안내">
+    <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label="계정 연결 안내">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-display text-sm font-bold text-foreground">기기가 바뀌어도 기록을 이어가시려면</h2>
+          <h2 className="text-[13px] font-semibold text-foreground">기기가 바뀌어도 기록을 이어가시려면</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             지금 쓰던 기록은 그대로 두고, 계정만 연결해두면 다른 기기에서도 이어서 볼 수 있어요.
           </p>
@@ -143,7 +143,7 @@ export function LoginBanner() {
         </button>
       </div>
 
-      <div className="mt-3 flex flex-col gap-2">
+      <div className="mt-4 flex flex-col gap-2">
         <Button
           type="button"
           onClick={() => handleLogin("kakao")}
