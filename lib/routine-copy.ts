@@ -88,7 +88,7 @@ const FIXED_COPY: Partial<Record<RecipeType, RoutineCopy>> = {
       "자극이 없는 토너를 가볍게 수차례 두드려 속수분을 채우셨나요? 그 위에 재생크림을 가볍게 펴 발라, 채워진 수분이 날아가지 않도록 잡아주는 단계예요.",
   },
   defense_barrier: {
-    title: "보호막 케어",
+    title: "장벽 잠금",
     detail:
       "오늘은 세라마이드와 시카(마데카소사이드) 성분으로 피부 보호막을 다지는 날이에요. 순한 세안 후 진정 성분이 담긴 크림을 평소보다 넉넉히 발라, 피부가 스스로 회복할 시간을 만들어주세요.",
   },
@@ -98,7 +98,7 @@ const FIXED_COPY: Partial<Record<RecipeType, RoutineCopy>> = {
       "오늘은 비타민C와 나이아신아마이드로 톤과 유분 밸런스를 정돈하는 날이에요. 세안 후 토너로 결을 가볍게 다듬고, 마무리는 보습으로 잡아주세요.",
   },
   defense_hydration: {
-    title: "속수분 채움 케어",
+    title: "수분 충전",
     detail:
       "오늘은 히알루론산과 세라마이드로 속수분을 채우는 날이에요. 수분감이 있는 제품을 결 따라 가볍게 덧발라, 당김 없이 편안한 상태를 유지해주세요.",
   },
@@ -106,7 +106,7 @@ const FIXED_COPY: Partial<Record<RecipeType, RoutineCopy>> = {
 
 /** concern 강조 없이 항상 고정 문구만 노출하는 카테고리 — SOS Rest는 응급 진정 목적이라 그날의 관심사 강조를 붙이지 않는다 */
 const SOS_REST_COPY: RoutineCopy = {
-  title: "긴급 진정 케어",
+  title: "SOS 진정",
   detail:
     "오늘은 시카(마데카소사이드) 성분만 단독으로 사용해 피부를 쉬게 하는 날이에요. 다른 기능성 제품은 잠시 쉬어가고, 순한 진정 케어에만 집중해주세요.",
 }
@@ -125,7 +125,7 @@ export function getCategoryCopy(category: RecipeType, concern: Concern = "none",
   // ACTIVE_OPEN(aha/bha/retinol) — {{activeName}}을 오늘 실제 성분 이름으로 치환. concern 강조는 적용하지 않는다
   const name = ACTIVE_LABEL[category] ?? "활성 성분"
   return {
-    title: `안전 구역 내 ${name} 슬롯 오픈`,
+    title: `${name} 집중 케어`,
     detail: `오늘 밤에는 ${name} 제품을 딱 한 방울만 루틴에 추가합니다. 다른 기능성 제품과 섞이지 않도록 단독으로 사용해주시고, 다음 날 아침에는 자외선 차단제를 꼭 챙겨주세요.`,
   }
 }

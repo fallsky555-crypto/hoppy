@@ -36,11 +36,11 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     type: "aha",
     color: "aha",
     emoji: "🧼",
-    tag: "AHA 스케일링",
-    title: "AHA 스케일링 데이",
+    tag: "집중 케어",
+    title: "AHA 집중 케어 데이",
     guide:
       "화장솜에 AHA 토너를 적셔 얼굴 결을 따라 가볍게 한 번만 정돈해 주세요. 사용 후에는 꼭 수분 크림으로 마무리!",
-    caution: "빡빡 문지르지 마세요. 따갑거나 화끈거리면 바로 멈추고 보습만 해주세요.",
+    caution: "피지 녹이고 모공 조이는 기능성 데이 · 이 시기엔 이 성분 하나만 사용하세요.",
   },
   moist: {
     type: "moist",
@@ -56,31 +56,31 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     type: "retinol",
     color: "retinol",
     emoji: "🧪",
-    tag: "레티놀 재생",
-    title: "레티놀 재생 데이",
+    tag: "집중 케어",
+    title: "레티놀 집중 케어 데이",
     guide:
       "저녁 세안 후, 평소 쓰던 수분 크림에 레티놀을 딱 쌀알 반 만큼만 섞어서 발라주세요. 주 1회로 천천히 적응하는 단계예요.",
-    caution: "눈가·입가는 피해주세요. 다음 날 아침 자외선 차단제는 필수랍니다!",
+    caution: "피지 녹이고 모공 조이는 기능성 데이 · 이 시기엔 이 성분 하나만 사용하세요.",
   },
   bha: {
     type: "bha",
     color: "bha",
     emoji: "🧴",
-    tag: "BHA 모공 케어",
-    title: "BHA 모공 케어 데이",
+    tag: "집중 케어",
+    title: "BHA 집중 케어 데이",
     guide:
       "세안 후 BHA 토너를 화장솜에 적셔 T존과 모공이 두드러지는 부위 위주로 가볍게 닦아내듯 발라주세요. 이어서 유수분 밸런스를 잡아주는 수분 크림으로 마무리해요.",
-    caution: "따갑거나 붉어지면 바로 멈추고 보습만 해주세요. 다음 날 아침 자외선 차단제는 필수랍니다!",
+    caution: "피지 녹이고 모공 조이는 기능성 데이 · 이 시기엔 이 성분 하나만 사용하세요.",
   },
   defense_barrier: {
     type: "defense_barrier",
     color: "defense_barrier",
     emoji: "🛡️",
-    tag: "보호막 케어",
-    title: "보호막 케어 데이",
+    tag: "장벽 잠금",
+    title: "장벽 잠금 데이",
     guide:
       "순한 세안 후 세라마이드와 시카(마데카소사이드) 성분이 담긴 크림을 평소보다 도톰하게 발라주세요. 피부 보호막이 스스로 회복할 시간을 만들어주는 날이에요.",
-    caution: "각질 제거·기능성 성분은 오늘 쉬어갑니다.",
+    caution: "세라마이드 크림으로 장벽 보호 · 이 시기엔 이 성분 하나만 사용하세요.",
   },
   defense_toning: {
     type: "defense_toning",
@@ -90,27 +90,27 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     title: "톤 정돈 케어 데이",
     guide:
       "세안 후 비타민C와 나이아신아마이드 성분으로 톤과 유분 밸런스를 정돈해주세요. 마무리는 보습으로 가볍게 잡아주시면 돼요.",
-    caution: "비타민C 성분은 자외선에 민감할 수 있어요. 다음 날 아침 자외선 차단제를 꼭 챙겨주세요.",
+    caution: "비타민C·나이아신아마이드로 톤 정돈 · 이 시기엔 이 성분 하나만 사용하세요.",
   },
   defense_hydration: {
     type: "defense_hydration",
     color: "defense_hydration",
     emoji: "💧",
-    tag: "속수분 케어",
-    title: "속수분 채움 케어 데이",
+    tag: "수분 충전",
+    title: "수분 충전 데이",
     guide:
       "히알루론산과 세라마이드 성분으로 속수분을 채워주세요. 수분감이 있는 제품을 결 따라 가볍게 덧발라, 당김 없이 편안한 상태를 유지해주세요.",
-    caution: "덧바른 뒤에는 가볍게 눌러 흡수시켜주세요.",
+    caution: "히알루론산 앰플만 · 이 시기엔 이 성분 하나만 사용하세요.",
   },
   sos_rest: {
     type: "sos_rest",
     color: "sos_rest",
     emoji: "🤍",
-    tag: "긴급 진정 케어",
-    title: "긴급 진정 케어 데이",
+    tag: "SOS 진정",
+    title: "SOS 진정 데이",
     guide:
       "오늘은 시카(마데카소사이드) 성분만 단독으로 사용해 피부를 쉬게 해주세요. 다른 기능성 제품은 잠시 쉬어가고, 순한 진정에만 집중하는 날이에요.",
-    caution: "다른 액티브 성분과는 겹치지 않게 오늘 하루는 쉬어가주세요.",
+    caution: "시카·어성초로 열감·자극 리셋 · 이 시기엔 이 성분 하나만 사용하세요.",
   },
 }
 

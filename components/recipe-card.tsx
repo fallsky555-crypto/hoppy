@@ -10,28 +10,30 @@ import { Check, ShieldAlert } from "lucide-react"
 /** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
 const REACTIVE_CATEGORIES: RecipeType[] = ["aha", "bha", "retinol"]
 
-const ACCENT_BG: Record<RecipeType, string> = {
-  rest: "bg-rest-soft",
-  aha: "bg-aha-soft",
-  moist: "bg-moist-soft",
-  retinol: "bg-retinol-soft",
-  bha: "bg-bha-soft",
-  defense_barrier: "bg-defense-barrier-soft",
-  defense_toning: "bg-defense-toning-soft",
-  defense_hydration: "bg-defense-hydration-soft",
-  sos_rest: "bg-sos-rest-soft",
+/** 카테고리 구분은 배경 워시가 아니라 카드 좌측 바(테두리) + 아이콘색으로만 표현한다 */
+const CATEGORY_BORDER: Record<RecipeType, string> = {
+  rest: "border-l-rest",
+  aha: "border-l-aha",
+  moist: "border-l-moist",
+  retinol: "border-l-retinol",
+  bha: "border-l-bha",
+  defense_barrier: "border-l-defense-barrier",
+  defense_toning: "border-l-defense-toning",
+  defense_hydration: "border-l-defense-hydration",
+  sos_rest: "border-l-sos-rest",
 }
 
-const ACCENT_TAG: Record<RecipeType, string> = {
-  rest: "bg-rest text-white",
-  aha: "bg-aha text-white",
-  moist: "bg-moist text-white",
-  retinol: "bg-retinol text-white",
-  bha: "bg-bha text-white",
-  defense_barrier: "bg-defense-barrier text-white",
-  defense_toning: "bg-defense-toning text-white",
-  defense_hydration: "bg-defense-hydration text-white",
-  sos_rest: "bg-sos-rest text-white",
+/** 태그 배지도 솔리드 채움 대신 아웃라인(테두리+텍스트색)으로 표현한다 */
+const TAG_STYLE: Record<RecipeType, string> = {
+  rest: "border-rest text-rest",
+  aha: "border-aha text-aha",
+  moist: "border-moist text-moist",
+  retinol: "border-retinol text-retinol",
+  bha: "border-bha text-bha",
+  defense_barrier: "border-defense-barrier text-defense-barrier",
+  defense_toning: "border-defense-toning text-defense-toning",
+  defense_hydration: "border-defense-hydration text-defense-hydration",
+  sos_rest: "border-sos-rest text-sos-rest",
 }
 
 interface RecipeCardProps {
@@ -69,14 +71,14 @@ export function RecipeCard({
 
   return (
     <section
-      className={cn("rounded-4xl p-6 shadow-sm ring-1 ring-border transition-colors", ACCENT_BG[recipe.color])}
+      className={cn("rounded-4xl border-l-4 bg-card p-6 shadow-sm ring-1 ring-border", CATEGORY_BORDER[recipe.color])}
       aria-label="오늘의 레시피 상세"
     >
       <div className="flex items-center justify-between">
         <span
           className={cn(
-            "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold",
-            ACCENT_TAG[recipe.color],
+            "inline-flex items-center gap-1 rounded-full border bg-card px-3 py-1 text-xs font-bold",
+            TAG_STYLE[recipe.color],
           )}
         >
           <TagIcon aria-hidden className="size-3.5" />
@@ -88,27 +90,25 @@ export function RecipeCard({
         </span>
       </div>
 
-      <h3 className="mt-3 font-display text-xl font-bold text-foreground text-balance">{copy.title}</h3>
+      <h3 className="mt-3 font-display text-xl font-bold text-emphasis text-balance">{copy.title}</h3>
 
       <p className="mt-1.5 text-base leading-relaxed text-foreground/80">{copy.detail}</p>
 
+      {recipe.caution && <p className="mt-2 text-xs font-medium text-muted-foreground">{recipe.caution}</p>}
+
       <div className="mt-4">
         {isCompleted ? (
-          <div className="flex items-center justify-center gap-2 rounded-full bg-card/80 py-3 text-sm font-bold text-primary">
+          <div className="flex items-center justify-center gap-2 rounded-full bg-secondary/70 py-3 text-sm font-bold text-primary">
             <Check className="size-4" aria-hidden />
-            기록 완료! 호빵이 발도장을 찍었어요 🐱
+            기록 완료했어요
           </div>
         ) : isToday ? (
-          <Button
-            onClick={onRecord}
-            size="lg"
-            className="w-full rounded-full text-base font-bold shadow-sm"
-          >
-            기록 완료 🐱
+          <Button onClick={onRecord} size="lg" className="w-full rounded-full text-base font-bold shadow-sm">
+            기록 완료
           </Button>
         ) : isFuture ? (
           <p className="text-center text-xs font-medium text-muted-foreground">
-            아직 오지 않은 날이에요. 그날이 되면 기록할 수 있어요!
+            아직 오지 않은 날이에요. 그날이 되면 기록할 수 있어요.
           </p>
         ) : (
           <p className="text-center text-xs font-medium text-muted-foreground">지나간 날의 루틴이에요.</p>
@@ -118,7 +118,7 @@ export function RecipeCard({
       {canReportReaction && (
         <div className="mt-2.5">
           {hasReportedReaction ? (
-            <p className="flex items-center justify-center gap-1.5 rounded-full bg-card/70 py-2 text-xs font-bold text-foreground/70">
+            <p className="flex items-center justify-center gap-1.5 rounded-full bg-secondary/60 py-2 text-xs font-bold text-foreground/70">
               <ShieldAlert className="size-3.5" aria-hidden />
               오늘 자극을 신고했어요. 이 성분은 7일 뒤로 미뤄져요.
             </p>
