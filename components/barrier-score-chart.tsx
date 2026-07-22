@@ -3,7 +3,6 @@
 import { useId, useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import type { BarrierScorePoint } from "@/lib/scheduling-engine"
-import { TrendingUp } from "lucide-react"
 
 interface BarrierScoreChartProps {
   log: BarrierScorePoint[]
@@ -63,25 +62,19 @@ export function BarrierScoreChart({ log, unlockDay }: BarrierScoreChartProps) {
 
   if (log.length === 0) {
     return (
-      <section className="rounded-4xl bg-card p-4 shadow-sm ring-1 ring-border" aria-label="장벽 점수">
-        <h2 className="mb-1 flex items-center gap-1.5 font-display text-base font-bold text-foreground">
-          <TrendingUp className="size-4 text-primary" aria-hidden />
-          장벽 점수
-        </h2>
-        <p className="rounded-2xl bg-secondary/60 p-3 text-xs leading-relaxed text-muted-foreground">
-          🔒 2주차(Day {unlockDay})부터 장벽 점수 그래프가 열려요. 꾸준히 기록하면서 조금만 기다려주세요!
+      <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label="장벽 점수">
+        <h2 className="mb-2.5 text-[13px] font-semibold text-foreground">장벽 점수</h2>
+        <p className="rounded-2xl bg-secondary p-3.5 text-xs leading-relaxed text-muted-foreground">
+          2주차(Day {unlockDay})부터 장벽 점수 그래프가 열려요. 꾸준히 기록하며 조금만 기다려주세요.
         </p>
       </section>
     )
   }
 
   return (
-    <section className="rounded-4xl bg-card p-4 shadow-sm ring-1 ring-border" aria-label="장벽 점수 그래프">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="flex items-center gap-1.5 font-display text-base font-bold text-foreground">
-          <TrendingUp className="size-4 text-primary" aria-hidden />
-          장벽 점수
-        </h2>
+    <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label="장벽 점수 그래프">
+      <div className="mb-3.5 flex items-center justify-between">
+        <h2 className="text-[13px] font-semibold text-foreground">장벽 점수</h2>
         <button
           type="button"
           onClick={() => setShowTable((v) => !v)}
@@ -92,9 +85,8 @@ export function BarrierScoreChart({ log, unlockDay }: BarrierScoreChartProps) {
       </div>
 
       <p className="mb-3 flex items-baseline gap-1">
-        <span className="font-display text-3xl font-bold text-primary">{latest.score}</span>
-        <span className="text-sm font-bold text-muted-foreground">점</span>
-        <span className="ml-1 text-[11px] text-muted-foreground">Day {latest.day} 기준</span>
+        <span className="font-display text-[28px] font-semibold text-primary">{latest.score}</span>
+        <span className="text-xs text-muted-foreground">점 · Day {latest.day} 기준</span>
       </p>
 
       {showTable ? (

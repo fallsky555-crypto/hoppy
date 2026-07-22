@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#ffffff',
+  themeColor: '#f6f4ef',
 }
 
 export default function RootLayout({
@@ -21,8 +21,10 @@ export default function RootLayout({
   return (
     <html lang="ko" className="light">
       <head>
-        {/* section 12 디자인 토큰 — Pretendard. globals.css의 @import는 tailwindcss의 import 체인과
-            순서가 꼬여 CSS 파싱이 깨지므로, 별도 <link>로 로드한다 */}
+        {/* 디자인 토큰 — Pretendard + Playfair Display. globals.css의 @import는 tailwindcss의
+            import 체인과 순서가 꼬여 CSS 파싱이 깨지므로, 별도 <link>로 로드한다 */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable.css" />
       </head>
       <body className="bg-background font-sans antialiased">

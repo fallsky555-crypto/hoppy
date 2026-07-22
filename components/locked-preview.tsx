@@ -10,19 +10,15 @@ interface LockedStageProps {
 
 function LockedStage({ badge, title, description, unlockNote }: LockedStageProps) {
   return (
-    <div className="relative overflow-hidden rounded-4xl bg-card/70 p-5 ring-1 ring-border">
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary">
-          <Lock className="size-4 text-muted-foreground" aria-hidden />
-        </div>
-        <div className="min-w-0">
-          <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{badge}</span>
-          <h3 className="font-display text-base font-bold text-foreground/70">{title}</h3>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
-          <p className="mt-2 rounded-xl bg-secondary/70 px-3 py-2 text-[11px] font-medium leading-relaxed text-secondary-foreground">
-            {unlockNote}
-          </p>
-        </div>
+    <div className="flex gap-3 rounded-4xl border-[1.5px] border-[#D8D3C4] bg-card px-5 py-[18px]">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent">
+        <Lock className="size-[13px] text-[#5C5648]" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#5C5648]">{badge}</span>
+        <h3 className="mt-0.5 font-display text-base font-bold text-foreground">{title}</h3>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-[#4A4438]">{description}</p>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{unlockNote}</p>
       </div>
     </div>
   )
@@ -56,15 +52,10 @@ export function LockedPreview({ skinType }: LockedPreviewProps) {
   const stage2 = STAGE_2_BY_TYPE[skinType ?? "A"]
 
   return (
-    <section aria-label="다음 단계 미리보기" className="space-y-3">
-      <h2 className="px-1 font-display text-base font-bold text-foreground">다음 단계 미리보기</h2>
+    <section aria-label="다음 단계 미리보기" className="space-y-2.5">
+      <h2 className="px-0.5 text-[13px] font-semibold text-foreground">다음 단계 미리보기</h2>
 
-      <LockedStage
-        badge="2단계"
-        title={stage2.title}
-        description={stage2.description}
-        unlockNote={stage2.unlockNote}
-      />
+      <LockedStage badge="2단계" title={stage2.title} description={stage2.description} unlockNote={stage2.unlockNote} />
 
       <LockedStage
         badge="3단계"

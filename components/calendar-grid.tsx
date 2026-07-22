@@ -2,36 +2,9 @@
 
 import { cn } from "@/lib/utils"
 import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
-import { RECIPE_ICON } from "@/components/recipe-icon"
 import { Check } from "lucide-react"
 
-/** 아이콘 자체를 카테고리 색으로 칠한다 — 이모지는 플랫폼마다 고정 원색이라 CSS로 톤을 맞출 수 없었다 */
-const ICON_COLOR: Record<RecipeType, string> = {
-  rest: "text-rest",
-  aha: "text-aha",
-  moist: "text-moist",
-  retinol: "text-retinol",
-  bha: "text-bha",
-  defense_barrier: "text-defense-barrier",
-  defense_toning: "text-defense-toning",
-  defense_hydration: "text-defense-hydration",
-  sos_rest: "text-sos-rest",
-}
-
-/** 카테고리 구분은 배경 워시가 아니라 카드 좌측 바(테두리) + 아이콘색으로만 표현한다 */
-const CATEGORY_BORDER: Record<RecipeType, string> = {
-  rest: "border-l-rest",
-  aha: "border-l-aha",
-  moist: "border-l-moist",
-  retinol: "border-l-retinol",
-  bha: "border-l-bha",
-  defense_barrier: "border-l-defense-barrier",
-  defense_toning: "border-l-defense-toning",
-  defense_hydration: "border-l-defense-hydration",
-  sos_rest: "border-l-sos-rest",
-}
-
-/** 캘린더 그리드 셀에 아이콘과 함께 표시할 짧은 한글 라벨 */
+/** 캘린더 그리드 셀에 표시할 짧은 한글 라벨 — 카테고리 구분은 색이 아니라 이 텍스트 라벨만으로 표현한다 */
 const SHORT_LABEL: Record<RecipeType, string> = {
   rest: "휴식",
   aha: "AHA",
@@ -67,13 +40,13 @@ export function CalendarGrid({
   const days = Array.from({ length: totalDays }, (_, i) => i + 1)
 
   return (
-    <section className="rounded-4xl bg-card p-5 shadow-sm ring-1 ring-border" aria-label="30일 도자기 피부 루틴 캘린더">
-      <div className="mb-3 flex items-center justify-between px-1">
-        <h2 className="font-display text-base font-bold text-foreground">30일 도자기 피부 루틴 캘린더</h2>
-        <span className="text-xs text-muted-foreground">가입일부터 Day {totalDays}까지</span>
+    <section className="rounded-4xl bg-card px-5 py-6 ring-1 ring-border" aria-label="30일 도자기 피부 루틴 캘린더">
+      <div className="mb-4 flex items-baseline justify-between gap-2 px-0.5">
+        <h2 className="text-[13px] font-semibold text-foreground">30일 루틴 캘린더</h2>
+        <span className="text-[11px] text-muted-foreground">Day {totalDays}까지</span>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1.5">
         {days.map((day) => {
           const recipe = getRecipe(day)
           const isToday = day === currentDay
@@ -81,6 +54,7 @@ export function CalendarGrid({
           const isCompleted = completedDays.includes(day)
           const isFuture = day > currentDay
           const justStamped = day === justStampedDay
+          const highlighted = isSelected || isToday
 
           return (
             <button
@@ -90,24 +64,18 @@ export function CalendarGrid({
               aria-label={`Day ${day} ${recipe.title}${isCompleted ? ", 기록 완료" : ""}${isToday ? ", 오늘" : ""}`}
               aria-pressed={isSelected}
               className={cn(
-                "relative flex aspect-square flex-col items-center justify-center gap-px rounded-2xl border-l-4 bg-card p-1 transition-all",
-                CATEGORY_BORDER[recipe.color],
-                isFuture && "opacity-55",
-                isSelected
-                  ? "ring-2 ring-primary ring-offset-1 ring-offset-card"
-                  : isToday
-                    ? "ring-2 ring-primary"
-                    : "ring-1 ring-black/5",
+                "relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-2xl border bg-card p-0.5 shadow-[0_1px_2px_rgba(30,29,26,0.04)] transition-all",
+                highlighted ? "border-2 border-primary" : "border-[#D8D3C4]",
+                isFuture && "opacity-60",
               )}
             >
-              <span className={cn("text-[11px] font-bold leading-none", isToday ? "text-primary" : "text-foreground/70")}>
+              <span className={cn("text-xs font-extrabold leading-none", isToday ? "text-primary" : "text-foreground")}>
                 {day}
               </span>
-              <Icon type={recipe.type} className={cn("mt-0.5 size-4", ICON_COLOR[recipe.color])} />
-              <span className="text-[8px] font-semibold leading-none text-muted-foreground">{SHORT_LABEL[recipe.type]}</span>
+              <span className="text-[9.5px] font-bold leading-none text-[#5C5648]">{SHORT_LABEL[recipe.type]}</span>
 
               {isToday && (
-                <span className="absolute -top-1 left-1/2 -translate-x-1/2 rounded-full bg-today-accent px-1.5 py-px text-[8px] font-bold text-today-accent-foreground shadow-sm">
+                <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-primary-foreground">
                   오늘
                 </span>
               )}
@@ -115,41 +83,17 @@ export function CalendarGrid({
               {isCompleted && (
                 <span
                   className={cn(
-                    "absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm",
+                    "absolute -bottom-1 -right-1 flex size-[15px] items-center justify-center rounded-full bg-foreground",
                     justStamped ? "animate-stamp" : "",
                   )}
                 >
-                  <Check className="size-2.5" aria-hidden strokeWidth={3} />
+                  <Check className="size-2 text-white" aria-hidden strokeWidth={3.5} />
                 </span>
               )}
             </button>
           )
         })}
       </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
-        <Legend type="defense_barrier" label="장벽 잠금" />
-        <Legend type="defense_toning" label="톤 정돈 케어" />
-        <Legend type="defense_hydration" label="수분 충전" />
-        <Legend type="sos_rest" label="SOS 진정" />
-        <Legend type="aha" label="AHA" />
-        <Legend type="bha" label="BHA" />
-        <Legend type="retinol" label="레티놀" />
-      </div>
     </section>
-  )
-}
-
-function Icon({ type, className }: { type: RecipeType; className?: string }) {
-  const IconComponent = RECIPE_ICON[type]
-  return <IconComponent aria-hidden className={className} />
-}
-
-function Legend({ type, label }: { type: RecipeType; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <Icon type={type} className={cn("size-3.5", ICON_COLOR[type])} />
-      {label}
-    </span>
   )
 }
