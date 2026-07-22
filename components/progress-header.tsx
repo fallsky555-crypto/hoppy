@@ -9,7 +9,7 @@ export function ProgressHeader({ currentDay, totalDays, completedCount }: Progre
 
   return (
     <header className="rounded-4xl bg-card p-5 shadow-sm ring-1 ring-border">
-      <p className="text-xs font-semibold text-primary">3개월 장벽 리셋 프로젝트</p>
+      <p className="text-xs font-semibold text-primary">30일 도자기 피부 프로젝트</p>
       <h1 className="font-display text-lg font-bold leading-tight text-emphasis text-balance">
         1단계 · 초보자 코스 진행 중
       </h1>

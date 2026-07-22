@@ -87,11 +87,14 @@
   --popover-foreground: #333333;
   --primary: #2a5c43;
   --primary-foreground: #ffffff;
-  --secondary: #ede3d2;
+  /* 색 규칙: 카드/버튼/컨테이너 배경은 흰색 또는 아주 옅은 회색만 — secondary/accent는
+     더 이상 베이지가 아니라 중립 회색이다. 이 값을 쓰는 모든 곳(대부분의 "은은한 배경")이
+     자동으로 흰색 계열로 바뀐다 */
+  --secondary: #f8f9fa;
   --secondary-foreground: #333333;
-  --muted: #f2ede1;
+  --muted: #f8f9fa;
   --muted-foreground: oklch(0.48 0.02 90);
-  --accent: #ede3d2;
+  --accent: #f8f9fa;
   --accent-foreground: #333333;
   --destructive: oklch(0.62 0.2 25);
   --border: oklch(0.88 0.02 90);

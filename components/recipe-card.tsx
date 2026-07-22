@@ -71,7 +71,10 @@ export function RecipeCard({
 
   return (
     <section
-      className={cn("rounded-4xl border-l-4 bg-card p-6 shadow-sm ring-1 ring-border", CATEGORY_BORDER[recipe.color])}
+      className={cn(
+        "rounded-4xl p-6 shadow-sm ring-1 ring-border",
+        isToday ? "bg-today-accent" : cn("border-l-4 bg-card", CATEGORY_BORDER[recipe.color]),
+      )}
       aria-label="오늘의 레시피 상세"
     >
       <div className="flex items-center justify-between">
@@ -84,17 +87,30 @@ export function RecipeCard({
           <TagIcon aria-hidden className="size-3.5" />
           {recipe.tag}
         </span>
-        <span className="font-display text-sm font-bold text-foreground/70">
+        <span className={cn("font-display text-sm font-bold", isToday ? "text-today-accent-foreground/80" : "text-foreground/70")}>
           Day {day}
-          {isToday && <span className="ml-1 text-primary">· 오늘</span>}
+          {isToday && <span className="ml-1 text-today-accent-foreground">· 오늘</span>}
         </span>
       </div>
 
-      <h3 className="mt-3 font-display text-xl font-bold text-emphasis text-balance">{copy.title}</h3>
+      <h3
+        className={cn(
+          "mt-3 font-display text-xl font-bold text-balance",
+          isToday ? "text-today-accent-foreground" : "text-emphasis",
+        )}
+      >
+        {copy.title}
+      </h3>
 
-      <p className="mt-1.5 text-base leading-relaxed text-foreground/80">{copy.detail}</p>
+      <p className={cn("mt-1.5 text-base leading-relaxed", isToday ? "text-today-accent-foreground/90" : "text-foreground/80")}>
+        {copy.detail}
+      </p>
 
-      {recipe.caution && <p className="mt-2 text-xs font-medium text-muted-foreground">{recipe.caution}</p>}
+      {recipe.caution && (
+        <p className={cn("mt-2 text-xs font-medium", isToday ? "text-today-accent-foreground/70" : "text-muted-foreground")}>
+          {recipe.caution}
+        </p>
+      )}
 
       <div className="mt-4">
         {isCompleted ? (

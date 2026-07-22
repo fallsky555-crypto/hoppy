@@ -31,18 +31,6 @@ const CATEGORY_BORDER: Record<RecipeType, string> = {
   sos_rest: "border-l-sos-rest",
 }
 
-const DOT_COLOR: Record<RecipeType, string> = {
-  rest: "bg-rest",
-  aha: "bg-aha",
-  moist: "bg-moist",
-  retinol: "bg-retinol",
-  bha: "bg-bha",
-  defense_barrier: "bg-defense-barrier",
-  defense_toning: "bg-defense-toning",
-  defense_hydration: "bg-defense-hydration",
-  sos_rest: "bg-sos-rest",
-}
-
 /** 캘린더 그리드 셀에 아이콘과 함께 표시할 짧은 한글 라벨 */
 const SHORT_LABEL: Record<RecipeType, string> = {
   rest: "휴식",
@@ -103,31 +91,20 @@ export function CalendarGrid({
               aria-pressed={isSelected}
               className={cn(
                 "relative flex aspect-square flex-col items-center justify-center gap-px rounded-2xl border-l-4 bg-card p-1 transition-all",
-                isToday ? "border-l-today-accent bg-today-accent" : CATEGORY_BORDER[recipe.color],
-                isFuture && !isToday && "opacity-55",
-                isSelected ? "ring-2 ring-primary ring-offset-1 ring-offset-card" : "ring-1 ring-black/5",
+                CATEGORY_BORDER[recipe.color],
+                isFuture && "opacity-55",
+                isSelected
+                  ? "ring-2 ring-primary ring-offset-1 ring-offset-card"
+                  : isToday
+                    ? "ring-2 ring-primary"
+                    : "ring-1 ring-black/5",
               )}
             >
-              <span
-                className={cn(
-                  "text-[11px] font-bold leading-none",
-                  isToday ? "text-today-accent-foreground" : "text-foreground/70",
-                )}
-              >
+              <span className={cn("text-[11px] font-bold leading-none", isToday ? "text-primary" : "text-foreground/70")}>
                 {day}
               </span>
-              <Icon
-                type={recipe.type}
-                className={cn("mt-0.5 size-4", isToday ? "text-today-accent-foreground" : ICON_COLOR[recipe.color])}
-              />
-              <span
-                className={cn(
-                  "text-[8px] font-semibold leading-none",
-                  isToday ? "text-today-accent-foreground" : "text-muted-foreground",
-                )}
-              >
-                {SHORT_LABEL[recipe.type]}
-              </span>
+              <Icon type={recipe.type} className={cn("mt-0.5 size-4", ICON_COLOR[recipe.color])} />
+              <span className="text-[8px] font-semibold leading-none text-muted-foreground">{SHORT_LABEL[recipe.type]}</span>
 
               {isToday && (
                 <span className="absolute -top-1 left-1/2 -translate-x-1/2 rounded-full bg-today-accent px-1.5 py-px text-[8px] font-bold text-today-accent-foreground shadow-sm">
@@ -138,11 +115,11 @@ export function CalendarGrid({
               {isCompleted && (
                 <span
                   className={cn(
-                    "absolute inset-0 flex items-center justify-center rounded-2xl bg-today-accent/90",
+                    "absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm",
                     justStamped ? "animate-stamp" : "",
                   )}
                 >
-                  <Check className="size-5 text-today-accent-foreground" aria-hidden strokeWidth={3} />
+                  <Check className="size-2.5" aria-hidden strokeWidth={3} />
                 </span>
               )}
             </button>

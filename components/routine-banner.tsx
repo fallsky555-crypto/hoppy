@@ -18,7 +18,7 @@ export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerP
     <section
       className={cn(
         "relative overflow-hidden rounded-4xl p-4 ring-1",
-        isCelebrate ? "bg-primary/15 ring-primary/40" : "bg-secondary/70 ring-border",
+        isCelebrate ? "bg-card ring-primary/40" : "bg-secondary/70 ring-border",
       )}
       aria-label={isCelebrate ? "완주 안내" : "주차 오리엔테이션"}
     >

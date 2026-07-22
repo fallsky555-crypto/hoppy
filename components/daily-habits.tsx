@@ -26,8 +26,8 @@ export function DailyHabits({ day, habit, maxWater, onToggleSunscreen, onWater }
         onClick={onToggleSunscreen}
         aria-pressed={habit.sunscreen}
         className={cn(
-          "flex w-full items-center gap-3 rounded-2xl p-3 text-left transition-colors",
-          habit.sunscreen ? "bg-retinol-soft ring-1 ring-retinol/40" : "bg-secondary/60 ring-1 ring-border",
+          "flex w-full items-center gap-3 rounded-2xl bg-secondary/60 p-3 text-left ring-1 transition-colors",
+          habit.sunscreen ? "ring-retinol/40" : "ring-border",
         )}
       >
         <span
@@ -54,7 +54,7 @@ export function DailyHabits({ day, habit, maxWater, onToggleSunscreen, onWater }
       </button>
 
       {/* 물 마신 잔 수 */}
-      <div className="mt-2.5 flex items-center gap-3 rounded-2xl bg-moist-soft p-3 ring-1 ring-moist/30">
+      <div className="mt-2.5 flex items-center gap-3 rounded-2xl bg-secondary/60 p-3 ring-1 ring-moist/30">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-moist text-white">
           <Droplet className="size-4" aria-hidden />
         </span>

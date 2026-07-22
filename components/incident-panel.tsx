@@ -47,7 +47,7 @@ export function IncidentPanel({ currentDay, incidentLog, onReportIncident }: Inc
       </p>
 
       {activeIncident ? (
-        <div className="rounded-2xl bg-moist-soft p-3 text-xs leading-relaxed text-foreground/80 ring-1 ring-moist/30">
+        <div className="rounded-2xl bg-secondary/60 p-3 text-xs leading-relaxed text-foreground/80 ring-1 ring-moist/30">
           {INCIDENT_META[activeIncident.incidentType].emoji} {INCIDENT_META[activeIncident.incidentType].label} 진정
           루틴 진행 중이에요. Day {activeIncident.resumesNormalAtDay}부터 원래 캘린더가 다시 시작돼요.
         </div>
@@ -59,7 +59,7 @@ export function IncidentPanel({ currentDay, incidentLog, onReportIncident }: Inc
               type="button"
               onClick={() => handleClick(type)}
               aria-pressed={pending === type}
-              className="flex flex-col items-center gap-1 rounded-2xl bg-secondary px-2 py-3 text-xs font-bold text-secondary-foreground transition-colors hover:bg-accent"
+              className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card px-2 py-3 text-xs font-bold text-foreground transition-colors hover:bg-secondary/60"
             >
               <span aria-hidden className="text-lg">
                 {INCIDENT_META[type].emoji}
