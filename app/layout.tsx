@@ -4,14 +4,13 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: '호빵이 스킨 다이어리 · 장벽 리셋 캘린더',
-  description:
-    '무너진 피부 장벽을 30일 동안 부드럽게 복구하는 초보자 장벽 리셋 캘린더. 귀여운 호빵이와 함께 매일 피부 레시피를 기록해요.',
+  description: '무너진 피부 장벽을 30일 동안 부드럽게 복구하는 초보자 장벽 리셋 캘린더. 매일 피부 레시피를 기록해요.',
   generator: 'v0.app',
 }
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#fbfcfb',
+  themeColor: '#ffffff',
 }
 
 export default function RootLayout({

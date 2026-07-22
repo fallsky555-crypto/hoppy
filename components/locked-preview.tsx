@@ -33,17 +33,17 @@ const STAGE_2_BY_TYPE: Record<"A" | "B" | "C", { title: string; description: str
   A: {
     title: "장벽 안정 케어",
     description: "장벽이 편안해지는 걸 느끼면, 자극 없는 선에서 결을 다듬는 케어를 조금씩 더해볼 수 있어요.",
-    unlockNote: "1단계를 꾸준히 마치면 장벽 안정 케어가 열려요. 내 피부 속도에 맞춰 천천히 함께 가요 🐾",
+    unlockNote: "1단계를 꾸준히 마치면 장벽 안정 케어가 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다.",
   },
   B: {
     title: "광피부 프로그램",
     description: "장벽이 편안해지면, 결을 정돈하는 턴오버 케어를 조금씩 더해볼 수 있어요.",
-    unlockNote: "1단계를 꾸준히 마치면 광피부 프로그램이 열려요. 내 피부 속도에 맞춰 천천히 함께 가요 🐾",
+    unlockNote: "1단계를 꾸준히 마치면 광피부 프로그램이 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다.",
   },
   C: {
     title: "모공 타이트닝 프로그램",
     description: "피지·모공이 편해지면, 유수분 밸런스를 잡아주는 케어를 이어가 볼 수 있어요.",
-    unlockNote: "1단계를 꾸준히 마치면 모공 타이트닝 프로그램이 열려요. 무리하지 않는 속도로 함께해요 🐾",
+    unlockNote: "1단계를 꾸준히 마치면 모공 타이트닝 프로그램이 열려요. 무리하지 않는 속도로 진행하시면 됩니다.",
   },
 }
 
@@ -60,17 +60,17 @@ export function LockedPreview({ skinType }: LockedPreviewProps) {
       <h2 className="px-1 font-display text-base font-bold text-foreground">다음 단계 미리보기</h2>
 
       <LockedStage
-        badge="🔒 2단계"
+        badge="2단계"
         title={stage2.title}
         description={stage2.description}
         unlockNote={stage2.unlockNote}
       />
 
       <LockedStage
-        badge="🔒 3단계"
+        badge="3단계"
         title="탄력 재생 프로그램"
         description="장벽이 자리를 잡으면, 탄력을 돕는 재생 케어를 천천히 시작해 볼 수 있어요."
-        unlockNote="2단계까지 마치면 탄력 재생 프로그램이 열려요. 조급해하지 않아도 괜찮아요 🐱"
+        unlockNote="2단계까지 마치면 탄력 재생 프로그램이 열려요. 서두르지 않아도 괜찮습니다."
       />
     </section>
   )

@@ -124,7 +124,7 @@ export default function Page() {
       <LockedPreview skinType={diary.skinType} />
 
       <p className="pt-1 text-center text-[11px] text-muted-foreground">
-        호빵이 스킨 다이어리 · 가입한 날부터 30일, 나만의 속도로 🐾
+        호빵이 스킨 다이어리 · 가입한 날부터 30일, 나만의 속도로
       </p>
     </main>
   )
