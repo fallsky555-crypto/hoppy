@@ -18,8 +18,16 @@ import type { Concern, SupportId } from "@/lib/routine-copy"
  * localStorage가 여전히 1차 캐시이고, Supabase는 기기 간 복원을 위한 백엔드다.
  */
 
-/** 익명 세션을 보장하고 auth.uid()를 반환한다. Supabase가 설정되지 않았으면 null */
-export async function ensureAnonSession(): Promise<string | null> {
+/**
+ * 페이지 로드마다 use-diary.ts와 LoginBanner가 각자 ensureAnonSession()을 부르는데,
+ * 둘 다 getSession()이 끝나기 전에는 "세션 없음"으로 보여서 둘 다 signInAnonymously()를
+ * 호출해버리는 레이스가 있었다 — 익명 유저가 페이지 로드 한 번에 2개씩(마이크로초
+ * 단위로) 생기는 문제로 실측됨. 같은 페이지 로드 안에서는 이 진행 중인 프로미스를
+ * 모든 호출자가 공유해서, 실제로 세션 생성 시도는 딱 한 번만 일어나게 한다.
+ */
+let anonSessionPromise: Promise<string | null> | null = null
+
+async function createOrRecoverAnonSession(): Promise<string | null> {
   const supabase = getSupabaseClient()
   if (!supabase) return null
 
@@ -37,6 +45,14 @@ export async function ensureAnonSession(): Promise<string | null> {
     console.warn("[supabase] anonymous sign-in threw:", err)
     return null
   }
+}
+
+/** 익명 세션을 보장하고 auth.uid()를 반환한다. Supabase가 설정되지 않았으면 null */
+export function ensureAnonSession(): Promise<string | null> {
+  if (!anonSessionPromise) {
+    anonSessionPromise = createOrRecoverAnonSession()
+  }
+  return anonSessionPromise
 }
 
 interface RemoteProfile {

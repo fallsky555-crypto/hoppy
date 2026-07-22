@@ -4,20 +4,46 @@ import { getSupabaseClient } from "@/lib/supabase/client"
 export type LoginProvider = "kakao" | "google"
 
 /**
+ * linkIdentity()가 어느 provider로 연결을 시도했는지 기록해둔다. Supabase는 이 소셜
+ * 계정이 이미 다른 유저에 연결돼 있으면 콜백 이후 우리 앱으로 에러 리다이렉트만 보내고
+ * "어느 provider였는지"는 알려주지 않으므로, 리다이렉트 전에 직접 남겨서 돌아온 뒤
+ * consumeOAuthErrorFromURL()에서 다시 읽는다.
+ */
+const LINK_ATTEMPT_KEY = "hoppy-oauth-link-attempt"
+
+function rememberLinkAttempt(provider: LoginProvider) {
+  try {
+    window.sessionStorage.setItem(LINK_ATTEMPT_KEY, provider)
+  } catch {
+    // 저장 실패는 무시
+  }
+}
+
+/**
  * 13-2. 현재 익명 세션(Supabase Anonymous Auth)을 카카오/구글 영구 계정에 그대로
  * 연결한다(identity linking). user_id가 로그인 전후로 동일하게 유지되므로 별도
  * 데이터 마이그레이션이 필요 없다 — "회원가입"이 아니라 "지금 쓰던 세션에 계정 연결".
  *
  * Supabase 대시보드에서 "Enable Manual Linking"과 카카오/구글 OAuth Provider가
  * 미리 설정돼 있어야 동작한다. 설정 전에는 error가 채워진 결과를 반환한다.
+ *
+ * 이 소셜 계정이 이미 다른 유저에 연결돼 있으면(identity_already_exists) 이 함수
+ * 자체는 에러 없이 리다이렉트를 시작하고, 실패는 콜백 이후 돌아온 URL에 담겨서
+ * consumeOAuthErrorFromURL()로 감지된다 — signInExistingIdentity() 참고.
  */
 export async function linkIdentity(provider: LoginProvider): Promise<{ error: string | null }> {
   const supabase = getSupabaseClient()
   if (!supabase) return { error: "Supabase가 설정되지 않았습니다." }
 
+  if (typeof window !== "undefined") rememberLinkAttempt(provider)
+
+  // origin만 넘긴다(경로·쿼리 제외) — 진단 파라미터가 URL에 남아있으면 매번 다른
+  // redirectTo 값이 되어 Supabase의 Redirect URLs 허용 목록과 정확히 일치하지 않을 수
+  // 있고, 그러면 Supabase가 조용히 Site URL(기본값 localhost)로 대체해버린다. 진단은
+  // 이 시점에 이미 로컬/원격에 저장돼 있으므로 origin만으로도 복귀 후 상태 복원에 문제없다.
   const { error } = await supabase.auth.linkIdentity({
     provider,
-    options: { redirectTo: typeof window !== "undefined" ? window.location.href : undefined },
+    options: { redirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
   })
 
   if (error) {
@@ -26,6 +52,66 @@ export async function linkIdentity(provider: LoginProvider): Promise<{ error: st
   }
   // 성공하면 브라우저가 곧바로 OAuth 제공자로 리다이렉트되므로 이 반환값이 쓰일 일은 거의 없다
   return { error: null }
+}
+
+/**
+ * identity_already_exists 폴백. 이 소셜 계정이 이미 다른(영구) 유저에 연결돼 있을 때,
+ * 지금 세션에 "연결"하는 대신 그 기존 계정으로 그냥 "로그인"한다. 익명 세션에 로컬로
+ * 쌓인 기록은 그 계정으로 옮겨지지 않는다 — 이건 데이터 병합이 아니라 "이미 있는
+ * 계정으로 갈아타기"이므로, 호출하는 쪽에서 그 사실을 먼저 안내해야 한다.
+ */
+export async function signInExistingIdentity(provider: LoginProvider): Promise<{ error: string | null }> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return { error: "Supabase가 설정되지 않았습니다." }
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
+  })
+
+  if (error) {
+    console.warn(`[supabase] signInWithOAuth(${provider}) failed:`, error.message)
+    return { error: error.message }
+  }
+  return { error: null }
+}
+
+export interface OAuthErrorResult {
+  errorCode: string
+  /** rememberLinkAttempt()로 남겨둔, 이 에러를 유발한 linkIdentity() 시도의 provider (알 수 없으면 null) */
+  provider: LoginProvider | null
+}
+
+/**
+ * OAuth 콜백에서 돌아온 URL에 에러가 있으면 읽어서 반환한다. Supabase 클라이언트
+ * 자신도 해시/쿼리 양쪽을 다 확인하므로(쿼리가 우선) 동일한 방식으로 파싱한다.
+ * 한 번 읽고 나면 URL에서 에러 파라미터를 지운다 — 새로고침해도 같은 처리가 반복되지
+ * 않도록 하기 위함이다.
+ */
+export function consumeOAuthErrorFromURL(): OAuthErrorResult | null {
+  if (typeof window === "undefined") return null
+
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""))
+  const searchParams = new URLSearchParams(window.location.search)
+  const errorCode = searchParams.get("error_code") ?? hashParams.get("error_code")
+  if (!errorCode) return null
+
+  let provider: LoginProvider | null = null
+  try {
+    const attempted = window.sessionStorage.getItem(LINK_ATTEMPT_KEY)
+    if (attempted === "kakao" || attempted === "google") provider = attempted
+    window.sessionStorage.removeItem(LINK_ATTEMPT_KEY)
+  } catch {
+    // 무시
+  }
+
+  for (const key of ["error", "error_code", "error_description"]) {
+    searchParams.delete(key)
+  }
+  const query = searchParams.toString()
+  window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""))
+
+  return { errorCode, provider }
 }
 
 /** 현재 세션이 아직 영구 계정에 연결되지 않은 익명 세션인지 확인한다 */
