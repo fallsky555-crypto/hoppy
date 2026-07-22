@@ -16,7 +16,7 @@ import { RECIPES, type Recipe, type RecipeType, TOTAL_DAYS } from "@/lib/schedul
  * 엔진 로직(특히 generateCalendar()의 카테고리 배정 규칙)이 바뀔 때마다 반드시 올린다 —
  * 릴리스 체크리스트 항목. 올리지 않으면 이번에 고친 "세션 캐싱" 버그가 형태만 바뀌어 재발한다.
  */
-export const CURRENT_ENGINE_VERSION = "1.7"
+export const CURRENT_ENGINE_VERSION = "1.7.1"
 
 // ── 2. Tier(강도) × Type(유형) ──────────────────────────────
 
@@ -311,11 +311,15 @@ const DEFAULT_INCIDENT_DURATION_DAYS: Record<IncidentType, number> = {
   treatment: 7,
 }
 
-/** 인시던트 기간 동안 전면 대체되는 루틴. 기능성 성분은 전부 배제한다 */
+/**
+ * 인시던트 기간 동안 전면 대체되는 루틴. 기능성 성분은 전부 배제한다.
+ * v1.7.1 버그 수정: rest/moist(v1.5 이전 레거시 카테고리)를 그대로 쓰고 있어서 인시던트
+ * 기간 동안 캘린더에 구버전 카테고리가 섞여 보이던 문제를 고쳤다 — 새 로테이션 카테고리로 교체.
+ */
 const INCIDENT_OVERRIDE_ROUTINE: Record<IncidentType, RecipeType> = {
-  period: "moist", // 피지 조절 + 장벽 진정
-  sunburn: "rest", // 세라마이드·판테놀 계열 진정, 기능성 성분 전면 차단
-  treatment: "rest",
+  period: "defense_toning", // 나이아신아마이드(피지·톤 조절) + 비타민C
+  sunburn: "sos_rest", // 시카/마데카소사이드 단독, 기능성 성분 전면 차단
+  treatment: "sos_rest",
 }
 
 /**
@@ -389,9 +393,13 @@ const REACTION_DELAY_DAYS = 7
 
 /**
  * 자극이 신고된 날의 기록은 그대로 두되(reactionFlag만 표시), 그 다음 날부터
- * 7일간의 휴식/보습 버퍼를 끼워 넣어 이후 일정 전체를 7일 뒤로 미룬다.
+ * 7일간의 휴식 버퍼를 끼워 넣어 이후 일정 전체를 7일 뒤로 미룬다.
  * 이 코스는 Type당 액티브 카테고리를 하나만 도입하므로(2-2), "해당 카테고리만
  * 개별 연기"와 "전체 일정을 7일 미루기"는 실질적으로 동일한 결과를 낸다.
+ *
+ * v1.7.1 버그 수정: 버퍼 구간이 rest/moist(v1.5 이전 레거시 카테고리)를 하드코딩하고
+ * 있어서 자극 신고 이후 캘린더에 구버전 카테고리가 섞여 보이던 문제를 고쳤다 —
+ * 방어일 3종 로테이션(11-2)을 그대로 이어서 돌린다.
  */
 export function delayForReaction(
   calendar: CalendarEntry[],
@@ -399,7 +407,8 @@ export function delayForReaction(
   category: RecipeType,
 ): { calendar: CalendarEntry[]; reaction: ReactionLogEntry } {
   const flagged = calendar.map((entry) => (entry.day === day ? { ...entry, reactionFlag: true } : entry))
-  const next = insertDays(flagged, day + 1, REACTION_DELAY_DAYS, (d) => (d % 2 === 1 ? "rest" : "moist"))
+  const bufferStart = day + 1
+  const next = insertDays(flagged, bufferStart, REACTION_DELAY_DAYS, (d) => DEFENSE_ROTATION[(d - bufferStart) % DEFENSE_ROTATION.length])
 
   return {
     calendar: next,
