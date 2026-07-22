@@ -165,6 +165,19 @@ function parseSupportOwned(raw: string | null): SupportId[] {
  * tier는 이 앱이 assignTier()로 직접 재계산하므로 URL의 tier 파라미터는 참고하지 않는다.
  * unsure=1이면(11-5, v1.5) assignTier()가 계산된 Tier가 0일 때만 안전 하한 1로 올린다.
  */
+/** 진단 내용이 실제로 달라졌는지(재진단) 비교한다 — 같은 URL을 다시 열었을 뿐인 재방문과 구분하기 위함 */
+function diagnosisEquals(a: DiagnosisInput | null, b: DiagnosisInput | null): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  return (
+    a.overlapCount === b.overlapCount &&
+    a.irritationReported === b.irritationReported &&
+    a.skinType === b.skinType &&
+    a.symptom === b.symptom &&
+    !!a.unsure === !!b.unsure
+  )
+}
+
 function diagnosisFromURL(): URLDiagnosisPayload | null {
   if (typeof window === "undefined") return null
   const params = new URLSearchParams(window.location.search)
@@ -211,18 +224,25 @@ export function useDiary() {
     const loaded = loadState()
     // URL로 진단 결과가 넘어왔으면(myroutinediet.com checker.html) 저장된 값보다 우선한다
     const fromURL = diagnosisFromURL()
-    setState(
-      fromURL
-        ? {
-            ...loaded,
-            diagnosis: fromURL.diagnosis,
-            pregnant: fromURL.pregnant,
-            prescriptionMeds: fromURL.prescriptionMeds,
-            concern: fromURL.concern,
-            supportOwned: fromURL.supportOwned,
-          }
-        : loaded,
-    )
+    if (fromURL) {
+      // 재진단(예전과 다른 Tier·Type으로 새 진단) 감지 — 이전 코스에서 쌓인 인시던트·자극
+      // 이벤트를 그대로 들고 오면 새 코스 위에도 계속 적용돼 총 일수가 부풀려진 채 남고,
+      // 그 버퍼 구간에 이전 코스 시점의 카테고리가 섞여 보인다. 같은 URL을 다시 연 것뿐인
+      // 재방문(진단 내용 동일)이면 건드리지 않는다. completedDays는 실제 완료 이력이라
+      // 유지한다 — 이번 버그와 무관하고, 지우면 정말로 데이터 손실이 된다.
+      const isNewDiagnosis = !diagnosisEquals(loaded.diagnosis, fromURL.diagnosis)
+      setState({
+        ...loaded,
+        diagnosis: fromURL.diagnosis,
+        pregnant: fromURL.pregnant,
+        prescriptionMeds: fromURL.prescriptionMeds,
+        concern: fromURL.concern,
+        supportOwned: fromURL.supportOwned,
+        events: isNewDiagnosis ? [] : loaded.events,
+      })
+    } else {
+      setState(loaded)
+    }
     setHydrated(true)
   }, [])
 
