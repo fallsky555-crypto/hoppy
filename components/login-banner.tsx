@@ -9,6 +9,7 @@ import {
   linkIdentity,
   signInExistingIdentity,
   signOut,
+  type LinkedIdentity,
   type LoginProvider,
 } from "@/lib/supabase/auth"
 import { ensureAnonSession } from "@/lib/supabase/sync"
@@ -31,7 +32,7 @@ export function LoginBanner() {
   /** identity_already_exists로 돌아왔을 때만 채워진다 — "연결" 대신 "그 계정으로 로그인" 화면을 보여준다 */
   const [identityConflict, setIdentityConflict] = useState<LoginProvider | null>(null)
   /** 이미 카카오/구글 계정이 연결된 세션이면 채워진다 — "연결 안내" 대신 연결 상태 + 로그아웃을 보여준다 */
-  const [linkedProvider, setLinkedProvider] = useState<LoginProvider | null>(null)
+  const [linkedIdentity, setLinkedIdentity] = useState<LinkedIdentity | null>(null)
   const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
@@ -59,10 +60,10 @@ export function LoginBanner() {
 
       // 연결된 계정이 있으면 "닫기"로 숨긴 적이 있어도 항상 보여준다 — 이건 안내 배너가
       // 아니라 현재 로그인 상태를 알려주는 정보 표시라 dismiss 대상이 아니다.
-      const provider = await getLinkedProvider()
+      const identity = await getLinkedProvider()
       if (cancelled) return
-      if (provider) {
-        setLinkedProvider(provider)
+      if (identity) {
+        setLinkedIdentity(identity)
         setVisible(true)
         return
       }
@@ -129,12 +130,14 @@ export function LoginBanner() {
 
   if (!visible) return null
 
-  if (linkedProvider) {
-    const label = PROVIDER_LABEL[linkedProvider]
+  if (linkedIdentity) {
+    const label = PROVIDER_LABEL[linkedIdentity.provider]
     return (
       <section className="flex items-center justify-between gap-3 rounded-4xl bg-card px-[22px] py-4 ring-1 ring-border" aria-label="계정 연결 상태">
         <div className="min-w-0">
-          <p className="text-[13px] font-semibold text-foreground">{label} 계정으로 연결됨</p>
+          <p className="truncate text-[13px] font-semibold text-foreground">
+            {linkedIdentity.nickname ? `${linkedIdentity.nickname}님, ${label} 계정으로 연결됨` : `${label} 계정으로 연결됨`}
+          </p>
           {error && <p className="mt-1 text-xs font-medium text-destructive">{error}</p>}
         </div>
         <Button
