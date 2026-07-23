@@ -4,12 +4,15 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   consumeOAuthErrorFromURL,
+  getLinkedProvider,
   isAnonymousSession,
   linkIdentity,
   signInExistingIdentity,
+  signOut,
   type LoginProvider,
 } from "@/lib/supabase/auth"
 import { ensureAnonSession } from "@/lib/supabase/sync"
+import { STORAGE_KEY as DIARY_STORAGE_KEY } from "@/lib/use-diary"
 import { X } from "lucide-react"
 
 const DISMISSED_KEY = "hoppy-login-banner-dismissed"
@@ -27,6 +30,9 @@ export function LoginBanner() {
   const [error, setError] = useState<string | null>(null)
   /** identity_already_exists로 돌아왔을 때만 채워진다 — "연결" 대신 "그 계정으로 로그인" 화면을 보여준다 */
   const [identityConflict, setIdentityConflict] = useState<LoginProvider | null>(null)
+  /** 이미 카카오/구글 계정이 연결된 세션이면 채워진다 — "연결 안내" 대신 연결 상태 + 로그아웃을 보여준다 */
+  const [linkedProvider, setLinkedProvider] = useState<LoginProvider | null>(null)
+  const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -44,18 +50,28 @@ export function LoginBanner() {
       return
     }
 
-    const dismissed = typeof window !== "undefined" && window.localStorage.getItem(DISMISSED_KEY) === "1"
-    if (dismissed) return
-
     // use-diary.ts도 별도로 ensureAnonSession()을 호출하지만, 마운트 순서가 보장되지
     // 않아 이 배너가 먼저 세션 상태를 확인하면 아직 세션이 없어 "익명 아님"으로
     // 잘못 판정될 수 있다. ensureAnonSession()은 이미 세션이 있으면 그대로 반환하는
     // 멱등 함수라 여기서 먼저 호출해도 안전하다.
-    ensureAnonSession()
-      .then(() => isAnonymousSession())
-      .then((anonymous) => {
-        if (!cancelled && anonymous) setVisible(true)
-      })
+    ensureAnonSession().then(async () => {
+      if (cancelled) return
+
+      // 연결된 계정이 있으면 "닫기"로 숨긴 적이 있어도 항상 보여준다 — 이건 안내 배너가
+      // 아니라 현재 로그인 상태를 알려주는 정보 표시라 dismiss 대상이 아니다.
+      const provider = await getLinkedProvider()
+      if (cancelled) return
+      if (provider) {
+        setLinkedProvider(provider)
+        setVisible(true)
+        return
+      }
+
+      const dismissed = typeof window !== "undefined" && window.localStorage.getItem(DISMISSED_KEY) === "1"
+      if (dismissed) return
+      const anonymous = await isAnonymousSession()
+      if (!cancelled && anonymous) setVisible(true)
+    })
     return () => {
       cancelled = true
     }
@@ -89,7 +105,51 @@ export function LoginBanner() {
     if (result.error) setError("지금은 로그인할 수 없어요. 잠시 후 다시 시도해주세요.")
   }
 
+  async function handleSignOut() {
+    setError(null)
+    setSigningOut(true)
+    const result = await signOut()
+    if (result.error) {
+      setSigningOut(false)
+      setError("지금은 로그아웃할 수 없어요. 잠시 후 다시 시도해주세요.")
+      return
+    }
+    // 로그아웃 자체는 세션만 종료할 뿐 로컬 캐시는 그대로 남아있어, 다음 방문 시 새
+    // 익명 세션인데도 화면에는 방금 로그아웃한 계정의 기록이 그대로 보이는 혼란이
+    // 생긴다. 로컬 캐시를 지우고 새로고침해 깨끗한 익명 상태로 되돌린다 — 원래
+    // 계정으로 다시 연결하면 loadRemoteState()가 그 기록을 복원해준다.
+    try {
+      window.localStorage.removeItem(DIARY_STORAGE_KEY)
+      window.localStorage.removeItem(DISMISSED_KEY)
+    } catch {
+      // 저장 실패는 무시
+    }
+    window.location.reload()
+  }
+
   if (!visible) return null
+
+  if (linkedProvider) {
+    const label = PROVIDER_LABEL[linkedProvider]
+    return (
+      <section className="flex items-center justify-between gap-3 rounded-4xl bg-card px-[22px] py-4 ring-1 ring-border" aria-label="계정 연결 상태">
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold text-foreground">{label} 계정으로 연결됨</p>
+          {error && <p className="mt-1 text-xs font-medium text-destructive">{error}</p>}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleSignOut}
+          disabled={signingOut}
+          className="shrink-0 rounded-full"
+        >
+          {signingOut ? "로그아웃 중..." : "로그아웃"}
+        </Button>
+      </section>
+    )
+  }
 
   if (identityConflict) {
     const label = PROVIDER_LABEL[identityConflict]

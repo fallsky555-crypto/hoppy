@@ -67,7 +67,8 @@ interface DiaryState {
   engineVersion: string | null
 }
 
-const STORAGE_KEY = "hoppy-skin-diary-v1"
+/** 로그아웃 시 로컬 캐시를 지우는 용도로도 쓰인다(login-banner.tsx) */
+export const STORAGE_KEY = "hoppy-skin-diary-v1"
 const MAX_WATER = 8
 
 function todayISO() {

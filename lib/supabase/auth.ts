@@ -127,3 +127,33 @@ export async function isAnonymousSession(): Promise<boolean> {
     return false
   }
 }
+
+/** 현재 세션에 연결된 카카오/구글 identity가 있으면 그 provider를, 없으면(익명) null을 반환한다 */
+export async function getLinkedProvider(): Promise<LoginProvider | null> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return null
+
+  try {
+    const { data } = await supabase.auth.getSession()
+    const identities = data.session?.user.identities ?? []
+    const linked = identities.find((identity) => identity.provider === "kakao" || identity.provider === "google")
+    return (linked?.provider as LoginProvider | undefined) ?? null
+  } catch (err) {
+    console.warn("[supabase] getLinkedProvider threw:", err)
+    return null
+  }
+}
+
+/** 현재 세션을 로그아웃한다. 연결된 계정의 기록은 Supabase에 그대로 남아있고, 같은 계정으로 다시
+ * 연결하면 loadRemoteState()가 복원한다 — 이 함수는 세션만 종료할 뿐 데이터를 지우지 않는다. */
+export async function signOut(): Promise<{ error: string | null }> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return { error: "Supabase가 설정되지 않았습니다." }
+
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    console.warn("[supabase] signOut failed:", error.message)
+    return { error: error.message }
+  }
+  return { error: null }
+}
