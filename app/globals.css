@@ -77,10 +77,10 @@
   --font-display: 'Playfair Display', 'Pretendard Variable', Pretendard, serif;
   /*
    * 에디토리얼 뷰티 톤 디자인 토큰 (design_handoff_hoppy_home 참고 이식).
-   * 앱 배경은 아이보리(#F6F4EF), 카드는 순백(#FFFFFF) — 두 톤을 겹쳐 카드가 배경 위에
-   * 살짝 뜨는 느낌을 준다. 숫자·타이틀은 Playfair Display, 본문/UI는 Pretendard 그대로.
+   * 페이지 배경은 순백(#FFFFFF)으로 카드와 통일 — 카드는 얇은 회색 테두리(ring-border)만으로
+   * 구분한다. 숫자·타이틀은 Playfair Display, 본문/UI는 Pretendard 그대로.
    */
-  --background: #f6f4ef;
+  --background: #ffffff;
   --foreground: #1e1d1b;
   --card: #ffffff;
   --card-foreground: #1e1d1b;
@@ -88,7 +88,8 @@
   --popover-foreground: #1e1d1b;
   --primary: #33452f;
   --primary-foreground: #ffffff;
-  /* secondary = 카드 안에 얹는 "가라앉은" 표면(물잔 카운터, 잠금 안내 박스 등) — 배경과 같은 아이보리 */
+  /* secondary = 카드 안에 얹는 "가라앉은" 표면(물잔 카운터, 잠금 안내 박스 등) — 흰 배경과
+     구분되도록 옅은 아이보리 톤을 유지한다(카드 내부 그룹핑용, 페이지 배경과는 별개) */
   --secondary: #f6f4ef;
   --secondary-foreground: #1e1d1b;
   --muted: #f6f4ef;
@@ -105,7 +106,7 @@
   --chart-3: oklch(0.75 0.1 230);
   --chart-4: oklch(0.72 0.13 20);
   --chart-5: oklch(0.85 0.08 90);
-  --sidebar: #f6f4ef;
+  --sidebar: #ffffff;
   --sidebar-foreground: #1e1d1b;
   --sidebar-primary: #33452f;
   --sidebar-primary-foreground: #ffffff;
