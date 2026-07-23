@@ -128,8 +128,26 @@ export async function isAnonymousSession(): Promise<boolean> {
   }
 }
 
-/** 현재 세션에 연결된 카카오/구글 identity가 있으면 그 provider를, 없으면(익명) null을 반환한다 */
-export async function getLinkedProvider(): Promise<LoginProvider | null> {
+export interface LinkedIdentity {
+  provider: LoginProvider
+  /** 카카오/구글이 넘겨준 프로필 닉네임(표시 이름). 필드가 없으면 null — 화면에서는 이 경우 닉네임 없이 표시한다 */
+  nickname: string | null
+}
+
+/** identity_data에서 표시용 닉네임을 뽑아낸다. 카카오는 kakao_account.profile.nickname이
+ * gotrue에서 name으로 매핑되고, 구글은 보통 name/full_name에 담긴다 — provider마다 실제
+ * 응답 키가 조금씩 달라 여러 후보를 순서대로 시도한다. */
+function extractNickname(identityData: Record<string, unknown> | undefined): string | null {
+  if (!identityData) return null
+  for (const key of ["name", "full_name", "nickname", "preferred_username", "user_name"]) {
+    const value = identityData[key]
+    if (typeof value === "string" && value.trim().length > 0) return value
+  }
+  return null
+}
+
+/** 현재 세션에 연결된 카카오/구글 identity가 있으면 그 provider와 닉네임을, 없으면(익명) null을 반환한다 */
+export async function getLinkedProvider(): Promise<LinkedIdentity | null> {
   const supabase = getSupabaseClient()
   if (!supabase) return null
 
@@ -137,7 +155,8 @@ export async function getLinkedProvider(): Promise<LoginProvider | null> {
     const { data } = await supabase.auth.getSession()
     const identities = data.session?.user.identities ?? []
     const linked = identities.find((identity) => identity.provider === "kakao" || identity.provider === "google")
-    return (linked?.provider as LoginProvider | undefined) ?? null
+    if (!linked) return null
+    return { provider: linked.provider as LoginProvider, nickname: extractNickname(linked.identity_data) }
   } catch (err) {
     console.warn("[supabase] getLinkedProvider threw:", err)
     return null
