@@ -43,7 +43,10 @@ export function RecipeCard({
 
   return (
     <section
-      className={cn("rounded-4xl p-6 ring-1", isToday ? "bg-primary ring-transparent" : "bg-card ring-border")}
+      className={cn(
+        "rounded-4xl px-[22px] py-[26px] ring-1",
+        isToday ? "bg-primary ring-transparent" : "bg-card ring-border",
+      )}
       aria-label="오늘의 레시피 상세"
     >
       <div className="flex items-center justify-between">
@@ -61,7 +64,12 @@ export function RecipeCard({
         </span>
       </div>
 
-      <h3 className={cn("mt-3.5 font-display text-xl font-semibold text-balance", isToday ? "text-white" : "text-foreground")}>
+      <h3
+        className={cn(
+          "mt-3.5 font-display text-xl leading-[1.3] font-semibold text-balance",
+          isToday ? "text-white" : "text-foreground",
+        )}
+      >
         {copy.title}
       </h3>
 
@@ -75,7 +83,7 @@ export function RecipeCard({
         {isCompleted ? (
           <div
             className={cn(
-              "flex items-center justify-center gap-2 rounded-full py-3.5 text-sm font-bold",
+              "flex items-center justify-center gap-1.5 rounded-full p-[13px] text-[13px] font-semibold",
               isToday ? "bg-white/15 text-white" : "bg-secondary text-foreground",
             )}
           >
@@ -83,7 +91,11 @@ export function RecipeCard({
             기록 완료했어요
           </div>
         ) : isToday ? (
-          <Button onClick={onRecord} size="lg" className="w-full rounded-full bg-background text-base font-bold">
+          <Button
+            onClick={onRecord}
+            size="lg"
+            className="h-auto w-full rounded-full bg-background p-[14px] text-[14px] font-bold tracking-[0.01em]"
+          >
             기록 완료
           </Button>
         ) : isFuture ? (
