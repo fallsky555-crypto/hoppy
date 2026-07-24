@@ -29,6 +29,7 @@ import {
   saveDiagnosis,
   saveEngineVersion,
 } from "@/lib/supabase/sync"
+import { isAnonymousSession } from "@/lib/supabase/auth"
 import type { Concern, SupportId } from "@/lib/routine-copy"
 
 /** 4번. 장벽 점수 그래프는 2주차(Day 8)부터 노출된다 */
@@ -192,6 +193,28 @@ function diagnosisFromURL(): URLDiagnosisPayload | null {
   }
 }
 
+/** URLDiagnosisPayload를 DiaryState에 바로 병합할 수 있는 필드 묶음으로 변환한다 */
+function urlDiagnosisFields(payload: URLDiagnosisPayload) {
+  return {
+    diagnosis: payload.diagnosis,
+    pregnant: payload.pregnant,
+    prescriptionMeds: payload.prescriptionMeds,
+    concern: payload.concern,
+    supportOwned: payload.supportOwned,
+  }
+}
+
+/** 진단 확인(적용/보류) 후 새로고침해도 같은 판정이 반복되지 않도록 URL에서 진단 파라미터를 지운다 */
+function clearDiagnosisURLParams() {
+  if (typeof window === "undefined") return
+  const params = new URLSearchParams(window.location.search)
+  for (const key of ["overlap", "irritation", "type", "symptom", "preg", "rx", "concern", "support", "unsure"]) {
+    params.delete(key)
+  }
+  const query = params.toString()
+  window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""))
+}
+
 export function useDiary() {
   // 하이드레이션 불일치를 피하기 위해 초기엔 기본값, 마운트 후 localStorage 로드
   const [state, setState] = useState<DiaryState>({
@@ -207,24 +230,83 @@ export function useDiary() {
     engineVersion: null,
   })
   const [hydrated, setHydrated] = useState(false)
+  /**
+   * 로그인 계정에 이미 진행 중인 기록이 있는데 URL로 새 진단이 들어왔을 때, 조용히
+   * 덮어쓰지 않고 사용자 확인을 받을 때까지 보류해두는 새 진단 값. null이면 확인이
+   * 필요 없는(또는 이미 처리된) 상태다.
+   */
+  const [pendingURLDiagnosis, setPendingURLDiagnosis] = useState<URLDiagnosisPayload | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     const loaded = loadState()
     // URL로 진단 결과가 넘어왔으면(myroutinediet.com checker.html) 저장된 값보다 우선한다
     const fromURL = diagnosisFromURL()
-    setState(
-      fromURL
-        ? {
+
+    if (!fromURL) {
+      setState(loaded)
+      setHydrated(true)
+      return
+    }
+
+    ;(async () => {
+      // 익명 세션의 첫 진단은 지금까지처럼 곧바로 적용한다 — 확인이 필요한 "이미
+      // 로그인된 계정의 기존 진행 중 기록" 자체가 성립하지 않는 경우다
+      const anonymous = await isAnonymousSession()
+      if (cancelled) return
+      if (anonymous) {
+        setState({ ...loaded, ...urlDiagnosisFields(fromURL) })
+        clearDiagnosisURLParams()
+        setHydrated(true)
+        return
+      }
+
+      // 로그인 계정 — 이 브라우저의 로컬 캐시에 진행 중인 진단이 없으면, 다른 기기에서
+      // "그 계정으로 로그인"해 로컬이 비어있을 수 있으니 원격에도 확인한다
+      let existing: DiaryState | null = loaded.diagnosis ? loaded : null
+      if (!existing) {
+        const userId = await ensureAnonSession()
+        if (cancelled) return
+        const remote = userId ? await loadRemoteState(userId) : null
+        if (cancelled) return
+        if (remote?.profile.diagnosis) {
+          existing = {
             ...loaded,
-            diagnosis: fromURL.diagnosis,
-            pregnant: fromURL.pregnant,
-            prescriptionMeds: fromURL.prescriptionMeds,
-            concern: fromURL.concern,
-            supportOwned: fromURL.supportOwned,
+            joinDate: remote.profile.signupDate,
+            diagnosis: remote.profile.diagnosis,
+            pregnant: remote.profile.pregnant,
+            prescriptionMeds: remote.profile.prescriptionMeds,
+            concern: remote.profile.concern,
+            supportOwned: remote.profile.supportOwned,
+            engineVersion: remote.profile.engineVersion,
+            completedDays: remote.completedDays,
+            events: remote.events.map((event) =>
+              event.kind === "incident"
+                ? { kind: "incident" as const, day: event.day, incidentType: event.incidentType!, durationDays: event.durationDays }
+                : { kind: "reaction" as const, day: event.day, category: event.category! },
+            ),
           }
-        : loaded,
-    )
-    setHydrated(true)
+        }
+      }
+
+      if (!existing) {
+        // 이 계정의 첫 진단 — 확인 없이 바로 적용
+        setState({ ...loaded, ...urlDiagnosisFields(fromURL) })
+        clearDiagnosisURLParams()
+        setHydrated(true)
+        return
+      }
+
+      // 이미 진행 중인 기록 발견 — 화면엔 기존 상태를 그대로 보여주고, 새 진단은
+      // 사용자가 확인하기 전까지는 적용하지 않는다 (page.tsx의 확인 화면 참고)
+      setState(existing)
+      setPendingURLDiagnosis(fromURL)
+      setHydrated(true)
+    })()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -427,6 +509,29 @@ export function useDiary() {
     })
   }, [])
 
+  /** "기존 루틴 계속하기" — 보류해둔 새 진단을 버리고 지금 상태를 그대로 유지한다 */
+  const confirmKeepExistingRoutine = useCallback(() => {
+    setPendingURLDiagnosis(null)
+    clearDiagnosisURLParams()
+  }, [])
+
+  /** "새로 시작하기" — 보류해둔 새 진단을 적용하고, 가입일을 오늘로 재설정해 진행 기록을 초기화한다 */
+  const confirmStartFreshRoutine = useCallback(() => {
+    setPendingURLDiagnosis((pending) => {
+      if (!pending) return pending
+      setState((prev) => ({
+        ...prev,
+        ...urlDiagnosisFields(pending),
+        joinDate: todayISO(),
+        completedDays: [],
+        habits: {},
+        events: [],
+      }))
+      return null
+    })
+    clearDiagnosisURLParams()
+  }, [])
+
   return {
     hydrated,
     currentDay,
@@ -452,5 +557,9 @@ export function useDiary() {
     prescriptionMeds: state.prescriptionMeds,
     concern: state.concern,
     supportOwned: state.supportOwned,
+    /** true면 로그인 계정에 이미 진행 중인 기록이 있는데 URL로 새 진단이 들어온 상태 — 확인 화면을 띄워야 한다 */
+    pendingReDiagnosis: pendingURLDiagnosis !== null,
+    confirmKeepExistingRoutine,
+    confirmStartFreshRoutine,
   }
 }
