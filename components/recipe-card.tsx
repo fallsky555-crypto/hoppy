@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
 import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-copy"
 import { Button } from "@/components/ui/button"
-import { Check, ShieldAlert } from "lucide-react"
+import { Check, ShieldAlert, Sun } from "lucide-react"
 
 /** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
 const REACTIVE_CATEGORIES: RecipeType[] = ["aha", "bha", "retinol"]
@@ -77,6 +77,20 @@ export function RecipeCard({
 
       {recipe.caution && (
         <p className={cn("mt-2 text-xs font-medium", isToday ? "text-white/70" : "text-muted-foreground")}>{recipe.caution}</p>
+      )}
+
+      {/* 액티브 성분(AHA/BHA/레티놀) 데이에만 노출되는 선크림 리마인더 — 매일 기본 습관의
+          "선크림 발랐어요" 체크와는 별개로, 광과민성이 커지는 날에만 강조해서 보여준다 */}
+      {REACTIVE_CATEGORIES.includes(recipe.type) && (
+        <div
+          className={cn(
+            "mt-3 flex items-center gap-2 rounded-2xl px-3 py-2.5 text-xs font-semibold",
+            isToday ? "bg-white/15 text-white" : "bg-secondary text-foreground",
+          )}
+        >
+          <Sun className="size-4 shrink-0" aria-hidden />
+          오늘은 자외선에 특히 민감해질 수 있어요. 외출 전 선크림을 꼭 발라주세요.
+        </div>
       )}
 
       <div className="mt-5">
