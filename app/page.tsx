@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
 import { RecipeCard } from "@/components/recipe-card"
@@ -47,6 +48,29 @@ export default function Page() {
   }
 
   const hasReportedReactionToday = diary.reactionLog.some((entry) => entry.day === currentDay)
+
+  // 로그인 계정에 이미 진행 중인 루틴이 있는데 체커에서 새 진단을 들고 돌아온 경우 —
+  // 조용히 덮어쓰지 않고 먼저 확인을 받는다. 이 화면이 해소되기 전까지는 캘린더를
+  // 포함한 나머지 화면(의료 상담 안내 포함)을 렌더링하지 않는다.
+  if (diary.pendingReDiagnosis) {
+    return (
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-4 px-4 py-10 text-center">
+        <h1 className="font-display text-lg font-bold text-foreground">이미 진행 중인 루틴이 있어요</h1>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Day {currentDay}/{totalDays}까지 기록해두셨어요. 새 진단 결과로 다시 시작하시겠어요?
+        </p>
+        <div className="mt-2 flex w-full flex-col gap-2">
+          <Button type="button" onClick={diary.confirmKeepExistingRoutine} className="w-full rounded-full">
+            기존 루틴 계속하기
+          </Button>
+          <Button type="button" variant="outline" onClick={diary.confirmStartFreshRoutine} className="w-full rounded-full">
+            새로 시작하기
+          </Button>
+        </div>
+        <p className="text-xs font-medium text-destructive">새로 시작하면 지금까지 기록한 Day와 기록이 모두 사라져요.</p>
+      </main>
+    )
+  }
 
   // 9-2. symptom === 'bad'인 경우 캘린더 대신 의료 상담 안내만 노출한다
   if (diary.medicalReferral) {
