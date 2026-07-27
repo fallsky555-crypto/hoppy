@@ -7,12 +7,6 @@
 @theme inline {
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
-  --color-rest: var(--rest);
-  --color-rest-soft: var(--rest-soft);
-  --color-aha: var(--aha);
-  --color-aha-soft: var(--aha-soft);
-  --color-moist: var(--moist);
-  --color-moist-soft: var(--moist-soft);
   --color-retinol: var(--retinol);
   --color-retinol-soft: var(--retinol-soft);
   --color-bha: var(--bha);
@@ -23,6 +17,12 @@
   --color-defense-toning-soft: var(--defense-toning-soft);
   --color-defense-hydration: var(--defense-hydration);
   --color-defense-hydration-soft: var(--defense-hydration-soft);
+  --color-barrier-lock: var(--barrier-lock);
+  --color-barrier-lock-soft: var(--barrier-lock-soft);
+  --color-hydration-lock: var(--hydration-lock);
+  --color-hydration-lock-soft: var(--hydration-lock-soft);
+  --color-toning-solo: var(--toning-solo);
+  --color-toning-solo-soft: var(--toning-solo-soft);
   --color-sos-rest: var(--sos-rest);
   --color-sos-rest-soft: var(--sos-rest-soft);
   --color-today-accent: var(--today-accent);
@@ -120,16 +120,11 @@
   --today-accent-foreground: #ffffff;
   --emphasis: #1e1d1b;
 
-  /* recipe category tints — rest/moist는 v1.5 이전 기본(미진단) 스케줄 하위 호환용이라 12-1 흙톤 교체 대상이 아니다 */
-  --rest: oklch(0.83 0.08 150);
-  --rest-soft: oklch(0.95 0.04 150);
-  --moist: oklch(0.72 0.1 235);
-  --moist-soft: oklch(0.95 0.035 235);
-
   /*
    * 카테고리 색상 — 저채도·중명도 팔레트. 배경 워시로 쓰지 않고 아이콘색+카드 좌측
-   * 바로만 쓰이므로, -soft 값은 daily-habits.tsx 등 이 색을 여전히 배경으로 쓰는
-   * 다른 곳(예: 물 잔 카운터의 moist)을 위해 남겨두되 옅은 틴트로 재계산했다.
+   * 바로만 쓰이므로, -soft 값은 이 색을 배경으로 쓰는 다른 곳을 위해 옅은 틴트로 남겨둔다.
+   * barrier-lock/hydration-lock/toning-solo는 2026-07-27 재설계로 신규 추가된 서브
+   * 로테이션 색상 — 디자인 톤 확정 전까지의 잠정값이다(스펙 8번 미확정 사항).
    */
   --defense-barrier: #4a6b5c; /* 장벽 잠금 */
   --defense-barrier-soft: #e4e9e7;
@@ -137,8 +132,12 @@
   --defense-toning-soft: #edeae7;
   --defense-hydration: #5c7a8a; /* 수분 충전 */
   --defense-hydration-soft: #e7ebed;
-  --aha: #9c7a3c;
-  --aha-soft: #f0ebe2;
+  --barrier-lock: #6f8f6a; /* 장벽 밀폐 — defense-barrier의 단독 성분 변형 */
+  --barrier-lock-soft: #ebefe8;
+  --hydration-lock: #4a8a92; /* 수분 잠금 — defense-hydration의 세라마이드 결합 변형 */
+  --hydration-lock-soft: #e2edee;
+  --toning-solo: #c08a3f; /* 비타민C 케어 — defense-toning의 단독 성분 변형 */
+  --toning-solo-soft: #f5ead9;
   --bha: #6e7a4a;
   --bha-soft: #e9ebe4;
   --retinol: #6b4357;

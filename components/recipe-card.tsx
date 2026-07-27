@@ -1,25 +1,25 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
+import type { Recipe, RecipeType } from "@/lib/schedule"
 import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-copy"
+import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 import { Button } from "@/components/ui/button"
 import { Check, ShieldAlert, Sun } from "lucide-react"
 
 /** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
-const REACTIVE_CATEGORIES: RecipeType[] = ["aha", "bha", "retinol"]
+const REACTIVE_CATEGORIES: RecipeType[] = ["bha", "retinol"]
 
 interface RecipeCardProps {
   day: number
   currentDay: number
   isCompleted: boolean
   onRecord: () => void
-  /** 진단이 있으면 개인화 캘린더, 없으면 기본 30일 스케줄(recipeForDay)을 사용 */
-  getRecipe?: (day: number) => Recipe
+  getRecipe: (day: number) => Recipe
   /** 오늘 이미 이 성분에 대한 자극을 신고했는지 */
   hasReportedReaction?: boolean
   onReportReaction?: () => void
-  /** rest/moist 문구에 강조할 관심사 + 보유 성분 */
+  /** 방어/락 계열 문구에 강조할 관심사 + 보유 성분 */
   concern?: Concern
   supportOwned?: SupportId[]
 }
@@ -29,14 +29,14 @@ export function RecipeCard({
   currentDay,
   isCompleted,
   onRecord,
-  getRecipe = recipeForDay,
+  getRecipe,
   hasReportedReaction = false,
   onReportReaction,
   concern = "none",
   supportOwned = [],
 }: RecipeCardProps) {
   const recipe = getRecipe(day)
-  const copy = getCategoryCopy(recipe.type, concern, supportOwned)
+  const copy = getCategoryCopy(recipe.type, day, concern, supportOwned)
   const isToday = day === currentDay
   const isFuture = day > currentDay
   const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)
@@ -131,7 +131,7 @@ export function RecipeCard({
               )}
             >
               <ShieldAlert className="size-3.5" aria-hidden />
-              오늘 자극을 신고했어요. 이 성분은 7일 뒤로 미뤄져요.
+              오늘 자극을 신고했어요. 이 성분은 {REACTION_DELAY_DAYS}일 뒤로 미뤄져요.
             </p>
           ) : (
             <Button

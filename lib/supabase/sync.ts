@@ -1,15 +1,6 @@
 import { getSupabaseClient } from "@/lib/supabase/client"
-import type { RecipeType } from "@/lib/schedule"
-import type {
-  BarrierScorePoint,
-  CalendarEntry,
-  DiagnosisInput,
-  IncidentLogEntry,
-  IncidentType,
-  ReactionLogEntry,
-  SkinType,
-  Tier,
-} from "@/lib/scheduling-engine"
+import type { RecipeType, ScheduleSettings } from "@/lib/schedule"
+import type { BarrierScorePoint, CalendarEntry, IncidentLogEntry, IncidentType, ReactionLogEntry } from "@/lib/scheduling-engine"
 import type { Concern, SupportId } from "@/lib/routine-copy"
 
 /**
@@ -57,17 +48,17 @@ export function ensureAnonSession(): Promise<string | null> {
 
 interface RemoteProfile {
   signupDate: string
-  diagnosis: DiagnosisInput | null
+  settings: ScheduleSettings
   pregnant: boolean
   prescriptionMeds: boolean
   concern: Concern
   supportOwned: SupportId[]
-  /** 13-3(v1.7). 이 프로필이 마지막으로 확인된 엔진 버전 — null이면 이 필드가 생기기 전의 레거시 유저 */
+  /** 이 프로필이 마지막으로 확인된 엔진 버전 — null이면 이 필드가 생기기 전의 레거시 유저 */
   engineVersion: string | null
 }
 
-/** 진단 결과 + 가입일을 diary_profiles에 upsert한다 */
-export async function saveDiagnosis(userId: string, signupDate: string, diagnosis: DiagnosisInput, tier: Tier): Promise<void> {
+/** BHA/레티놀 도입 간격 슬라이더 + 가입일을 diary_profiles에 upsert한다 */
+export async function saveSettings(userId: string, signupDate: string, settings: ScheduleSettings): Promise<void> {
   const supabase = getSupabaseClient()
   if (!supabase) return
 
@@ -75,30 +66,29 @@ export async function saveDiagnosis(userId: string, signupDate: string, diagnosi
     {
       user_id: userId,
       signup_date: signupDate.slice(0, 10),
-      overlap_count: diagnosis.overlapCount,
-      irritation_reported: diagnosis.irritationReported,
-      skin_type: diagnosis.skinType,
-      symptom: diagnosis.symptom ?? null,
-      tier: String(tier),
+      active_interval_days: settings.activeIntervalDays ?? null,
+      bha_interval_days: settings.bhaIntervalDays ?? null,
     },
     { onConflict: "user_id" },
   )
-  if (error) console.warn("[supabase] saveDiagnosis failed:", error.message)
+  if (error) console.warn("[supabase] saveSettings failed:", error.message)
 }
 
-/** 9-1. 임신/처방약 플래그를 diary_profiles에 반영한다 */
+/** 임신/처방약 플래그를 diary_profiles에 반영한다 */
 export async function saveContextFlags(userId: string, signupDate: string, pregnant: boolean, prescriptionMeds: boolean): Promise<void> {
   const supabase = getSupabaseClient()
   if (!supabase) return
 
-  const { error } = await supabase.from("diary_profiles").upsert(
-    { user_id: userId, signup_date: signupDate.slice(0, 10), pregnant, prescription_meds: prescriptionMeds },
-    { onConflict: "user_id" },
-  )
+  const { error } = await supabase
+    .from("diary_profiles")
+    .upsert(
+      { user_id: userId, signup_date: signupDate.slice(0, 10), pregnant, prescription_meds: prescriptionMeds },
+      { onConflict: "user_id" },
+    )
   if (error) console.warn("[supabase] saveContextFlags failed:", error.message)
 }
 
-/** rest/moist 문구에 강조할 관심사 + 보유 성분을 diary_profiles에 반영한다 */
+/** 방어/락 계열 문구에 강조할 관심사 + 보유 성분을 diary_profiles에 반영한다 */
 export async function saveConcern(userId: string, signupDate: string, concern: Concern, supportOwned: SupportId[]): Promise<void> {
   const supabase = getSupabaseClient()
   if (!supabase) return
@@ -203,8 +193,8 @@ export interface RemoteState {
 }
 
 /**
- * 새 기기/브라우저에서 기존 진단 데이터를 복원할 때 쓴다. diary_profiles가 없으면
- * (한 번도 진단하지 않은 유저) null을 반환하고, 앱은 기존처럼 로컬/URL 파라미터 흐름을 탄다.
+ * 새 기기/브라우저에서 기존 계정의 진행 기록을 복원할 때 쓴다. diary_profiles가 없으면
+ * (이 계정으로 한 번도 기록한 적 없는 경우) null을 반환하고, 앱은 기본 워크북 시퀀스로 새로 시작한다.
  */
 export async function loadRemoteState(userId: string): Promise<RemoteState | null> {
   const supabase = getSupabaseClient()
@@ -214,7 +204,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
       .select(
-        "signup_date, overlap_count, irritation_reported, skin_type, symptom, pregnant, prescription_meds, concern, support_owned, engine_version",
+        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, engine_version",
       )
       .eq("user_id", userId)
       .maybeSingle()
@@ -247,20 +237,13 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
       })),
     ]
 
-    const diagnosis: DiagnosisInput | null =
-      profile.overlap_count === null || profile.skin_type === null
-        ? null
-        : {
-            overlapCount: profile.overlap_count,
-            irritationReported: profile.irritation_reported ?? false,
-            skinType: profile.skin_type as SkinType,
-            symptom: profile.symptom ?? undefined,
-          }
-
     return {
       profile: {
         signupDate: new Date(profile.signup_date).toISOString(),
-        diagnosis,
+        settings: {
+          activeIntervalDays: profile.active_interval_days ?? undefined,
+          bhaIntervalDays: profile.bha_interval_days ?? undefined,
+        },
         pregnant: profile.pregnant ?? false,
         prescriptionMeds: profile.prescription_meds ?? false,
         concern: (profile.concern as Concern) ?? "none",

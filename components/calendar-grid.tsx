@@ -1,19 +1,19 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
+import type { Recipe, RecipeType } from "@/lib/schedule"
 import { Check } from "lucide-react"
 
 /** 캘린더 그리드 셀에 표시할 짧은 한글 라벨 — 카테고리 구분은 색이 아니라 이 텍스트 라벨만으로 표현한다 */
 const SHORT_LABEL: Record<RecipeType, string> = {
-  rest: "휴식",
-  aha: "AHA",
-  moist: "수분팩",
-  retinol: "레티놀",
   bha: "BHA",
+  retinol: "레티놀",
   defense_barrier: "장벽",
   defense_toning: "톤정돈",
   defense_hydration: "수분",
+  barrier_lock: "밀폐",
+  hydration_lock: "수분잠금",
+  toning_solo: "비타민C",
   sos_rest: "SOS",
 }
 
@@ -24,8 +24,7 @@ interface CalendarGridProps {
   completedDays: number[]
   justStampedDay: number | null
   onSelect: (day: number) => void
-  /** 진단이 있으면 개인화 캘린더, 없으면 기본 30일 스케줄(recipeForDay)을 사용 */
-  getRecipe?: (day: number) => Recipe
+  getRecipe: (day: number) => Recipe
 }
 
 export function CalendarGrid({
@@ -35,7 +34,7 @@ export function CalendarGrid({
   completedDays,
   justStampedDay,
   onSelect,
-  getRecipe = recipeForDay,
+  getRecipe,
 }: CalendarGridProps) {
   const days = Array.from({ length: totalDays }, (_, i) => i + 1)
 
