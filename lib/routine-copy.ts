@@ -181,7 +181,7 @@ export function getCategoryCopy(category: RecipeType, day: number, concern: Conc
     const name = ACTIVE_LABEL[category]
     return {
       title,
-      detail: `오늘 밤에는 ${name} 제품을 딱 한 방울만 루틴에 추가합니다. 다른 기능성 제품과 섞이지 않도록 단독으로 사용해주시고, 다음 날 아침에는 자외선 차단제를 꼭 챙겨주세요.`,
+      detail: `오늘 밤에는 ${name} 제품을 딱 한 방울만 루틴에 추가합니다. 다른 기능성 제품과 섞이지 않도록 단독으로 사용해주세요.`,
     }
   }
 

@@ -12,7 +12,7 @@ import { RoutineBanner } from "@/components/routine-banner"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
-import { BARRIER_SCORE_START_DAY, useDiary } from "@/lib/use-diary"
+import { useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { getCompletionCopy, getOrientationCopy } from "@/lib/routine-copy"
 
@@ -67,31 +67,7 @@ export default function Page() {
         heroImageSrc={diary.heroImageSrc}
       />
 
-      {isCourseComplete && <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />}
-
-      {showWeekOrientation && orientationCopy && (
-        <RoutineBanner copy={orientationCopy} onDismiss={() => setDismissedOrientationDay(currentDay)} />
-      )}
-
-      {(diary.pregnant || diary.prescriptionMeds) && (
-        <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
-          {diary.pregnant && <p>🤰 임신·수유 중으로 확인됐어요. 레티놀 성분은 이 코스에서 제외돼요.</p>}
-          {diary.prescriptionMeds && <p>💊 처방약을 사용 중이시군요. 담당 병원의 처방 지도가 이 앱의 가이드보다 항상 우선이에요.</p>}
-        </div>
-      )}
-
-      <LoginBanner />
-
-      <CalendarGrid
-        totalDays={totalDays}
-        currentDay={currentDay}
-        selectedDay={activeDay}
-        completedDays={completedDays}
-        justStampedDay={justStampedDay}
-        onSelect={setSelectedDay}
-        getRecipe={diary.getRecipeForDay}
-      />
-
+      {/* "오늘 뭘 해야 하는지"가 최대한 빨리 보이도록 스페셜케어 카드를 배너들보다 위로 끌어올린다 */}
       <RecipeCard
         day={activeDay}
         currentDay={currentDay}
@@ -104,6 +80,31 @@ export default function Page() {
         supportOwned={diary.supportOwned}
       />
 
+      {isCourseComplete && <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />}
+
+      <IncidentPanel currentDay={currentDay} incidentLog={diary.incidentLog} onReportIncident={handleReportIncident} />
+
+      {(diary.pregnant || diary.prescriptionMeds) && (
+        <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
+          {diary.pregnant && <p>🤰 임신·수유 중으로 확인됐어요. 레티놀 성분은 이 코스에서 제외돼요.</p>}
+          {diary.prescriptionMeds && <p>💊 처방약을 사용 중이시군요. 담당 병원의 처방 지도가 이 앱의 가이드보다 항상 우선이에요.</p>}
+        </div>
+      )}
+
+      <CalendarGrid
+        totalDays={totalDays}
+        currentDay={currentDay}
+        selectedDay={activeDay}
+        completedDays={completedDays}
+        justStampedDay={justStampedDay}
+        onSelect={setSelectedDay}
+        getRecipe={diary.getRecipeForDay}
+      />
+
+      {showWeekOrientation && orientationCopy && (
+        <RoutineBanner copy={orientationCopy} onDismiss={() => setDismissedOrientationDay(currentDay)} />
+      )}
+
       <DailyHabits
         day={activeDay}
         habit={diary.getHabit(activeDay)}
@@ -112,8 +113,9 @@ export default function Page() {
         onWater={(delta) => diary.setWater(activeDay, delta)}
       />
 
-      <BarrierScoreChart log={diary.barrierScoreLog} unlockDay={BARRIER_SCORE_START_DAY} />
-      <IncidentPanel currentDay={currentDay} incidentLog={diary.incidentLog} onReportIncident={handleReportIncident} />
+      <BarrierScoreChart currentDay={currentDay} totalDays={totalDays} />
+
+      <LoginBanner />
 
       <LockedPreview />
 

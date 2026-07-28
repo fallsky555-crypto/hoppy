@@ -115,8 +115,8 @@
   --sidebar-border: #e7e3d9;
   --sidebar-ring: #33452f;
 
-  /* "오늘" 카드 강조 — 이 리디자인에서는 별도 진한 톤 없이 브랜드 accent(primary)를 그대로 쓴다 */
-  --today-accent: #33452f;
+  /* "오늘" 카드 강조 — primary(#33452f)보다 명도를 올린 톤(동일 hue/채도, L 23%→36%) */
+  --today-accent: #516D4A;
   --today-accent-foreground: #ffffff;
   --emphasis: #1e1d1b;
 

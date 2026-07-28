@@ -32,7 +32,7 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     title: "BHA 스페셜케어 데이",
     guide:
       "세안 후 BHA 토너를 화장솜에 적셔 T존과 모공이 두드러지는 부위 위주로 가볍게 닦아내듯 발라주세요. 이어서 유수분 밸런스를 잡아주는 수분 크림으로 마무리해요.",
-    caution: "모공 속 피지·블랙헤드를 유동화하는 기능성 데이 · 이 시기엔 이 성분 하나만 사용하세요.",
+    caution: "모공 속 피지·블랙헤드를 유동화하는 기능성 데이 · 다음 날 아침 자외선 차단 필수",
   },
   retinol: {
     type: "retinol",
@@ -42,7 +42,7 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     title: "레티놀 스페셜케어 데이",
     guide:
       "저녁 세안 후, 평소 쓰던 수분 크림에 레티놀(또는 바쿠치올)을 딱 쌀알 반 만큼만 섞어서 발라주세요. 천천히 적응하는 단계예요.",
-    caution: "세로모공 탄력을 돕는 기능성 데이 · 이 시기엔 이 성분 하나만 사용하세요. 내일은 장벽·수분 위주로 쉬어가는 날이에요.",
+    caution: "세로모공 탄력을 돕는 기능성 데이 · 다음 날 아침 자외선 차단 필수 · 내일은 장벽·수분 위주로 쉬어가는 날이에요",
   },
   defense_barrier: {
     type: "defense_barrier",
