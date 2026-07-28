@@ -28,8 +28,8 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     type: "bha",
     color: "bha",
     emoji: "🧴",
-    tag: "집중 케어",
-    title: "BHA 집중 케어 데이",
+    tag: "스페셜케어",
+    title: "BHA 스페셜케어 데이",
     guide:
       "세안 후 BHA 토너를 화장솜에 적셔 T존과 모공이 두드러지는 부위 위주로 가볍게 닦아내듯 발라주세요. 이어서 유수분 밸런스를 잡아주는 수분 크림으로 마무리해요.",
     caution: "모공 속 피지·블랙헤드를 유동화하는 기능성 데이 · 이 시기엔 이 성분 하나만 사용하세요.",
@@ -38,8 +38,8 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     type: "retinol",
     color: "retinol",
     emoji: "🧪",
-    tag: "집중 케어",
-    title: "레티놀 집중 케어 데이",
+    tag: "스페셜케어",
+    title: "레티놀 스페셜케어 데이",
     guide:
       "저녁 세안 후, 평소 쓰던 수분 크림에 레티놀(또는 바쿠치올)을 딱 쌀알 반 만큼만 섞어서 발라주세요. 천천히 적응하는 단계예요.",
     caution: "세로모공 탄력을 돕는 기능성 데이 · 이 시기엔 이 성분 하나만 사용하세요. 내일은 장벽·수분 위주로 쉬어가는 날이에요.",
@@ -120,17 +120,21 @@ export const TOTAL_DAYS = 30
 
 /**
  * 슬라이더로 조정 가능한 액티브 도입 간격(일). 유저가 아무것도 건드리지 않으면
- * 둘 다 워크북 기본값(7)을 그대로 쓴다.
+ * 둘 다 기본값(5)을 그대로 쓴다. 온보딩 설계에서 확정한 강제 범위는
+ * [MIN_INTERVAL_DAYS, MAX_INTERVAL_DAYS] — generateCalendar()가 이 범위 밖 값을
+ * 받으면 가까운 쪽 경계값으로 clamp한다(사용자에게 에러를 보여주지 않는다).
  */
 export interface ScheduleSettings {
-  /** 레티놀/바쿠치올 간격(일). 기본 7, 권장 범위 5~10 */
+  /** 레티놀/바쿠치올 간격(일). 기본 5, 강제 범위 5~7 */
   activeIntervalDays?: number
-  /** BHA 간격(일). 기본 7, 권장 범위 5~10 */
+  /** BHA 간격(일). 기본 5, 강제 범위 5~7 */
   bhaIntervalDays?: number
 }
 
-export const DEFAULT_ACTIVE_INTERVAL_DAYS = 7
-export const DEFAULT_BHA_INTERVAL_DAYS = 7
+export const DEFAULT_ACTIVE_INTERVAL_DAYS = 5
+export const DEFAULT_BHA_INTERVAL_DAYS = 5
+export const MIN_INTERVAL_DAYS = 5
+export const MAX_INTERVAL_DAYS = 7
 
 /** 가입일(Day 1) 기준으로 오늘이 며칠 차인지 계산 (1 ~ TOTAL_DAYS 로 clamp) */
 export function dayFromJoinDate(joinISO: string, now: Date = new Date()): number {

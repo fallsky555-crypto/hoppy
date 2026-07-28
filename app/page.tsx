@@ -11,6 +11,7 @@ import { LockedPreview } from "@/components/locked-preview"
 import { RoutineBanner } from "@/components/routine-banner"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
+import { OnboardingFlow } from "@/components/onboarding-flow"
 import { BARRIER_SCORE_START_DAY, useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { getCompletionCopy, getOrientationCopy } from "@/lib/routine-copy"
@@ -22,6 +23,14 @@ export default function Page() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [justStampedDay, setJustStampedDay] = useState<number | null>(null)
   const [dismissedOrientationDay, setDismissedOrientationDay] = useState<number | null>(null)
+
+  // 하이드레이션 전엔 아무것도 그리지 않는다 — localStorage/원격 상태를 아직 못 읽은 채로
+  // 온보딩 화면을 잠깐 보여줬다가 메인 화면으로 튀는 깜빡임을 피하기 위해서다.
+  if (!diary.hydrated) return null
+
+  // 아직 온보딩(간격 슬라이더 질문)을 마치지 않았으면 메인 화면 대신 온보딩만 보여준다.
+  // 온보딩을 마치기 전까지는 가입일(Day 1)도 아직 찍히지 않은 상태다.
+  if (!diary.onboarded) return <OnboardingFlow onComplete={diary.completeOnboarding} />
 
   // 선택된 날이 없으면 오늘을 기본값으로 사용
   const activeDay = selectedDay ?? currentDay
@@ -51,7 +60,12 @@ export default function Page() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
-      <ProgressHeader currentDay={currentDay} totalDays={totalDays} completedCount={completedDays.length} />
+      <ProgressHeader
+        currentDay={currentDay}
+        totalDays={totalDays}
+        completedCount={completedDays.length}
+        heroImageSrc={diary.heroImageSrc}
+      />
 
       {isCourseComplete && <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />}
 

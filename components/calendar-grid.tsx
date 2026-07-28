@@ -17,6 +17,10 @@ const SHORT_LABEL: Record<RecipeType, string> = {
   sos_rest: "SOS",
 }
 
+/** 마일스톤(Day 1 또는 BHA 사이클 시작일) 셀에 얹는 원형 초상 오버레이 이미지 */
+const DAY_ONE_MILESTONE_IMAGE = "/milestones/day1-camera.jpeg"
+const DEFAULT_MILESTONE_IMAGE = "/hero/hero-01.jpeg"
+
 interface CalendarGridProps {
   totalDays: number
   currentDay: number
@@ -54,13 +58,15 @@ export function CalendarGrid({
           const isFuture = day > currentDay
           const justStamped = day === justStampedDay
           const highlighted = isSelected || isToday
+          const isMilestone = recipe.type === "bha" || day === 1
+          const milestoneImageSrc = day === 1 ? DAY_ONE_MILESTONE_IMAGE : DEFAULT_MILESTONE_IMAGE
 
           return (
             <button
               key={day}
               type="button"
               onClick={() => onSelect(day)}
-              aria-label={`Day ${day} ${recipe.title}${isCompleted ? ", 기록 완료" : ""}${isToday ? ", 오늘" : ""}`}
+              aria-label={`Day ${day} ${recipe.title}${isCompleted ? ", 기록 완료" : ""}${isToday ? ", 오늘" : ""}${isMilestone ? ", 마일스톤" : ""}`}
               aria-pressed={isSelected}
               className={cn(
                 "relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-2xl border bg-card p-0.5 shadow-[0_1px_2px_rgba(30,29,26,0.04)] transition-all",
@@ -72,6 +78,12 @@ export function CalendarGrid({
                 {day}
               </span>
               <span className="text-[9.5px] font-bold leading-none text-[#5C5648]">{SHORT_LABEL[recipe.type]}</span>
+
+              {isMilestone && (
+                <span className="absolute -bottom-1 -left-1 size-4 overflow-hidden rounded-full ring-2 ring-card">
+                  <img src={milestoneImageSrc} alt="" className="size-full object-cover" />
+                </span>
+              )}
 
               {isToday && (
                 <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-primary-foreground">

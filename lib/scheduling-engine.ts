@@ -9,6 +9,8 @@
 import {
   DEFAULT_ACTIVE_INTERVAL_DAYS,
   DEFAULT_BHA_INTERVAL_DAYS,
+  MAX_INTERVAL_DAYS,
+  MIN_INTERVAL_DAYS,
   RECIPES,
   type Recipe,
   type RecipeType,
@@ -71,8 +73,15 @@ function defenseCategoryForCount(count: number): RecipeType {
 
 type ActiveKind = "bha" | "retinol"
 
-function normalizeInterval(days: number | undefined, fallback: number): number {
-  return days !== undefined && Number.isFinite(days) && days > 0 ? Math.round(days) : fallback
+/**
+ * 유저가 준 값이 있으면 반올림 후 [MIN_INTERVAL_DAYS, MAX_INTERVAL_DAYS]로 clamp하고,
+ * 없거나 유효하지 않으면 fallback을 그대로 clamp해 돌려준다. 온보딩 화면(3단계
+ * 매핑+코멘트)도 최종값을 미리 보여줄 때 이 함수를 그대로 가져다 쓴다 — clamp
+ * 규칙이 엔진과 어긋나지 않도록 하기 위해서다.
+ */
+export function normalizeInterval(days: number | undefined, fallback: number): number {
+  const value = days !== undefined && Number.isFinite(days) ? Math.round(days) : fallback
+  return Math.min(Math.max(value, MIN_INTERVAL_DAYS), MAX_INTERVAL_DAYS)
 }
 
 /**

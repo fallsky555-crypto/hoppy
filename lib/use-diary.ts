@@ -27,6 +27,7 @@ import {
   saveSettings,
 } from "@/lib/supabase/sync"
 import type { Concern, SupportId } from "@/lib/routine-copy"
+import { heroImageSrcForDay } from "@/lib/hero-image"
 
 /** 장벽 점수 그래프는 2주차(Day 8)부터 노출된다 */
 export const BARRIER_SCORE_START_DAY = 8
@@ -292,6 +293,13 @@ export function useDiary() {
 
   const currentDay = dayFromJoinDate(state.joinDate)
 
+  /**
+   * 온보딩 완료 여부를 별도 필드 없이 판단한다. completeOnboarding()이 항상 두 값을
+   * 함께 채워 넣으므로(둘 다 undefined 아니면 온보딩 끝난 것), 새 컬럼/로컬 필드가
+   * 필요 없다.
+   */
+  const onboarded = state.settings.activeIntervalDays !== undefined && state.settings.bhaIntervalDays !== undefined
+
   const baseCalendar = useMemo(
     () => generateCalendar({ signupDate: state.joinDate, settings: state.settings }),
     [state.joinDate, state.settings],
@@ -301,6 +309,9 @@ export function useDiary() {
   const { calendar, incidentLog, reactionLog } = useMemo(() => applyEvents(baseCalendar, state.events), [baseCalendar, state.events])
 
   const totalDays = calendar.length
+
+  // 상단 여정 카드 히어로 이미지 — BHA가 새로 들어가는 날마다 다음 사이클 이미지로 바뀐다
+  const heroImageSrc = useMemo(() => heroImageSrcForDay(calendar, currentDay), [calendar, currentDay])
 
   // 장벽 점수 시계열 — 2주차(Day 8)부터 오늘까지
   const barrierScoreLog: BarrierScorePoint[] = useMemo(() => {
@@ -366,6 +377,20 @@ export function useDiary() {
     setState((prev) => ({ ...prev, settings }))
   }, [])
 
+  /**
+   * 온보딩 4단계 "시작하기" 전용. activeIntervalDays/bhaIntervalDays를 항상 같은
+   * 값으로 한 번에 채워 넣고(온보딩 판단 기준이 "둘 다 있는지"라 절대 따로 저장되면
+   * 안 된다), 가입일(Day 1)도 이 순간으로 스탬프한다 — 온보딩을 보는 동안은 아직
+   * Day 1이 시작되지 않은 것으로 취급한다.
+   */
+  const completeOnboarding = useCallback((intervalDays: number) => {
+    setState((prev) => ({
+      ...prev,
+      joinDate: todayISO(),
+      settings: { activeIntervalDays: intervalDays, bhaIntervalDays: intervalDays },
+    }))
+  }, [])
+
   /** [Period] / [Sunburn] / [Treatment] 버튼에서 호출 — 캘린더를 응급 루틴으로 전환한다 */
   const reportIncident = useCallback((day: number, incidentType: IncidentType, durationDays?: number) => {
     setState((prev) => ({ ...prev, events: [...prev.events, { kind: "incident", day, incidentType, durationDays }] }))
@@ -413,8 +438,11 @@ export function useDiary() {
 
   return {
     hydrated,
+    onboarded,
+    completeOnboarding,
     currentDay,
     totalDays,
+    heroImageSrc,
     completedDays: state.completedDays,
     complete,
     getHabit,
