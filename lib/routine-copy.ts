@@ -183,12 +183,35 @@ const ACTIVE_LABEL: Record<"aha" | "bha" | "retinol", string> = {
   retinol: "레티놀",
 }
 
+/** concern별 구매 가이드 문구 (owned=false인 경우) */
+const CONCERN_PURCHASE_GUIDE: Record<Exclude<Concern, "none">, string> = {
+  nia: "나이아신아마이드, 없으신가요? 자주 쓰시는 구매사이트에서 '나이아신아마이드 2~5%' 세럼으로 검색하시면 자극 부담 없이 시작하기 좋아요.",
+  hya: "히알루론산, 없으신가요? 자주 쓰시는 구매사이트에서 '히알루론산' 앰플·세럼으로 검색하시면 돼요. 농도보다 고분자+저분자 혼합인지가 더 중요해요.",
+  cica: "시카(마데카소사이드), 없으신가요? 구매사이트에서 '시카' 또는 '마데카소사이드'로 검색하시면 돼요. 크림 제형이면 진정 효과가 오래 유지돼요.",
+  cer: "세라마이드, 없으신가요? 구매사이트에서 '세라마이드' 크림으로 검색하시면 돼요. '세라마이드 복합' 또는 '베리어크림' 표기 제품이 안전해요.",
+}
+
+/** concern별 관련 카테고리 (언제 노출될지 결정) */
+const CONCERN_CATEGORIES: Record<Exclude<Concern, "none">, RecipeType[]> = {
+  nia: ["defense_toning", "defense_toning"],
+  hya: ["defense_hydration", "defense_hydration"],
+  cica: ["defense_barrier", "sos_rest"],
+  cer: ["defense_barrier", "barrier_lock"],
+}
+
 /**
  * day의 카테고리에 맞는 루틴 문구. title/detail은 calendar 기반으로 해당 카테고리의
  * 등장 횟수를 세어 variant 순환 선택. caution은 고정 정보성 문구.
  * 스페셜케어는 첫 등장(count===0)일 때 별도 문구, 이후부터 3개 순환.
+ * concern이 설정되고 해당 성분이 없으면 구매 가이드 문구를 caution 뒤에 추가.
  */
-export function getCategoryCopy(category: RecipeType, calendar: CalendarEntry[], day: number): RoutineCopy {
+export function getCategoryCopy(
+  category: RecipeType,
+  calendar: CalendarEntry[],
+  day: number,
+  concern: Concern = "none",
+  supportOwned: SupportId[] = [],
+): RoutineCopy {
   const appearanceCount = countCategoryAppearances(calendar, category, day)
 
   // 스페셜케어 첫 등장: 별도 문구 사용
@@ -212,7 +235,27 @@ export function getCategoryCopy(category: RecipeType, calendar: CalendarEntry[],
     detail = detail.replace(/\{\{name\}\}/g, ACTIVE_LABEL[category])
   }
 
-  const caution = CAUTION_TEXT[category]
+  let caution = CAUTION_TEXT[category]
+
+  // concern 기반 구매 가이드: 해당 카테고리에 처음 또는 두 번째 등장할 때만 노출
+  if (concern !== "none" && concern in CONCERN_PURCHASE_GUIDE) {
+    const concernCategories = CONCERN_CATEGORIES[concern]
+    const categoryMatches = concernCategories.includes(category)
+    const appearanceInConcern = concernCategories.filter((c) => c === category).indexOf(category)
+
+    if (categoryMatches && appearanceCount < 2) {
+      // concernAppearanceIndex가 0 또는 1일 때만 노출 (코스 중 최대 2번)
+      const supportId = concern as SupportId
+      if (!supportOwned.includes(supportId)) {
+        if (caution) {
+          caution = `${caution} · ${CONCERN_PURCHASE_GUIDE[concern]}`
+        } else {
+          caution = CONCERN_PURCHASE_GUIDE[concern]
+        }
+      }
+    }
+  }
+
   return { title: variant.title, detail, caution }
 }
 
