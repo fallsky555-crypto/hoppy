@@ -1,25 +1,25 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { recipeForDay, type Recipe, type RecipeType } from "@/lib/schedule"
+import type { Recipe, RecipeType } from "@/lib/schedule"
 import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-copy"
+import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 import { Button } from "@/components/ui/button"
-import { Check, ShieldAlert, Sun } from "lucide-react"
+import { Check, ShieldAlert } from "lucide-react"
 
 /** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
-const REACTIVE_CATEGORIES: RecipeType[] = ["aha", "bha", "retinol"]
+const REACTIVE_CATEGORIES: RecipeType[] = ["bha", "retinol"]
 
 interface RecipeCardProps {
   day: number
   currentDay: number
   isCompleted: boolean
   onRecord: () => void
-  /** 진단이 있으면 개인화 캘린더, 없으면 기본 30일 스케줄(recipeForDay)을 사용 */
-  getRecipe?: (day: number) => Recipe
+  getRecipe: (day: number) => Recipe
   /** 오늘 이미 이 성분에 대한 자극을 신고했는지 */
   hasReportedReaction?: boolean
   onReportReaction?: () => void
-  /** rest/moist 문구에 강조할 관심사 + 보유 성분 */
+  /** 방어/락 계열 문구에 강조할 관심사 + 보유 성분 */
   concern?: Concern
   supportOwned?: SupportId[]
 }
@@ -29,14 +29,14 @@ export function RecipeCard({
   currentDay,
   isCompleted,
   onRecord,
-  getRecipe = recipeForDay,
+  getRecipe,
   hasReportedReaction = false,
   onReportReaction,
   concern = "none",
   supportOwned = [],
 }: RecipeCardProps) {
   const recipe = getRecipe(day)
-  const copy = getCategoryCopy(recipe.type, concern, supportOwned)
+  const copy = getCategoryCopy(recipe.type, day, concern, supportOwned)
   const isToday = day === currentDay
   const isFuture = day > currentDay
   const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)
@@ -45,7 +45,7 @@ export function RecipeCard({
     <section
       className={cn(
         "rounded-4xl px-[22px] py-[26px] ring-1",
-        isToday ? "bg-primary ring-transparent" : "bg-card ring-border",
+        isToday ? "bg-today-accent ring-transparent" : "bg-card ring-border",
       )}
       aria-label="오늘의 레시피 상세"
     >
@@ -77,20 +77,6 @@ export function RecipeCard({
 
       {recipe.caution && (
         <p className={cn("mt-2 text-xs font-medium", isToday ? "text-white/70" : "text-muted-foreground")}>{recipe.caution}</p>
-      )}
-
-      {/* 액티브 성분(AHA/BHA/레티놀) 데이에만 노출되는 선크림 리마인더 — 매일 기본 습관의
-          "선크림 발랐어요" 체크와는 별개로, 광과민성이 커지는 날에만 강조해서 보여준다 */}
-      {REACTIVE_CATEGORIES.includes(recipe.type) && (
-        <div
-          className={cn(
-            "mt-3 flex items-center gap-2 rounded-2xl px-3 py-2.5 text-xs font-semibold",
-            isToday ? "bg-white/15 text-white" : "bg-secondary text-foreground",
-          )}
-        >
-          <Sun className="size-4 shrink-0" aria-hidden />
-          오늘은 자외선에 특히 민감해질 수 있어요. 외출 전 선크림을 꼭 발라주세요.
-        </div>
       )}
 
       <div className="mt-5">
@@ -131,7 +117,7 @@ export function RecipeCard({
               )}
             >
               <ShieldAlert className="size-3.5" aria-hidden />
-              오늘 자극을 신고했어요. 이 성분은 7일 뒤로 미뤄져요.
+              오늘 자극을 신고했어요. 이 성분은 {REACTION_DELAY_DAYS}일 뒤로 미뤄져요.
             </p>
           ) : (
             <Button

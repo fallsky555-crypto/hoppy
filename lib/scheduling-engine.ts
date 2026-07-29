@@ -1,113 +1,30 @@
 /**
- * Hoppy 스케줄링 엔진 (scheduling-engine-spec.md v1.5 구현)
+ * Hoppy 스케줄링 엔진 (2026-07-27 재설계 스펙 구현)
  *
- * lib/schedule.ts의 고정 30일 스케줄(recipeForDay)을 대체하는 개인화 캘린더 생성기.
- * Tier(강도) × Type(유형) 조합으로 캘린더를 만들고, 장벽 점수·인시던트 오버라이드·
- * 자극 지연·2단계 잠금 해제 판정까지 같은 상태 기계 원칙을 공유한다.
- *
- * v1.5(11번): 방어일(defense)/공격일(attack) 축을 도입해 하루 단위 순차 시뮬레이션으로
- * 캘린더를 생성한다. 방어일은 3종 성분 로테이션을 돌고, 공격일은 Tier별 간격 규칙과
- * 레티놀 합류 조건을 따른다. SOS Rest(가입일 기준 고정일)는 인시던트 다음으로 우선한다.
+ * "이미 건강한 피부를 위한 모공 케어 웰니스 프로그램" 컨셉으로 전환하면서, 진단
+ * 기반(Tier×Type) 개인화를 걷어내고 "요철이 사라지는 30일 표준 스케줄러" 워크북의
+ * 하루 단위 순차 시뮬레이션만 남긴다. 액티브(BHA/레티놀)는 각자 독립적인 고정
+ * 간격으로 도입되고, 액티브가 아닌 날은 6단계 서브 로테이션을 돈다.
  */
-import { RECIPES, type Recipe, type RecipeType, TOTAL_DAYS } from "@/lib/schedule"
+import {
+  DEFAULT_ACTIVE_INTERVAL_DAYS,
+  DEFAULT_BHA_INTERVAL_DAYS,
+  MAX_INTERVAL_DAYS,
+  MIN_INTERVAL_DAYS,
+  RECIPES,
+  type Recipe,
+  type RecipeType,
+  type ScheduleSettings,
+  TOTAL_DAYS,
+} from "@/lib/schedule"
 
 /**
- * 13-3(v1.7). 저장된 diary_profiles.engine_version과 비교해 캐시 무효화를 판단하는 기준값.
- * 엔진 로직(특히 generateCalendar()의 카테고리 배정 규칙)이 바뀔 때마다 반드시 올린다 —
- * 릴리스 체크리스트 항목. 올리지 않으면 이번에 고친 "세션 캐싱" 버그가 형태만 바뀌어 재발한다.
+ * 저장된 diary_profiles.engine_version과 비교해 캐시 무효화를 판단하는 기준값.
+ * generateCalendar()의 카테고리 배정 규칙이 바뀔 때마다 반드시 올린다.
  */
-export const CURRENT_ENGINE_VERSION = "1.7"
+export const CURRENT_ENGINE_VERSION = "2.0"
 
-// ── 2. Tier(강도) × Type(유형) ──────────────────────────────
-
-/** X = 의료 상담 필요 (9-2). 캘린더를 생성하지 않는다. */
-export type Tier = 0 | 1 | 2 | "X"
-export type SkinType = "A" | "B" | "C"
-
-export interface DiagnosisInput {
-  /** 진단 시점에 겹쳐 쓰고 있던 액티브 성분 개수 (checker.html strong.length) */
-  overlapCount: number
-  irritationReported: boolean
-  skinType: SkinType
-  /** checker.html symptom 값. 'bad'면 액티브 개수와 무관하게 Tier X로 분기 (9-2) */
-  symptom?: string
-  /** 11-5(v1.5). checker.html "성분을 잘 모르겠어요" 체크 — Tier 안전 하한을 1로 올린다(낮추지는 않음) */
-  unsure?: boolean
-}
-
-interface TierRule {
-  /** 마지막 휴식일. Day 1~restEndDay는 액티브 없이 휴식/보습만 진행 */
-  restEndDay: number
-  /** 첫 액티브 도입일 */
-  firstActiveDay: number
-}
-
-/** v1.3 — 체감 효능 격차 수정으로 각 Tier 내에서 도입일을 앞당김 (Day 10/14/21 → 3/5/9) */
-const TIER_RULES: Record<0 | 1 | 2, TierRule> = {
-  0: { restEndDay: 2, firstActiveDay: 3 },
-  1: { restEndDay: 4, firstActiveDay: 5 },
-  2: { restEndDay: 8, firstActiveDay: 9 },
-}
-
-/** 2-1. Tier 배정 + 9-2. Tier X 우선 분기 + 11-5. unsure 안전 하한(v1.5) */
-export function assignTier(
-  diagnosis: Pick<DiagnosisInput, "overlapCount" | "irritationReported" | "symptom" | "unsure">,
-): Tier {
-  if (diagnosis.symptom === "bad") return "X"
-
-  let tier: 0 | 1 | 2
-  if (diagnosis.overlapCount >= 3) tier = 2
-  else if (diagnosis.overlapCount === 2 || diagnosis.irritationReported) tier = 1
-  else tier = 0
-
-  // "성분을 잘 모르겠어요" — 계산된 Tier를 낮추지는 않고, 0이었을 때만 안전 하한 1로 올린다
-  if (diagnosis.unsure && tier === 0) tier = 1
-
-  return tier
-}
-
-/** 9-1. checker.html symptom → 자극 보고 여부 매핑 */
-const IRRITATION_SYMPTOMS = ["dry", "flush", "flaky", "trouble", "bad"]
-export function isIrritationSymptom(symptom: string | undefined): boolean {
-  return !!symptom && IRRITATION_SYMPTOMS.includes(symptom)
-}
-
-/**
- * 9-3. A/B/C 유형 판별 임시 휴리스틱.
- * checker.html에 유형 판별 전용 문항이 생기면 이 함수를 대체한다.
- */
-export interface SkinTypeHeuristicInput {
-  symptom?: string
-  resetGroupSymptoms: string[]
-  selectedActiveIds: string[]
-  bhaOrBenzoylPeroxideIds: string[]
-  ahaOrTonerPadIds: string[]
-}
-
-export function inferSkinType({
-  symptom,
-  resetGroupSymptoms,
-  selectedActiveIds,
-  bhaOrBenzoylPeroxideIds,
-  ahaOrTonerPadIds,
-}: SkinTypeHeuristicInput): SkinType {
-  if (symptom === "bad" || (symptom && resetGroupSymptoms.includes(symptom))) return "A"
-  if (selectedActiveIds.some((id) => bhaOrBenzoylPeroxideIds.includes(id))) return "C"
-  if (selectedActiveIds.some((id) => ahaOrTonerPadIds.includes(id))) return "B"
-  return "B"
-}
-
-/**
- * 2-2. Type별 주력 액티브(공격일 콘텐츠).
- * A유형(장벽 붕괴형)은 이번 코스에서 액티브를 도입하지 않고 방어일 로테이션만 반복한다.
- */
-const PRIMARY_ACTIVE_CATEGORY: Record<SkinType, "aha" | "bha" | null> = {
-  A: null,
-  B: "aha",
-  C: "bha",
-}
-
-// ── 3~4. 캘린더 생성 ─────────────────────────────────────────
+// ── 캘린더 생성 ─────────────────────────────────────────────
 
 export interface CalendarEntry {
   day: number
@@ -117,29 +34,18 @@ export interface CalendarEntry {
   completed: boolean | null
   reactionFlag: boolean | null
   /**
-   * Type A(장벽 붕괴형)의 Tier별 첫 액티브 도입일(Day5/Day9)에만 true.
-   * 실제로 바르는 성분은 그대로 rest/moist고, UI에서 "장벽 집중 케어 데이"처럼
-   * 그 날만 다르게 표시하기 위한 이름표 용도의 플래그다.
+   * 어제가 액티브(bha/retinol)였던 이유로 오늘 방어/락 계열이 배정된 날에만 true.
+   * 강제 로직은 아니고, UI에서 "전날 액티브 하셨다면 오늘은 수분·장벽에 집중해주세요"
+   * 같은 문구를 보여주고 싶을 때 쓰는 이름표 용도의 선택적 플래그다.
    */
-  milestone: boolean
+  afterActiveRestDay: boolean
 }
 
 export interface GenerateCalendarParams {
-  diagnosis: DiagnosisInput
   signupDate: string // ISO
   totalDays?: number
-  /**
-   * 11-4·2-3 클린 완료 판정에 쓰는 완료/자극 이력. 생략하면(예: 최초 생성 시점)
-   * 아직 완료된 날이 없는 것으로 보고 레티놀 합류 조건도 미충족 상태로 계산한다.
-   */
-  completedDays?: number[]
-  /** 자극이 신고된 날짜 목록 — reportReaction()이 호출된 날 */
-  reactionDays?: number[]
+  settings?: ScheduleSettings
 }
-
-export type GenerateCalendarResult =
-  | { status: "medical_referral" }
-  | { status: "ok"; tier: 0 | 1 | 2; skinType: SkinType; calendar: CalendarEntry[] }
 
 function addDays(iso: string, amount: number): string {
   const date = new Date(iso)
@@ -147,91 +53,103 @@ function addDays(iso: string, amount: number): string {
   return date.toISOString()
 }
 
-// ── 11. 7성분 로테이션 시스템(v1.5) ───────────────────────────
+// ── 6단계 서브 로테이션(방어일) ─────────────────────────────
 
-/** 11-1. 방어일(defense) 3종 로테이션 — 세라마이드+시카 → 비타민C+나이아신아마이드 → 히알루론산+세라마이드 */
-const DEFENSE_ROTATION: readonly RecipeType[] = ["defense_barrier", "defense_toning", "defense_hydration"]
+/** 고정 순서 — 슬라이더 조정 대상 아님 */
+const DEFENSE_ROTATION: readonly RecipeType[] = [
+  "defense_barrier",
+  "defense_toning",
+  "defense_hydration",
+  "barrier_lock",
+  "hydration_lock",
+  "toning_solo",
+]
 
 function defenseCategoryForCount(count: number): RecipeType {
   return DEFENSE_ROTATION[count % DEFENSE_ROTATION.length]
 }
 
-/** 11-4. SOS Rest — 가입일 기준 고정일(Day 7/14/22/29). 인시던트 다음으로 우선하는 캘린더 트리거형 오버라이드 */
-const SOS_REST_DAYS: ReadonlySet<number> = new Set([7, 14, 22, 29])
+// ── 액티브(BHA/레티놀) 도입 판정 ─────────────────────────────
 
-/** 11-3. 레티놀 합류에 필요한 주력 액티브 클린 완료 횟수 — Tier2는 더 보수적으로 3회 */
-const CLEAN_COMPLETIONS_FOR_RETINOL: Record<0 | 1 | 2, number> = { 0: 2, 1: 2, 2: 3 }
+type ActiveKind = "bha" | "retinol"
 
 /**
- * 11-6. 하루 단위 순차 시뮬레이션으로 캘린더를 만든다. day 1부터 totalDays까지 훑으며
- * 우선순위 순으로 그날의 카테고리를 정한다: SOS Rest > Type A(항상 방어 로테이션) >
- * 액티브 도입 전(방어 로테이션) > 공격일 판정(Tier별 간격 규칙) > 레티놀 합류.
- *
- * 방어 로테이션 카운터는 캘린더 전체를 통틀어 누적되는 순번이며, SOS Rest·공격일로
- * 소비된 날은 카운트를 올리지 않는다(그 자리를 건너뛰어도 로테이션 순서는 유지된다).
- * 공격일 판정은 Tier0·1은 도입일부터 이어지는 날짜 기반 격일 패턴, Tier2는 직전
- * 공격일로부터 최소 3일 간격이 되는 첫 날로 계산한다. 레티놀 합류 이후에는 직전
- * 공격일 콘텐츠와 다른 것을 배정해 주력 액티브 ↔ 레티놀이 자연히 교대된다.
+ * 유저가 준 값이 있으면 반올림 후 [MIN_INTERVAL_DAYS, MAX_INTERVAL_DAYS]로 clamp하고,
+ * 없거나 유효하지 않으면 fallback을 그대로 clamp해 돌려준다. 온보딩 화면(3단계
+ * 매핑+코멘트)도 최종값을 미리 보여줄 때 이 함수를 그대로 가져다 쓴다 — clamp
+ * 규칙이 엔진과 어긋나지 않도록 하기 위해서다.
  */
-export function generateCalendar({
-  diagnosis,
-  signupDate,
-  totalDays = TOTAL_DAYS,
-  completedDays = [],
-  reactionDays = [],
-}: GenerateCalendarParams): GenerateCalendarResult {
-  const tier = assignTier(diagnosis)
-  if (tier === "X") return { status: "medical_referral" }
+export function normalizeInterval(days: number | undefined, fallback: number): number {
+  const value = days !== undefined && Number.isFinite(days) ? Math.round(days) : fallback
+  return Math.min(Math.max(value, MIN_INTERVAL_DAYS), MAX_INTERVAL_DAYS)
+}
 
-  const { firstActiveDay } = TIER_RULES[tier]
-  const primary = PRIMARY_ACTIVE_CATEGORY[diagnosis.skinType]
-  const cleanThreshold = CLEAN_COMPLETIONS_FOR_RETINOL[tier]
-  const completedSet = new Set(completedDays)
-  const reactionSet = new Set(reactionDays)
-  /**
-   * 11-2/11-6 버그 수정(v1.7). 최초 생성 시점엔 completedDays/reactionDays가 둘 다
-   * 비어 있어 "자극 없이 N회 클린 완료"를 판정할 실제 데이터가 없다 — 이전엔 이 경우
-   * 조건이 항상 거짓으로 평가되어 레티놀이 30일 내내 한 번도 합류하지 못했다. 실제
-   * 기록이 하나라도 있으면(반응 우선 원칙) 이 낙관적 가정은 즉시 꺼지고, 아래 카운팅은
-   * completedSet/reactionSet 기반 실측치로만 판정한다.
-   */
-  const noRealDataYet = completedDays.length === 0 && reactionDays.length === 0
+/**
+ * 하루 단위 순차 시뮬레이션으로 캘린더를 만든다. day 1부터 totalDays까지 훑으며
+ * 우선순위 순으로 그날의 카테고리를 정한다:
+ *
+ *   1. 어제가 액티브였다면 → 오늘은 무조건 방어/락 계열(액티브 연속 금지)
+ *   2. 오늘이 BHA/레티놀 "도입 타이밍"이면 → 액티브 배정
+ *      (각자 독립적인 간격을 가지며, 아직 한 번도 배정되지 않았으면 즉시 도입 대상이다.
+ *      같은 날 둘 다 도입 타이밍이 겹치면, 지난번 충돌에서 배정됐던 쪽이 이번엔
+ *      양보하는 교대 방식으로 하나만 배정하고 나머지는 다음 가능한 날로 미룬다)
+ *   3. 그 외 → 6단계 서브 로테이션에서 다음 순서 배정
+ *
+ * 방어 로테이션 카운터는 캘린더 전체에서 누적되고, 액티브로 소비된 날은 건너뛰되
+ * 카운터는 그대로 유지한다.
+ */
+export function generateCalendar({ signupDate, totalDays = TOTAL_DAYS, settings = {} }: GenerateCalendarParams): CalendarEntry[] {
+  const bhaInterval = normalizeInterval(settings.bhaIntervalDays, DEFAULT_BHA_INTERVAL_DAYS)
+  const retinolInterval = normalizeInterval(settings.activeIntervalDays, DEFAULT_ACTIVE_INTERVAL_DAYS)
 
   const calendar: CalendarEntry[] = []
   let defenseCount = 0
-  let lastAttackDay = 0
-  let lastAttackContent: RecipeType | null = null
-  let primaryCleanCompletions = 0
+  let lastBhaDay = 0
+  let lastRetinolDay = 0
+  /** day는 1부터 시작하므로, "아직 액티브 배정 없음"은 day-1(=0)과 절대 겹치지 않는 -1로 표시한다 */
+  let lastActiveDay = -1
+  /** 같은 날 두 액티브가 겹칠 때, 지난번에 우선 배정됐던 쪽을 이번엔 양보시키는 교대 우선순위 */
+  let collisionPriority: ActiveKind = "bha"
+
+  const isDue = (kind: ActiveKind, day: number): boolean => {
+    const lastDay = kind === "bha" ? lastBhaDay : lastRetinolDay
+    const interval = kind === "bha" ? bhaInterval : retinolInterval
+    return lastDay === 0 || day - lastDay >= interval
+  }
+
+  const placeActive = (kind: ActiveKind, day: number): RecipeType => {
+    if (kind === "bha") lastBhaDay = day
+    else lastRetinolDay = day
+    lastActiveDay = day
+    return kind
+  }
 
   for (let day = 1; day <= totalDays; day++) {
     let category: RecipeType
+    let afterActiveRestDay = false
 
-    if (SOS_REST_DAYS.has(day)) {
-      category = "sos_rest"
-    } else if (!primary || day < firstActiveDay) {
-      // Type A는 액티브를 도입하지 않고, 그 외 유형도 도입일 전에는 방어 로테이션만 돈다
+    if (lastActiveDay === day - 1) {
+      // 규칙 1. 어제가 액티브였다면 오늘은 무조건 방어/락 계열
       category = defenseCategoryForCount(defenseCount)
       defenseCount++
+      afterActiveRestDay = true
     } else {
-      const isAttackDay =
-        tier === 2
-          ? lastAttackDay === 0
-            ? day === firstActiveDay
-            : day - lastAttackDay >= 3
-          : (day - firstActiveDay) % 2 === 0
+      const bhaDue = isDue("bha", day)
+      const retinolDue = isDue("retinol", day)
 
-      if (!isAttackDay) {
+      if (bhaDue && retinolDue) {
+        // 규칙 2. 같은 날 두 액티브가 겹치면 하나만 배정하고, 진 쪽은 다음 가능한 날로 미룬다
+        const winner: ActiveKind = collisionPriority
+        collisionPriority = winner === "bha" ? "retinol" : "bha"
+        category = placeActive(winner, day)
+      } else if (bhaDue) {
+        category = placeActive("bha", day)
+      } else if (retinolDue) {
+        category = placeActive("retinol", day)
+      } else {
+        // 규칙 3. 6단계 서브 로테이션
         category = defenseCategoryForCount(defenseCount)
         defenseCount++
-      } else {
-        lastAttackDay = day
-        const retinolEligible = primaryCleanCompletions >= cleanThreshold
-        category = retinolEligible ? (lastAttackContent === primary ? "retinol" : primary) : primary
-        lastAttackContent = category
-        if (category === primary) {
-          const countsAsClean = noRealDataYet || (completedSet.has(day) && !reactionSet.has(day))
-          if (countsAsClean) primaryCleanCompletions++
-        }
       }
     }
 
@@ -242,20 +160,14 @@ export function generateCalendar({
       recipe: RECIPES[category],
       completed: null,
       reactionFlag: null,
-      // Type A는 액티브 카테고리가 없으니, 대신 Tier별 첫 액티브 도입일에 이름표만 붙인다
-      milestone: !primary && day === firstActiveDay,
+      afterActiveRestDay,
     })
   }
 
-  return { status: "ok", tier, skinType: diagnosis.skinType, calendar }
+  return calendar
 }
 
-// ── 4. 4주 Lock-in 주차 라벨 (감정적 마일스톤 오버레이) ─────────
-//
-// v1.3 우선순위 원칙: 액티브 성분의 실제 첫 도입일·빈도는 TIER_RULES(2-1)와
-// generateCalendar()의 하루 단위 시뮬레이션(11-6)이 항상 우선한다. 아래 이름표는
-// 그 계산 결과를 절대 읽거나 되돌리지 않는 순수 연출용 레이어라, "내러티브가
-// 실제 시작일을 3주차로 늦춘다"는 구조적 충돌이 애초에 발생할 수 없다.
+// ── 4주 Lock-in 주차 라벨 (감정적 마일스톤 오버레이) ─────────
 
 export interface WeekLabel {
   week: 1 | 2 | 3 | 4
@@ -275,7 +187,7 @@ export function weekLabelForDay(day: number): WeekLabel {
   return WEEK_LABELS[week - 1]
 }
 
-// ── 4-1. 장벽 점수 ───────────────────────────────────────────
+// ── 장벽 점수 ───────────────────────────────────────────────
 
 export interface BarrierScoreInput {
   /** 경과일 수 — 인시던트 오버라이드 기간은 제외하고 전달 */
@@ -292,7 +204,7 @@ export function calculateBarrierScore({ elapsedDays, recordedDays, irritationDay
   return Math.round((completionRate * 0.5 + irritationFreeRate * 0.5) * 100)
 }
 
-// ── 5. 스킨 인시던트 — 비상 재생 주기 ─────────────────────────
+// ── 스킨 인시던트 — 비상 재생 주기 ─────────────────────────
 
 export type IncidentType = "period" | "sunburn" | "treatment"
 
@@ -311,11 +223,11 @@ const DEFAULT_INCIDENT_DURATION_DAYS: Record<IncidentType, number> = {
   treatment: 7,
 }
 
-/** 인시던트 기간 동안 전면 대체되는 루틴. 기능성 성분은 전부 배제한다 */
+/** 인시던트 기간 동안 전면 대체되는 루틴. 기능성 성분은 전부 배제하고 SOS Rest로 통일한다 */
 const INCIDENT_OVERRIDE_ROUTINE: Record<IncidentType, RecipeType> = {
-  period: "moist", // 피지 조절 + 장벽 진정
-  sunburn: "rest", // 세라마이드·판테놀 계열 진정, 기능성 성분 전면 차단
-  treatment: "rest",
+  period: "sos_rest",
+  sunburn: "sos_rest",
+  treatment: "sos_rest",
 }
 
 /**
@@ -338,7 +250,15 @@ function insertDays(
   const inserted: CalendarEntry[] = Array.from({ length: count }, (_, i) => {
     const day = atDay + i
     const category = categoryForInsertedDay(day)
-    return { day, date: addDays(baseDate, i), category, recipe: RECIPES[category], completed: null, reactionFlag: null, milestone: false }
+    return {
+      day,
+      date: addDays(baseDate, i),
+      category,
+      recipe: RECIPES[category],
+      completed: null,
+      reactionFlag: null,
+      afterActiveRestDay: false,
+    }
   })
 
   const shiftedFuture = calendar
@@ -349,8 +269,8 @@ function insertDays(
 }
 
 /**
- * 5. 인시던트 오버라이드. 지난 일정은 유지하고, 트리거된 날부터 durationDays만큼
- * 응급 루틴 일정을 새로 끼워 넣는다. 원래 그 자리에 있던 미래 일정은 그만큼
+ * 인시던트 오버라이드. 지난 일정은 유지하고, 트리거된 날부터 durationDays만큼
+ * SOS Rest 일정을 새로 끼워 넣는다. 원래 그 자리에 있던 미래 일정은 그만큼
  * 통째로 뒤로 밀린다("종료 시 NORMAL로 복귀, 미래 일정만 뒤로 밀림").
  */
 export function startIncidentOverride(
@@ -376,7 +296,7 @@ export function startIncidentOverride(
   }
 }
 
-// ── 반응 피드백 루프 — 자극 신고 시 7일 연기 (8번 엣지 케이스) ─────
+// ── 반응 피드백 루프 — 자극 신고 시 5일 연기 ────────────────
 
 export interface ReactionLogEntry {
   day: number
@@ -385,13 +305,11 @@ export interface ReactionLogEntry {
   delayedToDay: number
 }
 
-const REACTION_DELAY_DAYS = 7
+export const REACTION_DELAY_DAYS = 5
 
 /**
  * 자극이 신고된 날의 기록은 그대로 두되(reactionFlag만 표시), 그 다음 날부터
- * 7일간의 휴식/보습 버퍼를 끼워 넣어 이후 일정 전체를 7일 뒤로 미룬다.
- * 이 코스는 Type당 액티브 카테고리를 하나만 도입하므로(2-2), "해당 카테고리만
- * 개별 연기"와 "전체 일정을 7일 미루기"는 실질적으로 동일한 결과를 낸다.
+ * 5일간 SOS Rest 버퍼를 끼워 넣어 이후 일정 전체를 5일 뒤로 미룬다.
  */
 export function delayForReaction(
   calendar: CalendarEntry[],
@@ -399,7 +317,7 @@ export function delayForReaction(
   category: RecipeType,
 ): { calendar: CalendarEntry[]; reaction: ReactionLogEntry } {
   const flagged = calendar.map((entry) => (entry.day === day ? { ...entry, reactionFlag: true } : entry))
-  const next = insertDays(flagged, day + 1, REACTION_DELAY_DAYS, (d) => (d % 2 === 1 ? "rest" : "moist"))
+  const next = insertDays(flagged, day + 1, REACTION_DELAY_DAYS, () => "sos_rest")
 
   return {
     calendar: next,
@@ -407,7 +325,7 @@ export function delayForReaction(
   }
 }
 
-// ── 4-1(연속). 장벽 점수 시계열 ────────────────────────────────
+// ── 장벽 점수 시계열 ────────────────────────────────────────
 
 export interface BarrierScorePoint {
   day: number
@@ -416,7 +334,7 @@ export interface BarrierScorePoint {
 
 /**
  * fromDay~toDay 구간의 장벽 점수 시계열을 계산한다. 인시던트 오버라이드 기간은
- * (4-1 규칙대로) 완료율·자극 계산에서 통째로 제외한다.
+ * 완료율·자극 계산에서 통째로 제외한다.
  */
 export function buildBarrierScoreLog(
   calendar: CalendarEntry[],
@@ -445,7 +363,7 @@ export function buildBarrierScoreLog(
   return log
 }
 
-// ── 6. 완주 및 2단계 잠금 해제 판정 ────────────────────────────
+// ── 완주 및 2단계 잠금 해제 판정 ────────────────────────────
 
 export interface UnlockCheckInput {
   totalDays: number

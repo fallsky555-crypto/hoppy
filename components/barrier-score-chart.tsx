@@ -1,187 +1,42 @@
-"use client"
-
-import { useId, useMemo, useState } from "react"
-import { cn } from "@/lib/utils"
-import type { BarrierScorePoint } from "@/lib/scheduling-engine"
-
 interface BarrierScoreChartProps {
-  log: BarrierScorePoint[]
-  /** 그래프가 열리는 Day (2주차 시작일) */
-  unlockDay: number
+  currentDay: number
+  totalDays: number
 }
 
-const VIEW_W = 300
-const VIEW_H = 120
-const PAD = { top: 14, right: 10, bottom: 18, left: 26 }
-const PLOT_W = VIEW_W - PAD.left - PAD.right
-const PLOT_H = VIEW_H - PAD.top - PAD.bottom
-
-function scoreToY(score: number) {
-  return PAD.top + (1 - score / 100) * PLOT_H
+/**
+ * 주차가 끝나는 날(Day 7/14/21/totalDays)에만 나타나는 짧은 완주 격려 카드.
+ * 그래프/표는 걷어냈다 — 장벽 점수 자체의 계산·저장(buildBarrierScoreLog,
+ * saveBarrierScoreLog)은 lib/use-diary.ts에 그대로 남아있고, 이 컴포넌트는
+ * currentDay/totalDays만으로 노출 여부와 카피를 정한다.
+ *
+ * totalDays를 30으로 하드코딩하지 않는 이유: 인시던트/자극신고로 일정이
+ * 밀리면 totalDays가 30보다 커지는데(예: 생리 인시던트 1회면 36일), 그
+ * 경우에도 "코스 마지막 날"이 정확히 걸리게 하려면 totalDays 기준이어야 한다.
+ */
+function weeklyEncouragementCopy(week: number) {
+  return {
+    title: `${week}주, 잘 지나왔어요`,
+    detail: `매일 조금씩 쌓아온 기록이 벌써 ${week}주가 됐어요. 남은 시간도 이 속도로 충분해요.`,
+  }
 }
 
-export function BarrierScoreChart({ log, unlockDay }: BarrierScoreChartProps) {
-  const gradientId = useId()
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
-  const [showTable, setShowTable] = useState(false)
+const COURSE_COMPLETE_COPY = {
+  title: "30일, 끝까지 해냈어요",
+  detail: "중간에 쉬어간 날이 있었어도 괜찮아요. 다시 돌아와서 여기까지 온 게 중요해요.",
+}
 
-  const points = useMemo(
-    () =>
-      log.map((point, i) => ({
-        ...point,
-        x: PAD.left + (log.length === 1 ? PLOT_W / 2 : (i / (log.length - 1)) * PLOT_W),
-        y: scoreToY(point.score),
-      })),
-    [log],
-  )
+export function BarrierScoreChart({ currentDay, totalDays }: BarrierScoreChartProps) {
+  const isCourseEnd = currentDay === totalDays
+  const isWeeklyBoundary = currentDay === 7 || currentDay === 14 || currentDay === 21
 
-  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")
-  const areaPath =
-    points.length > 0
-      ? `${linePath} L${points[points.length - 1].x.toFixed(1)},${PAD.top + PLOT_H} L${points[0].x.toFixed(1)},${PAD.top + PLOT_H} Z`
-      : ""
+  if (!isCourseEnd && !isWeeklyBoundary) return null
 
-  const latest = log[log.length - 1]
-  const hovered = hoverIndex !== null ? points[hoverIndex] : null
-
-  function handlePointerMove(e: React.PointerEvent<SVGSVGElement>) {
-    if (points.length === 0) return
-    const rect = e.currentTarget.getBoundingClientRect()
-    const relX = ((e.clientX - rect.left) / rect.width) * VIEW_W
-    let nearest = 0
-    let nearestDist = Infinity
-    points.forEach((p, i) => {
-      const dist = Math.abs(p.x - relX)
-      if (dist < nearestDist) {
-        nearestDist = dist
-        nearest = i
-      }
-    })
-    setHoverIndex(nearest)
-  }
-
-  if (log.length === 0) {
-    return (
-      <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label="장벽 점수">
-        <h2 className="mb-2.5 text-[13px] font-semibold text-foreground">장벽 점수</h2>
-        <p className="rounded-2xl bg-secondary p-3.5 text-xs leading-relaxed text-muted-foreground">
-          2주차(Day {unlockDay})부터 장벽 점수 그래프가 열려요. 꾸준히 기록하며 조금만 기다려주세요.
-        </p>
-      </section>
-    )
-  }
+  const copy = isCourseEnd ? COURSE_COMPLETE_COPY : weeklyEncouragementCopy(currentDay / 7)
 
   return (
-    <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label="장벽 점수 그래프">
-      <div className="mb-3.5 flex items-center justify-between">
-        <h2 className="text-[13px] font-semibold text-foreground">장벽 점수</h2>
-        <button
-          type="button"
-          onClick={() => setShowTable((v) => !v)}
-          className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:underline"
-        >
-          {showTable ? "그래프로 보기" : "표로 보기"}
-        </button>
-      </div>
-
-      <p className="mb-3 flex items-baseline gap-1">
-        <span className="font-display text-[28px] font-semibold text-primary">{latest.score}</span>
-        <span className="text-xs text-muted-foreground">점 · Day {latest.day} 기준</span>
-      </p>
-
-      {showTable ? (
-        <div className="max-h-40 overflow-y-auto rounded-2xl ring-1 ring-border">
-          <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-secondary text-secondary-foreground">
-              <tr>
-                <th className="px-3 py-2 font-bold">Day</th>
-                <th className="px-3 py-2 font-bold">점수</th>
-              </tr>
-            </thead>
-            <tbody>
-              {log.map((point) => (
-                <tr key={point.day} className="border-t border-border">
-                  <td className="px-3 py-1.5 tabular-nums text-foreground/80">Day {point.day}</td>
-                  <td className="px-3 py-1.5 tabular-nums font-bold text-foreground">{point.score}점</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="relative">
-          <svg
-            viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-            preserveAspectRatio="none"
-            className="h-28 w-full touch-none"
-            role="img"
-            aria-label={`Day ${log[0].day}부터 Day ${latest.day}까지 장벽 점수 추이, 최근 점수 ${latest.score}점`}
-            onPointerMove={handlePointerMove}
-            onPointerLeave={() => setHoverIndex(null)}
-          >
-            <defs>
-              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.18" />
-                <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-
-            {/* 리셋시브 그리드라인: 0 / 50 / 100 */}
-            {[0, 50, 100].map((tick) => (
-              <g key={tick}>
-                <line
-                  x1={PAD.left}
-                  x2={VIEW_W - PAD.right}
-                  y1={scoreToY(tick)}
-                  y2={scoreToY(tick)}
-                  stroke="var(--color-border)"
-                  strokeWidth={1}
-                />
-                <text x={PAD.left - 6} y={scoreToY(tick) + 3} textAnchor="end" fontSize={8} fill="var(--color-muted-foreground)">
-                  {tick}
-                </text>
-              </g>
-            ))}
-
-            {areaPath && <path d={areaPath} fill={`url(#${gradientId})`} />}
-            {linePath && (
-              <path d={linePath} fill="none" stroke="var(--color-primary)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-            )}
-
-            {/* 끝점 마커 */}
-            {points.length > 0 && (
-              <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r={4} fill="var(--color-primary)" stroke="var(--color-card)" strokeWidth={2} />
-            )}
-
-            {/* 크로스헤어 */}
-            {hovered && (
-              <>
-                <line x1={hovered.x} x2={hovered.x} y1={PAD.top} y2={PAD.top + PLOT_H} stroke="var(--color-border)" strokeWidth={1} />
-                <circle cx={hovered.x} cy={hovered.y} r={4} fill="var(--color-primary)" stroke="var(--color-card)" strokeWidth={2} />
-              </>
-            )}
-
-            {/* x축: 첫날 / 마지막날 */}
-            <text x={PAD.left} y={VIEW_H - 4} fontSize={8} fill="var(--color-muted-foreground)">
-              Day {log[0].day}
-            </text>
-            <text x={VIEW_W - PAD.right} y={VIEW_H - 4} textAnchor="end" fontSize={8} fill="var(--color-muted-foreground)">
-              Day {latest.day}
-            </text>
-          </svg>
-
-          {hovered && (
-            <div
-              className={cn(
-                "pointer-events-none absolute top-0 -translate-x-1/2 rounded-lg bg-foreground px-2 py-1 text-[10px] font-bold text-background shadow-sm",
-              )}
-              style={{ left: `${(hovered.x / VIEW_W) * 100}%` }}
-            >
-              Day {hovered.day} · {hovered.score}점
-            </div>
-          )}
-        </div>
-      )}
+    <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label="주차 완주 격려">
+      <h2 className="font-display text-base font-bold text-foreground">{copy.title}</h2>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed text-[#4A4438]">{copy.detail}</p>
     </section>
   )
 }

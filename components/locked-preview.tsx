@@ -1,5 +1,4 @@
 import { Lock } from "lucide-react"
-import type { SkinType } from "@/lib/scheduling-engine"
 
 interface LockedStageProps {
   badge: string
@@ -24,38 +23,21 @@ function LockedStage({ badge, title, description, unlockNote }: LockedStageProps
   )
 }
 
-/** 유형별 2단계 프로그램 이름·문구 — 단정적 표현("100% 개선" 등) 대신 완곡한 톤 유지 */
-const STAGE_2_BY_TYPE: Record<"A" | "B" | "C", { title: string; description: string; unlockNote: string }> = {
-  A: {
-    title: "장벽 안정 케어",
-    description: "장벽이 편안해지는 걸 느끼면, 자극 없는 선에서 결을 다듬는 케어를 조금씩 더해볼 수 있어요.",
-    unlockNote: "1단계를 꾸준히 마치면 장벽 안정 케어가 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다.",
-  },
-  B: {
-    title: "광피부 프로그램",
-    description: "장벽이 편안해지면, 결을 정돈하는 턴오버 케어를 조금씩 더해볼 수 있어요.",
-    unlockNote: "1단계를 꾸준히 마치면 광피부 프로그램이 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다.",
-  },
-  C: {
-    title: "모공 타이트닝 프로그램",
-    description: "피지·모공이 편해지면, 유수분 밸런스를 잡아주는 케어를 이어가 볼 수 있어요.",
-    unlockNote: "1단계를 꾸준히 마치면 모공 타이트닝 프로그램이 열려요. 무리하지 않는 속도로 진행하시면 됩니다.",
-  },
-}
-
-interface LockedPreviewProps {
-  /** 진단이 아직 없으면 null — 이때는 유형에 치우치지 않은 기본 문구를 보여준다 */
-  skinType: SkinType | null
-}
-
-export function LockedPreview({ skinType }: LockedPreviewProps) {
-  const stage2 = STAGE_2_BY_TYPE[skinType ?? "A"]
-
+/**
+ * 2026-07-27 재설계: 피부타입(A/B/C)은 스케줄 생성에도, 다음 단계 프로그램
+ * 분기에도 관여하지 않는다 — 전 유저가 동일한 워크북을 따르므로 미리보기도 하나다.
+ */
+export function LockedPreview() {
   return (
     <section aria-label="다음 단계 미리보기" className="space-y-2.5">
       <h2 className="px-0.5 text-[13px] font-semibold text-foreground">다음 단계 미리보기</h2>
 
-      <LockedStage badge="2단계" title={stage2.title} description={stage2.description} unlockNote={stage2.unlockNote} />
+      <LockedStage
+        badge="2단계"
+        title="장벽 안정 케어"
+        description="장벽이 편안해지는 걸 느끼면, 자극 없는 선에서 결을 다듬는 케어를 조금씩 더해볼 수 있어요."
+        unlockNote="1단계를 꾸준히 마치면 장벽 안정 케어가 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다."
+      />
 
       <LockedStage
         badge="3단계"

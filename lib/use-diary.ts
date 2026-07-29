@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { dayFromJoinDate, recipeForDay, TOTAL_DAYS, type Recipe, type RecipeType } from "@/lib/schedule"
+import { dayFromJoinDate, RECIPES, TOTAL_DAYS, type Recipe, type RecipeType, type ScheduleSettings } from "@/lib/schedule"
 import {
   buildBarrierScoreLog,
   CURRENT_ENGINE_VERSION,
@@ -10,12 +10,9 @@ import {
   startIncidentOverride,
   type BarrierScorePoint,
   type CalendarEntry,
-  type DiagnosisInput,
   type IncidentLogEntry,
   type IncidentType,
   type ReactionLogEntry,
-  type SkinType,
-  type Tier,
 } from "@/lib/scheduling-engine"
 import {
   appendIncidentLog,
@@ -26,13 +23,13 @@ import {
   saveCalendar,
   saveConcern,
   saveContextFlags,
-  saveDiagnosis,
   saveEngineVersion,
+  saveSettings,
 } from "@/lib/supabase/sync"
-import { isAnonymousSession } from "@/lib/supabase/auth"
 import type { Concern, SupportId } from "@/lib/routine-copy"
+import { heroImageSrcForDay } from "@/lib/hero-image"
 
-/** 4번. 장벽 점수 그래프는 2주차(Day 8)부터 노출된다 */
+/** 장벽 점수 그래프는 2주차(Day 8)부터 노출된다 */
 export const BARRIER_SCORE_START_DAY = 8
 
 export interface DailyHabit {
@@ -50,20 +47,20 @@ interface DiaryState {
   joinDate: string
   completedDays: number[]
   habits: Record<number, DailyHabit>
-  /** 진단 결과. 아직 진단을 받지 않았으면 null → 기본 30일 스케줄(schedule.ts) 사용 */
-  diagnosis: DiagnosisInput | null
+  /** BHA/레티놀 도입 간격 슬라이더. 아무것도 안 건드리면 워크북 기본값(7/7)을 그대로 쓴다 */
+  settings: ScheduleSettings
   events: ScheduleEvent[]
-  /** 9-1. 임신/수유 중 — 레티놀 슬롯 잠금 안내에 사용 (Tier·Type과 무관한 공통 규칙) */
+  /** 임신/수유 중 — 레티놀 슬롯 잠금 안내에 사용 */
   pregnant: boolean
-  /** 9-1. 처방약 사용 중 — "처방 지도가 앱 가이드보다 우선" 고지에 사용 */
+  /** 처방약 사용 중 — "처방 지도가 앱 가이드보다 우선" 고지에 사용 */
   prescriptionMeds: boolean
-  /** rest/moist 문구에 강조할 관심사. Tier·Type 계산과는 무관하고 문구에만 영향을 준다 */
+  /** 루틴 문구에 강조할 관심사. 스케줄 계산과는 무관하고 문구에만 영향을 준다 */
   concern: Concern
   /** 유저가 이미 갖고 있다고 답한 성분 id 목록 */
   supportOwned: SupportId[]
   /**
-   * 13-3(v1.7). 이 유저의 데이터가 마지막으로 확인된 엔진 버전. null이면 이 필드가
-   * 생기기 전의 레거시 상태 — CURRENT_ENGINE_VERSION과 다르면 하이드레이션 직후 갱신한다.
+   * 이 유저의 데이터가 마지막으로 확인된 엔진 버전. null이면 이 필드가 생기기 전의
+   * 레거시 상태 — CURRENT_ENGINE_VERSION과 다르면 하이드레이션 직후 갱신한다.
    */
   engineVersion: string | null
 }
@@ -76,12 +73,12 @@ function todayISO() {
   return new Date().toISOString()
 }
 
-function loadState(): DiaryState {
-  const fresh: DiaryState = {
+function freshState(): DiaryState {
+  return {
     joinDate: todayISO(),
     completedDays: [],
     habits: {},
-    diagnosis: null,
+    settings: {},
     events: [],
     pregnant: false,
     prescriptionMeds: false,
@@ -89,16 +86,20 @@ function loadState(): DiaryState {
     supportOwned: [],
     engineVersion: null,
   }
-  if (typeof window === "undefined") return fresh
+}
+
+function loadLocalState(): DiaryState | null {
+  if (typeof window === "undefined") return null
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return fresh
+    if (!raw) return null
     const parsed = JSON.parse(raw) as Partial<DiaryState>
+    const fresh = freshState()
     return {
       joinDate: parsed.joinDate ?? fresh.joinDate,
       completedDays: parsed.completedDays ?? [],
       habits: parsed.habits ?? {},
-      diagnosis: parsed.diagnosis ?? null,
+      settings: parsed.settings ?? {},
       events: parsed.events ?? [],
       pregnant: parsed.pregnant ?? false,
       prescriptionMeds: parsed.prescriptionMeds ?? false,
@@ -107,12 +108,12 @@ function loadState(): DiaryState {
       engineVersion: parsed.engineVersion ?? null,
     }
   } catch {
-    return fresh
+    return null
   }
 }
 
 /**
- * 5번 · 8번 엣지케이스. 인시던트/자극 신고 이벤트를 day 순서로 캘린더에 순차 적용한다.
+ * 인시던트/자극 신고 이벤트를 day 순서로 캘린더에 순차 적용한다.
  * 인시던트 기간 중에는 액티브가 이미 응급 루틴으로 대체돼 있으므로, 그 기간에 신고된
  * 자극은 자연히 "인시던트 종료 후 재개 시점"의 다음 해당 카테고리 일정부터 지연된다.
  */
@@ -137,8 +138,8 @@ function applyEvents(baseCalendar: CalendarEntry[], events: ScheduleEvent[]) {
   return { calendar, incidentLog, reactionLog }
 }
 
-interface URLDiagnosisPayload {
-  diagnosis: DiagnosisInput
+/** 체커(checker.html)에서 돌아올 때 실려오는, 스케줄과 무관한 부가 정보 */
+interface URLContextPayload {
   pregnant: boolean
   prescriptionMeds: boolean
   concern: Concern
@@ -161,31 +162,18 @@ function parseSupportOwned(raw: string | null): SupportId[] {
 }
 
 /**
- * 9-4. 외부 진단 화면(myroutinediet.com의 checker.html)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
- * ?overlap={number}&irritation={true/false}&type={A/B/C}&symptom={string}&preg={0/1}&rx={0/1}
- * &concern={dry/flush/flaky/trouble/none}&support={hya,cica,nia,cer 콤마 구분}&unsure={0/1}
- * tier는 이 앱이 assignTier()로 직접 재계산하므로 URL의 tier 파라미터는 참고하지 않는다.
- * unsure=1이면(11-5, v1.5) assignTier()가 계산된 Tier가 0일 때만 안전 하한 1로 올린다.
+ * 외부 진단 화면(myroutinediet.com의 checker.html)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
+ * ?type={A/B/C}&preg={0/1}&rx={0/1}&concern={dry/flush/flaky/trouble/none}&support={hya,cica,nia,cer 콤마 구분}
+ * type(피부 유형)은 스케줄 생성에도, 어떤 UI 카피에도 더 이상 관여하지 않는다 — 저장하지
+ * 않고, "체커에서 돌아왔다"는 신호로만 그 존재 여부를 확인한다. 스케줄(캘린더)은 이
+ * 파라미터 유무와 무관하게 가입 즉시 기본 워크북 시퀀스로 시작한다.
  */
-function diagnosisFromURL(): URLDiagnosisPayload | null {
+function contextFromURL(): URLContextPayload | null {
   if (typeof window === "undefined") return null
   const params = new URLSearchParams(window.location.search)
-  const overlap = params.get("overlap")
-  const type = params.get("type")
-  if (overlap === null || type === null) return null
-  if (type !== "A" && type !== "B" && type !== "C") return null
-
-  const overlapCount = Number(overlap)
-  if (!Number.isFinite(overlapCount)) return null
+  if (params.get("type") === null) return null
 
   return {
-    diagnosis: {
-      overlapCount,
-      irritationReported: params.get("irritation") === "true",
-      skinType: type as SkinType,
-      symptom: params.get("symptom") ?? undefined,
-      unsure: params.get("unsure") === "1",
-    },
     pregnant: params.get("preg") === "1",
     prescriptionMeds: params.get("rx") === "1",
     concern: parseConcern(params.get("concern")),
@@ -193,87 +181,60 @@ function diagnosisFromURL(): URLDiagnosisPayload | null {
   }
 }
 
-/** URLDiagnosisPayload를 DiaryState에 바로 병합할 수 있는 필드 묶음으로 변환한다 */
-function urlDiagnosisFields(payload: URLDiagnosisPayload) {
-  return {
-    diagnosis: payload.diagnosis,
-    pregnant: payload.pregnant,
-    prescriptionMeds: payload.prescriptionMeds,
-    concern: payload.concern,
-    supportOwned: payload.supportOwned,
-  }
-}
-
-/** 진단 확인(적용/보류) 후 새로고침해도 같은 판정이 반복되지 않도록 URL에서 진단 파라미터를 지운다 */
-function clearDiagnosisURLParams() {
+/** 체커에서 돌아온 뒤 새로고침해도 같은 처리가 반복되지 않도록 URL에서 컨텍스트 파라미터를 지운다 */
+function clearContextURLParams() {
   if (typeof window === "undefined") return
   const params = new URLSearchParams(window.location.search)
-  for (const key of ["overlap", "irritation", "type", "symptom", "preg", "rx", "concern", "support", "unsure"]) {
+  for (const key of ["type", "preg", "rx", "concern", "support"]) {
     params.delete(key)
   }
   const query = params.toString()
   window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""))
 }
 
+function applyURLContext(base: DiaryState, context: URLContextPayload | null): DiaryState {
+  if (!context) return base
+  return {
+    ...base,
+    pregnant: context.pregnant,
+    prescriptionMeds: context.prescriptionMeds,
+    concern: context.concern,
+    supportOwned: context.supportOwned,
+  }
+}
+
 export function useDiary() {
   // 하이드레이션 불일치를 피하기 위해 초기엔 기본값, 마운트 후 localStorage 로드
-  const [state, setState] = useState<DiaryState>({
-    joinDate: todayISO(),
-    completedDays: [],
-    habits: {},
-    diagnosis: null,
-    events: [],
-    pregnant: false,
-    prescriptionMeds: false,
-    concern: "none",
-    supportOwned: [],
-    engineVersion: null,
-  })
+  const [state, setState] = useState<DiaryState>(freshState)
   const [hydrated, setHydrated] = useState(false)
-  /**
-   * 로그인 계정에 이미 진행 중인 기록이 있는데 URL로 새 진단이 들어왔을 때, 조용히
-   * 덮어쓰지 않고 사용자 확인을 받을 때까지 보류해두는 새 진단 값. null이면 확인이
-   * 필요 없는(또는 이미 처리된) 상태다.
-   */
-  const [pendingURLDiagnosis, setPendingURLDiagnosis] = useState<URLDiagnosisPayload | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    const loaded = loadState()
-    // URL로 진단 결과가 넘어왔으면(myroutinediet.com checker.html) 저장된 값보다 우선한다
-    const fromURL = diagnosisFromURL()
+    const localState = loadLocalState()
+    const urlContext = contextFromURL()
 
-    if (!fromURL) {
-      setState(loaded)
+    if (localState) {
+      // 이 기기에 이미 진행 중인 로컬 기록이 있다 — joinDate/진행 기록은 그대로 두고,
+      // 체커에서 돌아온 경우라면 concern/support/preg/rx 같은 부가 정보만 갱신한다
+      setState(applyURLContext(localState, urlContext))
+      if (urlContext) clearContextURLParams()
       setHydrated(true)
       return
     }
 
     ;(async () => {
-      // 익명 세션의 첫 진단은 지금까지처럼 곧바로 적용한다 — 확인이 필요한 "이미
-      // 로그인된 계정의 기존 진행 중 기록" 자체가 성립하지 않는 경우다
-      const anonymous = await isAnonymousSession()
+      // 이 기기는 로컬 기록이 없다 — 로그인 계정이면 다른 기기에서 이어오던 원격 기록이
+      // 있는지 먼저 확인한다 (없으면 새 계정으로 보고 기본 워크북 시퀀스를 새로 시작)
+      const userId = await ensureAnonSession()
       if (cancelled) return
-      if (anonymous) {
-        setState({ ...loaded, ...urlDiagnosisFields(fromURL) })
-        clearDiagnosisURLParams()
-        setHydrated(true)
-        return
-      }
+      const remote = userId ? await loadRemoteState(userId) : null
+      if (cancelled) return
 
-      // 로그인 계정 — 이 브라우저의 로컬 캐시에 진행 중인 진단이 없으면, 다른 기기에서
-      // "그 계정으로 로그인"해 로컬이 비어있을 수 있으니 원격에도 확인한다
-      let existing: DiaryState | null = loaded.diagnosis ? loaded : null
-      if (!existing) {
-        const userId = await ensureAnonSession()
-        if (cancelled) return
-        const remote = userId ? await loadRemoteState(userId) : null
-        if (cancelled) return
-        if (remote?.profile.diagnosis) {
-          existing = {
-            ...loaded,
+      const base: DiaryState = remote
+        ? {
+            ...freshState(),
             joinDate: remote.profile.signupDate,
-            diagnosis: remote.profile.diagnosis,
+            settings: remote.profile.settings,
             pregnant: remote.profile.pregnant,
             prescriptionMeds: remote.profile.prescriptionMeds,
             concern: remote.profile.concern,
@@ -286,21 +247,10 @@ export function useDiary() {
                 : { kind: "reaction" as const, day: event.day, category: event.category! },
             ),
           }
-        }
-      }
+        : freshState()
 
-      if (!existing) {
-        // 이 계정의 첫 진단 — 확인 없이 바로 적용
-        setState({ ...loaded, ...urlDiagnosisFields(fromURL) })
-        clearDiagnosisURLParams()
-        setHydrated(true)
-        return
-      }
-
-      // 이미 진행 중인 기록 발견 — 화면엔 기존 상태를 그대로 보여주고, 새 진단은
-      // 사용자가 확인하기 전까지는 적용하지 않는다 (page.tsx의 확인 화면 참고)
-      setState(existing)
-      setPendingURLDiagnosis(fromURL)
+      setState(applyURLContext(base, urlContext))
+      if (urlContext) clearContextURLParams()
       setHydrated(true)
     })()
 
@@ -330,43 +280,7 @@ export function useDiary() {
     }
   }, [])
 
-  // 이 기기/브라우저에 로컬 진단이 없을 때만, 같은 유저의 원격 진단 데이터를 복원한다
-  useEffect(() => {
-    if (!userId || !hydrated || state.diagnosis) return
-    let cancelled = false
-    loadRemoteState(userId).then((remote) => {
-      if (cancelled || !remote) return
-      setState((prev) => ({
-        ...prev,
-        joinDate: remote.profile.signupDate,
-        diagnosis: remote.profile.diagnosis,
-        pregnant: remote.profile.pregnant,
-        prescriptionMeds: remote.profile.prescriptionMeds,
-        concern: remote.profile.concern,
-        supportOwned: remote.profile.supportOwned,
-        engineVersion: remote.profile.engineVersion,
-        completedDays: remote.completedDays,
-        events: remote.events.map((event) =>
-          event.kind === "incident"
-            ? { kind: "incident" as const, day: event.day, incidentType: event.incidentType!, durationDays: event.durationDays }
-            : { kind: "reaction" as const, day: event.day, category: event.category! },
-        ),
-      }))
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [userId, hydrated, state.diagnosis])
-
-  /**
-   * 13-3(v1.7). 캐시 무효화. baseCalendarResult(아래)는 completedDays/reactionDays를
-   * 유일한 소스로 삼아 매 렌더마다 "지금 번들된" generateCalendar()로 다시 계산되므로,
-   * 이미 지난 날짜(completedDays/reactionDays에 실제로 기록된 날)는 그 값 자체가 재작성
-   * 근거가 되어 자연히 보존되고, 미래 일정만 최신 엔진 로직을 반영한다 — 그래서 여기서는
-   * 별도의 캘린더 재생성 호출 없이 태그만 최신으로 맞추면 된다. 이 태그가 하는 일은
-   * (1) 이 유저의 데이터가 어느 엔진으로 마지막 확인됐는지 기록해두는 것, (2) 다음 엔진
-   * 변경 때도 반드시 CURRENT_ENGINE_VERSION을 올리도록 강제하는 릴리스 체크포인트다.
-   */
+  // 캐시 무효화. 엔진 로직이 바뀔 때마다 CURRENT_ENGINE_VERSION을 올리도록 강제하는 릴리스 체크포인트다.
   useEffect(() => {
     if (!hydrated || state.engineVersion === CURRENT_ENGINE_VERSION) return
     setState((prev) => (prev.engineVersion === CURRENT_ENGINE_VERSION ? prev : { ...prev, engineVersion: CURRENT_ENGINE_VERSION }))
@@ -379,55 +293,49 @@ export function useDiary() {
 
   const currentDay = dayFromJoinDate(state.joinDate)
 
-  // 2-3(v1.3) 빈도 상향 판정용 — 자극이 신고된 날짜만 뽑아둔다
-  const reactionDays = useMemo(() => state.events.filter((event) => event.kind === "reaction").map((event) => event.day), [state.events])
+  /**
+   * 온보딩 완료 여부를 별도 필드 없이 판단한다. completeOnboarding()이 항상 두 값을
+   * 함께 채워 넣으므로(둘 다 undefined 아니면 온보딩 끝난 것), 새 컬럼/로컬 필드가
+   * 필요 없다.
+   */
+  const onboarded = state.settings.activeIntervalDays !== undefined && state.settings.bhaIntervalDays !== undefined
 
-  const baseCalendarResult = useMemo(() => {
-    if (!state.diagnosis) return null
-    return generateCalendar({
-      diagnosis: state.diagnosis,
-      signupDate: state.joinDate,
-      completedDays: state.completedDays,
-      reactionDays,
-    })
-  }, [state.diagnosis, state.joinDate, state.completedDays, reactionDays])
+  const baseCalendar = useMemo(
+    () => generateCalendar({ signupDate: state.joinDate, settings: state.settings }),
+    [state.joinDate, state.settings],
+  )
 
   // 인시던트 오버라이드 / 자극 지연 이벤트를 기본 캘린더 위에 순차 적용한다
-  const calendarResult = useMemo(() => {
-    if (baseCalendarResult?.status !== "ok") return baseCalendarResult
-    const { calendar, incidentLog, reactionLog } = applyEvents(baseCalendarResult.calendar, state.events)
-    return { ...baseCalendarResult, calendar, incidentLog, reactionLog }
-  }, [baseCalendarResult, state.events])
+  const { calendar, incidentLog, reactionLog } = useMemo(() => applyEvents(baseCalendar, state.events), [baseCalendar, state.events])
 
-  const tier: Tier | null = calendarResult === null ? null : calendarResult.status === "ok" ? calendarResult.tier : "X"
-  const medicalReferral = calendarResult?.status === "medical_referral"
-  const totalDays = calendarResult?.status === "ok" ? calendarResult.calendar.length : TOTAL_DAYS
-  const incidentLog = calendarResult?.status === "ok" ? calendarResult.incidentLog : []
-  const reactionLog = calendarResult?.status === "ok" ? calendarResult.reactionLog : []
+  const totalDays = calendar.length
 
-  // 4-1. 장벽 점수 시계열 — 2주차(Day 8)부터 오늘까지
+  // 상단 여정 카드 히어로 이미지 — BHA가 새로 들어가는 날마다 다음 사이클 이미지로 바뀐다
+  const heroImageSrc = useMemo(() => heroImageSrcForDay(calendar, currentDay), [calendar, currentDay])
+
+  // 장벽 점수 시계열 — 2주차(Day 8)부터 오늘까지
   const barrierScoreLog: BarrierScorePoint[] = useMemo(() => {
-    if (calendarResult?.status !== "ok" || currentDay < BARRIER_SCORE_START_DAY) return []
-    return buildBarrierScoreLog(calendarResult.calendar, calendarResult.incidentLog, state.completedDays, BARRIER_SCORE_START_DAY, currentDay)
-  }, [calendarResult, state.completedDays, currentDay])
+    if (currentDay < BARRIER_SCORE_START_DAY) return []
+    return buildBarrierScoreLog(calendar, incidentLog, state.completedDays, BARRIER_SCORE_START_DAY, currentDay)
+  }, [calendar, incidentLog, state.completedDays, currentDay])
 
-  // 진단 결과 + 캘린더 진행 상황(완료 여부 포함)을 diary_profiles / calendar_entries에 반영한다
+  // 스케줄 설정 + 캘린더 진행 상황(완료 여부 포함)을 diary_profiles / calendar_entries에 반영한다
   useEffect(() => {
-    if (!userId || !state.diagnosis || calendarResult?.status !== "ok") return
-    saveDiagnosis(userId, state.joinDate, state.diagnosis, calendarResult.tier)
+    if (!userId) return
+    saveSettings(userId, state.joinDate, state.settings)
     saveCalendar(
       userId,
-      calendarResult.calendar.map((entry) => ({ ...entry, completed: state.completedDays.includes(entry.day) })),
+      calendar.map((entry) => ({ ...entry, completed: state.completedDays.includes(entry.day) })),
     )
-  }, [userId, state.diagnosis, state.joinDate, state.completedDays, calendarResult])
+  }, [userId, state.joinDate, state.settings, state.completedDays, calendar])
 
-  // 9-1. 임신/처방약 플래그
+  // 임신/처방약 플래그
   useEffect(() => {
     if (!userId) return
     saveContextFlags(userId, state.joinDate, state.pregnant, state.prescriptionMeds)
   }, [userId, state.joinDate, state.pregnant, state.prescriptionMeds])
 
-  // rest/moist 문구에 강조할 관심사 + 보유 성분
+  // 루틴 문구에 강조할 관심사 + 보유 성분
   useEffect(() => {
     if (!userId) return
     saveConcern(userId, state.joinDate, state.concern, state.supportOwned)
@@ -457,28 +365,38 @@ export function useDiary() {
     saveBarrierScoreLog(userId, barrierScoreLog)
   }, [userId, barrierScoreLog])
 
-  /** 진단이 있으면 개인화 캘린더에서, 없으면 기본 30일 스케줄에서 레시피를 가져온다 */
   const getRecipeForDay = useCallback(
     (day: number): Recipe => {
-      if (calendarResult?.status === "ok") {
-        const entry = calendarResult.calendar.find((e) => e.day === day)
-        if (entry) return entry.recipe
-      }
-      return recipeForDay(day)
+      const entry = calendar.find((e) => e.day === day)
+      return entry ? entry.recipe : RECIPES.defense_barrier
     },
-    [calendarResult],
+    [calendar],
   )
 
-  const setDiagnosis = useCallback((diagnosis: DiagnosisInput) => {
-    setState((prev) => ({ ...prev, diagnosis }))
+  const setSettings = useCallback((settings: ScheduleSettings) => {
+    setState((prev) => ({ ...prev, settings }))
   }, [])
 
-  /** 5번. [Period] / [Sunburn] / [Treatment] 버튼에서 호출 — 캘린더를 응급 루틴으로 전환한다 */
+  /**
+   * 온보딩 4단계 "시작하기" 전용. activeIntervalDays/bhaIntervalDays를 항상 같은
+   * 값으로 한 번에 채워 넣고(온보딩 판단 기준이 "둘 다 있는지"라 절대 따로 저장되면
+   * 안 된다), 가입일(Day 1)도 이 순간으로 스탬프한다 — 온보딩을 보는 동안은 아직
+   * Day 1이 시작되지 않은 것으로 취급한다.
+   */
+  const completeOnboarding = useCallback((intervalDays: number) => {
+    setState((prev) => ({
+      ...prev,
+      joinDate: todayISO(),
+      settings: { activeIntervalDays: intervalDays, bhaIntervalDays: intervalDays },
+    }))
+  }, [])
+
+  /** [Period] / [Sunburn] / [Treatment] 버튼에서 호출 — 캘린더를 응급 루틴으로 전환한다 */
   const reportIncident = useCallback((day: number, incidentType: IncidentType, durationDays?: number) => {
     setState((prev) => ({ ...prev, events: [...prev.events, { kind: "incident", day, incidentType, durationDays }] }))
   }, [])
 
-  /** 8번 엣지케이스. 특정 카테고리에 자극이 신고되면 그 카테고리의 향후 일정을 7일 연기한다 */
+  /** 특정 카테고리에 자극이 신고되면 그 카테고리의 향후 일정을 5일 연기한다 */
   const reportReaction = useCallback((day: number, category: RecipeType) => {
     setState((prev) => ({ ...prev, events: [...prev.events, { kind: "reaction", day, category }] }))
   }, [])
@@ -509,44 +427,30 @@ export function useDiary() {
     })
   }, [])
 
-  /** "기존 루틴 계속하기" — 보류해둔 새 진단을 버리고 지금 상태를 그대로 유지한다 */
-  const confirmKeepExistingRoutine = useCallback(() => {
-    setPendingURLDiagnosis(null)
-    clearDiagnosisURLParams()
-  }, [])
-
-  /** "새로 시작하기" — 보류해둔 새 진단을 적용하고, 가입일을 오늘로 재설정해 진행 기록을 초기화한다 */
-  const confirmStartFreshRoutine = useCallback(() => {
-    setPendingURLDiagnosis((pending) => {
-      if (!pending) return pending
-      setState((prev) => ({
-        ...prev,
-        ...urlDiagnosisFields(pending),
-        joinDate: todayISO(),
-        completedDays: [],
-        habits: {},
-        events: [],
-      }))
-      return null
-    })
-    clearDiagnosisURLParams()
+  /**
+   * 설정 화면의 "루틴 처음부터 다시 시작하기" 버튼 전용. 체커 재방문 흐름과는 완전히
+   * 분리된, 유저가 직접 요청한 명시적 초기화다 — 가입일을 오늘로 재설정해 진행 기록을
+   * 지우되, 슬라이더 설정·관심사·보유 성분 등 개인화 정보는 그대로 유지한다.
+   */
+  const startFresh = useCallback(() => {
+    setState((prev) => ({ ...prev, joinDate: todayISO(), completedDays: [], habits: {}, events: [] }))
   }, [])
 
   return {
     hydrated,
+    onboarded,
+    completeOnboarding,
     currentDay,
     totalDays,
+    heroImageSrc,
     completedDays: state.completedDays,
     complete,
     getHabit,
     toggleSunscreen,
     setWater,
     maxWater: MAX_WATER,
-    diagnosis: state.diagnosis,
-    setDiagnosis,
-    tier,
-    skinType: state.diagnosis?.skinType ?? null,
-    medicalReferral,
+    settings: state.settings,
+    setSettings,
     getRecipeForDay,
     incidentLog,
     reactionLog,
@@ -557,9 +461,6 @@ export function useDiary() {
     prescriptionMeds: state.prescriptionMeds,
     concern: state.concern,
     supportOwned: state.supportOwned,
-    /** true면 로그인 계정에 이미 진행 중인 기록이 있는데 URL로 새 진단이 들어온 상태 — 확인 화면을 띄워야 한다 */
-    pendingReDiagnosis: pendingURLDiagnosis !== null,
-    confirmKeepExistingRoutine,
-    confirmStartFreshRoutine,
+    startFresh,
   }
 }
