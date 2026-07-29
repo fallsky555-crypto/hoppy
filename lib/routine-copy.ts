@@ -81,6 +81,30 @@ const DEFENSE_HYDRATION_VARIANTS: readonly CategoryCopyVariant[] = [
 
 const DEFENSE_HYDRATION_CAUTION = "히알루론산 앰플만 · 이 시기엔 이 성분 하나만 사용하세요."
 
+/** 장벽 밀폐 1종 */
+const BARRIER_LOCK_VARIANTS: readonly CategoryCopyVariant[] = [
+  {
+    title: "오늘은 지키는 날이에요",
+    detail: "무언가를 더하기보다, 가진 걸 지키는 날이에요. 세라마이드로 장벽을 든든하게 감싸주세요.",
+  },
+]
+
+/** 수분 잠금 1종 */
+const HYDRATION_LOCK_VARIANTS: readonly CategoryCopyVariant[] = [
+  {
+    title: "채운 걸 놓치지 않기",
+    detail: "히알루론산으로 채운 수분이 날아가지 않게, 세라마이드로 위를 덮어 잠가주세요.",
+  },
+]
+
+/** 비타민C 케어 1종 */
+const TONING_SOLO_VARIANTS: readonly CategoryCopyVariant[] = [
+  {
+    title: "오늘은 톤에만 집중해요",
+    detail: "비타민C 하나로, 오늘은 톤을 맑히는 데만 집중하는 날이에요. 결 따라 가볍게 펴 발라주세요.",
+  },
+]
+
 /** SOS 진정 4종 */
 const SOS_REST_VARIANTS: readonly CategoryCopyVariant[] = [
   {
@@ -165,6 +189,12 @@ function getVariantsForCategory(category: RecipeType): readonly CategoryCopyVari
       return DEFENSE_TONING_VARIANTS
     case "defense_hydration":
       return DEFENSE_HYDRATION_VARIANTS
+    case "barrier_lock":
+      return BARRIER_LOCK_VARIANTS
+    case "hydration_lock":
+      return HYDRATION_LOCK_VARIANTS
+    case "toning_solo":
+      return TONING_SOLO_VARIANTS
     case "sos_rest":
       return SOS_REST_VARIANTS
     case "aha":
