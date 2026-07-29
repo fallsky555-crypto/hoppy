@@ -114,7 +114,9 @@ export function generateCalendar({ signupDate, totalDays = TOTAL_DAYS, settings 
   const isDue = (kind: ActiveKind, day: number): boolean => {
     const lastDay = kind === "bha" ? lastBhaDay : lastRetinolDay
     const interval = kind === "bha" ? bhaInterval : retinolInterval
-    return lastDay === 0 || day - lastDay >= interval
+    const minStartDay = kind === "bha" ? 3 : 1
+    if (lastDay === 0) return day >= minStartDay
+    return day - lastDay >= interval
   }
 
   const placeActive = (kind: ActiveKind, day: number): RecipeType => {

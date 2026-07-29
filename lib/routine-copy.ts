@@ -103,7 +103,12 @@ const SOS_REST_VARIANTS: readonly CategoryCopyVariant[] = [
 
 const SOS_REST_CAUTION = "시카·어성초로 열감·자극 리셋 · 이 시기엔 이 성분 하나만 사용하세요."
 
-/** 스페셜케어(AHA/BHA/레티놀) 3종 */
+/** 스페셜케어(AHA/BHA/레티놀) — 첫 등장 전용 + 이후 3종 순환 */
+const ACTIVE_FIRST_VARIANT: CategoryCopyVariant = {
+  title: "오늘부터 시작해요",
+  detail: "오늘부터 {{name}}을 시작해요. 처음엔 딱 한 방울, 천천히 적응해가는 걸로 충분해요. 다른 기능성 제품과 섞지 말고, 내일 아침엔 자외선 차단제 꼭 챙겨주세요.",
+}
+
 const ACTIVE_VARIANTS: readonly CategoryCopyVariant[] = [
   {
     title: "여기까지 오신 게 이미 대단해요",
@@ -181,9 +186,19 @@ const ACTIVE_LABEL: Record<"aha" | "bha" | "retinol", string> = {
 /**
  * day의 카테고리에 맞는 루틴 문구. title/detail은 calendar 기반으로 해당 카테고리의
  * 등장 횟수를 세어 variant 순환 선택. caution은 고정 정보성 문구.
+ * 스페셜케어는 첫 등장(count===0)일 때 별도 문구, 이후부터 3개 순환.
  */
 export function getCategoryCopy(category: RecipeType, calendar: CalendarEntry[], day: number): RoutineCopy {
   const appearanceCount = countCategoryAppearances(calendar, category, day)
+
+  // 스페셜케어 첫 등장: 별도 문구 사용
+  if ((category === "aha" || category === "bha" || category === "retinol") && appearanceCount === 0) {
+    let detail = ACTIVE_FIRST_VARIANT.detail
+    detail = detail.replace(/\{\{name\}\}/g, ACTIVE_LABEL[category])
+    const caution = CAUTION_TEXT[category]
+    return { title: ACTIVE_FIRST_VARIANT.title, detail, caution }
+  }
+
   const index = pickVariantIndex(category, appearanceCount)
   const variant = getVariantsForCategory(category)[index]
 
