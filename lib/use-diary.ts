@@ -22,6 +22,7 @@ import {
   saveBarrierScoreLog,
   saveCalendar,
   saveConcern,
+  saveCompletionFeedback,
   saveContextFlags,
   saveEngineVersion,
   saveSettings,
@@ -436,6 +437,14 @@ export function useDiary() {
     setState((prev) => ({ ...prev, joinDate: todayISO(), completedDays: [], habits: {}, events: [] }))
   }, [])
 
+  const submitFeedback = useCallback(
+    async (feedbackText: string) => {
+      if (!userId) return
+      await saveCompletionFeedback(userId, feedbackText)
+    },
+    [userId],
+  )
+
   return {
     hydrated,
     onboarded,
@@ -463,5 +472,6 @@ export function useDiary() {
     concern: state.concern,
     supportOwned: state.supportOwned,
     startFresh,
+    submitFeedback,
   }
 }

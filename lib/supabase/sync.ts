@@ -177,6 +177,18 @@ export async function saveBarrierScoreLog(userId: string, points: BarrierScorePo
   if (error) console.warn("[supabase] saveBarrierScoreLog failed:", error.message)
 }
 
+/** 완주 30일 기념 소감을 completion_feedback에 저장한다 */
+export async function saveCompletionFeedback(userId: string, feedbackText: string): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("completion_feedback").insert({
+    user_id: userId,
+    feedback_text: feedbackText,
+  })
+  if (error) console.warn("[supabase] saveCompletionFeedback failed:", error.message)
+}
+
 export interface RemoteScheduleEvent {
   kind: "incident" | "reaction"
   day: number

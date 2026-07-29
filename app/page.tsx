@@ -12,6 +12,7 @@ import { RoutineBanner } from "@/components/routine-banner"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
+import { CompletionFeedback } from "@/components/completion-feedback"
 import { useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { getCompletionCopy } from "@/lib/routine-copy"
@@ -76,7 +77,12 @@ export default function Page() {
         supportOwned={diary.supportOwned}
       />
 
-      {isCourseComplete && <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />}
+      {isCourseComplete && (
+        <>
+          <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />
+          <CompletionFeedback onSubmit={diary.submitFeedback} />
+        </>
+      )}
 
       <IncidentPanel currentDay={currentDay} incidentLog={diary.incidentLog} onReportIncident={handleReportIncident} />
 
