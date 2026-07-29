@@ -443,6 +443,7 @@ export function useDiary() {
     currentDay,
     totalDays,
     heroImageSrc,
+    calendar,
     completedDays: state.completedDays,
     complete,
     getHabit,

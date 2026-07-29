@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { Recipe, RecipeType } from "@/lib/schedule"
+import type { CalendarEntry, Recipe, RecipeType } from "@/lib/schedule"
 import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-copy"
 import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ interface RecipeCardProps {
   isCompleted: boolean
   onRecord: () => void
   getRecipe: (day: number) => Recipe
+  calendar: CalendarEntry[]
   /** 오늘 이미 이 성분에 대한 자극을 신고했는지 */
   hasReportedReaction?: boolean
   onReportReaction?: () => void
@@ -30,13 +31,14 @@ export function RecipeCard({
   isCompleted,
   onRecord,
   getRecipe,
+  calendar,
   hasReportedReaction = false,
   onReportReaction,
   concern = "none",
   supportOwned = [],
 }: RecipeCardProps) {
   const recipe = getRecipe(day)
-  const copy = getCategoryCopy(recipe.type, day, concern, supportOwned)
+  const copy = getCategoryCopy(recipe.type, calendar, day)
   const isToday = day === currentDay
   const isFuture = day > currentDay
   const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)
@@ -75,8 +77,8 @@ export function RecipeCard({
 
       <p className={cn("mt-2 text-[15.5px] leading-[1.7]", isToday ? "text-white/92" : "text-[#4A4438]")}>{copy.detail}</p>
 
-      {recipe.caution && (
-        <p className={cn("mt-2 text-xs font-medium", isToday ? "text-white/70" : "text-muted-foreground")}>{recipe.caution}</p>
+      {copy.caution && (
+        <p className={cn("mt-2 text-xs font-medium", isToday ? "text-white/70" : "text-muted-foreground")}>{copy.caution}</p>
       )}
 
       <div className="mt-5">

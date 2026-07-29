@@ -74,6 +74,7 @@ export default function Page() {
         isCompleted={completedDays.includes(activeDay)}
         onRecord={handleRecord}
         getRecipe={diary.getRecipeForDay}
+        calendar={diary.calendar}
         hasReportedReaction={hasReportedReactionToday}
         onReportReaction={handleReportReaction}
         concern={diary.concern}
