@@ -1,16 +1,16 @@
 import type { Recipe, RecipeType } from "@/lib/schedule"
 
 /**
- * routine-copy-ko.md v2.0 문구 세트 — 카테고리를 3개 그룹으로 묶어서 관리한다.
- * lib/scheduling-engine.ts는 건드리지 않는다 — 이 파일은 화면에 보여줄 문구만 담당하고,
- * 어떤 카테고리·날짜인지는 기존 엔진(getRecipeForDay, dayFromJoinDate 등)이 그대로 정한다.
+ * 2026-07-27 재설계 스펙 반영. 카테고리별로 4개씩 확정된 "리추얼 헤드라인"을 day
+ * 기준으로 순환 노출하고, 그 아래에 실제 사용법을 안내하는 detail을 붙인다.
+ * lib/scheduling-engine.ts는 건드리지 않는다 — 이 파일은 화면에 보여줄 문구만
+ * 담당하고, 어떤 카테고리·날짜인지는 기존 엔진(getRecipeForDay, dayFromJoinDate
+ * 등)이 그대로 정한다.
  *
- * v1.5(11번) 성분 로테이션 반영: defense_barrier → BARRIER_GIPS(오리엔테이션 있음),
- * defense_toning/defense_hydration/sos_rest → BARRIER_LOCKING(오리엔테이션 없음),
- * aha/bha/retinol → ACTIVE_OPEN. rest/moist는 미진단(기본 스케줄) 하위 호환용으로 유지한다.
- *
- * 문구 작성 시 project-handoff-summary.md 원칙을 따른다: 과장 표현 금지, Tier/Type
- * 코드명 노출 금지, 브랜드/제품명 대신 성분 카테고리명만 사용, "건강검진 리포트" 톤 유지.
+ * 카피 톤 방향: 은유·역설 구조 대신 "지금 뭘 하는지 + 왜 필요한지"를 담백하게
+ * 말해주는 격려형. 관념어(균형/완벽함/리듬) 대신 몸으로 느껴지는 말(당김/촉촉함/
+ * 편안함) 사용. 명령형("~하세요") 대신 "~하고 있어요/해줘요" 톤 유지. 과장 표현
+ * 금지, 브랜드/제품명 대신 성분 카테고리명만 사용, "건강검진 리포트" 톤 유지.
  */
 
 export interface RoutineCopy {
@@ -18,22 +18,7 @@ export interface RoutineCopy {
   detail: string
 }
 
-type CategoryGroup = "BARRIER_GIPS" | "BARRIER_LOCKING" | "ACTIVE_OPEN"
-
-function categoryGroup(category: RecipeType): CategoryGroup {
-  if (category === "aha" || category === "bha" || category === "retinol") return "ACTIVE_OPEN"
-  if (category === "rest" || category === "defense_barrier") return "BARRIER_GIPS"
-  return "BARRIER_LOCKING" // moist, defense_toning, defense_hydration, sos_rest
-}
-
-/** ACTIVE_OPEN 문구의 "가이드에 지정된 활성 성분 제품" 자리에 들어갈 실제 성분 이름 */
-const ACTIVE_LABEL: Partial<Record<RecipeType, string>> = {
-  aha: "AHA",
-  bha: "BHA",
-  retinol: "레티놀",
-}
-
-/** 9-5(신규). checker.html의 오늘 피부 상태(symptom) 문항에서 넘어오는 관심사 */
+/** 체커의 오늘 피부 상태(symptom) 문항에서 넘어오는 관심사 */
 export type Concern = "dry" | "flush" | "flaky" | "trouble" | "none"
 /** 유저가 이미 갖고 있다고 답한 성분 id (콤마 구분 URL 파라미터) */
 export type SupportId = "hya" | "cica" | "nia" | "cer"
@@ -62,7 +47,7 @@ function withOro(name: string): string {
 }
 
 /**
- * rest/moist 문구 뒤에 이어 붙일 concern 맞춤 한 문장.
+ * 방어/락 계열 문구 뒤에 이어 붙일 concern 맞춤 한 문장.
  * concern이 "none"이면 강조하지 않고 null(기존 기본 문구 그대로).
  * support_owned에 해당 성분이 있으면 "갖고 계신 성분으로" 소유 언급, 없으면 완곡한 제안.
  */
@@ -75,59 +60,132 @@ function getConcernAddendum(concern: Concern, supportOwned: SupportId[]): string
     : `오늘 같은 날엔 ${ingredient.name} 성분이 ${ingredient.effect}에 도움을 줄 수 있어요.`
 }
 
-/** v1.5(11번) 방어일 3종 + SOS Rest 고정 문구 — concern 강조가 적용되는 카테고리만 withConcernAddendum을 거친다 */
-const FIXED_COPY: Partial<Record<RecipeType, RoutineCopy>> = {
-  rest: {
-    title: "보호막 형성을 위한 재생크림 레이어링",
-    detail:
-      "오늘 밤은 화장대에 있는 재생크림을 평소보다 조금 더 도톰하게 얹어주세요. 외부 자극을 물리적으로 막아주고, 장벽이 편안해질 시간을 만들어주는 과정이에요.",
-  },
-  moist: {
-    title: "수분 보충 후 유수분 압착 잠금",
-    detail:
-      "자극이 없는 토너를 가볍게 수차례 두드려 속수분을 채우셨나요? 그 위에 재생크림을 가볍게 펴 발라, 채워진 수분이 날아가지 않도록 잡아주는 단계예요.",
-  },
-  defense_barrier: {
-    title: "장벽 잠금",
-    detail:
-      "오늘은 세라마이드와 시카(마데카소사이드) 성분으로 피부 보호막을 다지는 날이에요. 순한 세안 후 진정 성분이 담긴 크림을 평소보다 넉넉히 발라, 피부가 스스로 회복할 시간을 만들어주세요.",
-  },
-  defense_toning: {
-    title: "톤 정돈 케어",
-    detail:
-      "오늘은 비타민C와 나이아신아마이드로 톤과 유분 밸런스를 정돈하는 날이에요. 세안 후 토너로 결을 가볍게 다듬고, 마무리는 보습으로 잡아주세요.",
-  },
-  defense_hydration: {
-    title: "수분 충전",
-    detail:
-      "오늘은 히알루론산과 세라마이드로 속수분을 채우는 날이에요. 수분감이 있는 제품을 결 따라 가볍게 덧발라, 당김 없이 편안한 상태를 유지해주세요.",
-  },
+/** 헤드라인을 순환시킬 그룹 단위 — RecipeType보다 성긴 7종 */
+type HeadlineGroup = "barrier_lock" | "hydration_lock" | "active_open" | "defense_barrier" | "toning" | "defense_hydration" | "sos_rest"
+
+function headlineGroup(category: RecipeType): HeadlineGroup {
+  switch (category) {
+    case "bha":
+    case "retinol":
+      return "active_open"
+    case "barrier_lock":
+      return "barrier_lock"
+    case "hydration_lock":
+      return "hydration_lock"
+    case "defense_barrier":
+      return "defense_barrier"
+    case "defense_toning":
+    case "toning_solo":
+      return "toning"
+    case "defense_hydration":
+      return "defense_hydration"
+    case "sos_rest":
+      return "sos_rest"
+  }
+}
+
+/** 카테고리 그룹별 리추얼 헤드라인 4종. day 기준으로 순환 노출한다 */
+const HEADLINES: Record<HeadlineGroup, readonly [string, string, string, string]> = {
+  barrier_lock: [
+    "오늘은 쉬어가는 날이에요",
+    "아무것도 안 해도, 피부는 스스로 회복하고 있어요",
+    "매일 안 해도 괜찮아요, 쉬는 것도 루틴이에요",
+    "오늘 하루 비워두면, 내일 더 잘 받아들여요",
+  ],
+  hydration_lock: [
+    "지금 촉촉하게 채우는 중이에요",
+    "마른 피부에 물을 주는 시간이에요",
+    "10분만 있으면 확 달라져요",
+    "오늘은 흠뻑 적셔주는 날이에요",
+  ],
+  active_open: [
+    "오늘부터 천천히 시작해봐요",
+    "처음이라 서툴러도 괜찮아요, 익숙해질 거예요",
+    "조금씩 늘려가면 돼요, 서두르지 않아도 돼요",
+    "오늘 한 방울이, 한 달 뒤 달라진 피부를 만들어요",
+  ],
+  defense_barrier: [
+    "오늘은 지키는 게 우선이에요",
+    "자극받은 피부, 오늘은 편안하게만 해줘요",
+    "든든하게 막아주는 날이에요",
+    "무리한 케어보다, 오늘은 보호가 먼저예요",
+  ],
+  toning: [
+    "오늘은 결을 다듬는 날이에요",
+    "조금씩, 매일 정돈해가는 중이에요",
+    "급하게 안 해도 돼요, 꾸준히가 답이에요",
+    "오늘도 한 걸음 더 맑아지고 있어요",
+  ],
+  defense_hydration: [
+    "오늘 유독 당긴다면, 더 채워줘요",
+    "수분 충전 중이에요",
+    "목마른 피부엔 한 겹 더 얹어줘요",
+    "채워야 할 땐, 채워도 괜찮아요",
+  ],
+  sos_rest: [
+    "오늘은 진정이 먼저예요",
+    "예민해진 피부, 잠깐 쉬어가요",
+    "무리하지 않아도 돼요, 오늘은 최소한만",
+    "힘든 날엔, 최소한의 케어로도 충분해요",
+  ],
+}
+
+function pickHeadline(category: RecipeType, day: number): string {
+  const variants = HEADLINES[headlineGroup(category)]
+  const index = ((day - 1) % variants.length + variants.length) % variants.length
+  return variants[index]
+}
+
+/** ACTIVE_OPEN 문구의 "가이드에 지정된 활성 성분 제품" 자리에 들어갈 실제 성분 이름 */
+const ACTIVE_LABEL: Record<"bha" | "retinol", string> = {
+  bha: "BHA",
+  retinol: "레티놀",
+}
+
+/** 방어/락 6종의 사용법 안내 detail — concern 강조가 적용되는 카테고리만 withConcernAddendum을 거친다 */
+const DETAIL: Record<
+  "defense_barrier" | "defense_toning" | "defense_hydration" | "barrier_lock" | "hydration_lock" | "toning_solo",
+  string
+> = {
+  defense_barrier:
+    "세라마이드와 시카(마데카소사이드) 성분으로 피부 보호막을 다지는 날이에요. 순한 세안 후 진정 성분이 담긴 크림을 평소보다 넉넉히 발라, 피부가 스스로 회복할 시간을 만들어주세요.",
+  defense_toning:
+    "비타민C와 나이아신아마이드로 톤과 유분 밸런스를 정돈하는 날이에요. 세안 후 토너로 결을 가볍게 다듬고, 마무리는 보습으로 잡아주세요.",
+  defense_hydration:
+    "히알루론산으로 속수분을 채우는 날이에요. 수분감이 있는 제품을 결 따라 가볍게 덧발라, 당김 없이 편안한 상태를 유지해주세요.",
+  barrier_lock:
+    "세라마이드 성분만 단독으로, 평소보다 조금 더 도톰하게 얹어주세요. 외부 자극을 물리적으로 막아주고, 장벽이 편안해질 시간을 만들어주는 과정이에요.",
+  hydration_lock:
+    "자극이 없는 토너나 앰플로 속수분을 채운 뒤, 세라마이드 크림을 가볍게 펴 발라 채워진 수분이 날아가지 않도록 잡아주는 단계예요.",
+  toning_solo:
+    "비타민C 성분만 단독으로 세안 후 결을 따라 가볍게 발라주세요. 다른 기능성 제품과 섞이지 않도록 오늘은 이 성분에만 집중해주세요.",
 }
 
 /** concern 강조 없이 항상 고정 문구만 노출하는 카테고리 — SOS Rest는 응급 진정 목적이라 그날의 관심사 강조를 붙이지 않는다 */
-const SOS_REST_COPY: RoutineCopy = {
-  title: "SOS 진정",
-  detail:
-    "오늘은 시카(마데카소사이드) 성분만 단독으로 사용해 피부를 쉬게 하는 날이에요. 다른 기능성 제품은 잠시 쉬어가고, 순한 진정 케어에만 집중해주세요.",
-}
+const SOS_REST_DETAIL =
+  "오늘은 시카(마데카소사이드) 성분만 단독으로 사용해 피부를 쉬게 하는 날이에요. 다른 기능성 제품은 잠시 쉬어가고, 순한 진정 케어에만 집중해주세요."
 
 /**
- * 오늘(또는 보고 있는 날)의 카테고리에 맞는 루틴 문구.
- * rest/moist/defense_barrier/defense_toning/defense_hydration에는 concern/supportOwned에
- * 맞춘 문장을 이어 붙인다. sos_rest와 aha/bha/retinol(ACTIVE_OPEN)은 concern과 무관하다.
+ * day(또는 보고 있는 날)의 카테고리에 맞는 루틴 문구. title은 헤드라인 순환,
+ * detail은 실제 사용법 안내다. 방어/락 6종에는 concern/supportOwned에 맞춘 문장을
+ * 이어 붙인다. sos_rest와 bha/retinol(ACTIVE_OPEN)은 concern과 무관하다.
  */
-export function getCategoryCopy(category: RecipeType, concern: Concern = "none", supportOwned: SupportId[] = []): RoutineCopy {
-  if (category === "sos_rest") return SOS_REST_COPY
+export function getCategoryCopy(category: RecipeType, day: number, concern: Concern = "none", supportOwned: SupportId[] = []): RoutineCopy {
+  const title = pickHeadline(category, day)
 
-  const fixed = FIXED_COPY[category]
-  if (fixed) return withConcernAddendum(fixed, concern, supportOwned)
-
-  // ACTIVE_OPEN(aha/bha/retinol) — {{activeName}}을 오늘 실제 성분 이름으로 치환. concern 강조는 적용하지 않는다
-  const name = ACTIVE_LABEL[category] ?? "활성 성분"
-  return {
-    title: `${name} 집중 케어`,
-    detail: `오늘 밤에는 ${name} 제품을 딱 한 방울만 루틴에 추가합니다. 다른 기능성 제품과 섞이지 않도록 단독으로 사용해주시고, 다음 날 아침에는 자외선 차단제를 꼭 챙겨주세요.`,
+  if (category === "sos_rest") {
+    return { title, detail: SOS_REST_DETAIL }
   }
+
+  if (category === "bha" || category === "retinol") {
+    const name = ACTIVE_LABEL[category]
+    return {
+      title,
+      detail: `오늘 밤에는 ${name} 제품을 딱 한 방울만 루틴에 추가합니다. 다른 기능성 제품과 섞이지 않도록 단독으로 사용해주세요.`,
+    }
+  }
+
+  return withConcernAddendum({ title, detail: DETAIL[category] }, concern, supportOwned)
 }
 
 function withConcernAddendum(base: RoutineCopy, concern: Concern, supportOwned: SupportId[]): RoutineCopy {
@@ -135,17 +193,24 @@ function withConcernAddendum(base: RoutineCopy, concern: Concern, supportOwned: 
   return addendum ? { ...base, detail: `${base.detail} ${addendum}` } : base
 }
 
-/** BARRIER_LOCKING은 오리엔테이션(weekly_guide) 문구가 없다 — 정의된 그룹만 매핑 */
-const GROUP_WEEKLY_GUIDE: Partial<Record<CategoryGroup, RoutineCopy>> = {
-  BARRIER_GIPS: {
+/** 오리엔테이션 배너는 방어/락 계열 ↔ 액티브 계열을 오갈 때만 보여준다. SOS Rest는 응급 상황이라 대상 아님 */
+type OrientationGroup = "DEFENSE" | "ACTIVE"
+
+function orientationGroup(category: RecipeType): OrientationGroup | null {
+  if (category === "bha" || category === "retinol") return "ACTIVE"
+  if (category === "sos_rest") return null
+  return "DEFENSE"
+}
+
+const GROUP_WEEKLY_GUIDE: Record<OrientationGroup, RoutineCopy> = {
+  DEFENSE: {
     title: "반갑습니다, 당신의 피부 아군입니다.",
-    detail:
-      "이번 코스에서는 새로운 기능성 제품을 추가하기보다, 화장대에 있는 재생크림을 활용해 장벽의 기초 체력을 다지는 데 집중합니다.",
+    detail: "이번 코스에서는 화장대에 있는 진정·보습 성분을 활용해 장벽의 기초 체력을 다지는 데 집중합니다.",
   },
-  ACTIVE_OPEN: {
+  ACTIVE: {
     title: "장벽의 기초 체력이 다져졌어요.",
     detail:
-      "이제 쌓여있는 각질과 피지를 정돈할 타이밍입니다. 성분 충돌을 막기 위해 이번 주부터는 맞춤형 활성 성분을 주 1회, 안전 구역 안에서만 시작해요.",
+      "이제 쌓여있는 각질과 피지를 정돈할 타이밍입니다. 성분 충돌을 막기 위해 BHA·레티놀은 정해진 간격으로, 안전 구역 안에서만 번갈아 시작해요.",
   },
 }
 
@@ -153,17 +218,16 @@ const GROUP_WEEKLY_GUIDE: Partial<Record<CategoryGroup, RoutineCopy>> = {
  * day % 7 === 1 (Day 1/8/15/22/29...)에 호출한다. 오늘 카테고리가 속한 그룹이
  * 이전 주차 체크포인트(Day 1/8/15/22...)에서는 한 번도 나온 적 없는, 이번이 "처음
  * 시작"하는 그룹일 때만 오리엔테이션 문구를 반환한다. 이미 어느 체크포인트에선가
- * 보여준 적 있는 그룹이거나(BARRIER_LOCKING처럼) weekly_guide가 없는 그룹이면 null을 반환한다.
+ * 보여준 적 있는 그룹이거나 SOS Rest면 null을 반환한다.
  */
 export function getOrientationCopy(getRecipeForDay: (day: number) => Recipe, day: number): RoutineCopy | null {
-  const group = categoryGroup(getRecipeForDay(day).type)
-  const guide = GROUP_WEEKLY_GUIDE[group]
-  if (!guide) return null
+  const group = orientationGroup(getRecipeForDay(day).type)
+  if (!group) return null
 
   for (let past = day - 7; past >= 1; past -= 7) {
-    if (categoryGroup(getRecipeForDay(past).type) === group) return null
+    if (orientationGroup(getRecipeForDay(past).type) === group) return null
   }
-  return guide
+  return GROUP_WEEKLY_GUIDE[group]
 }
 
 /** 코스 마지막 날에 보여줄 완주 화면 문구 */

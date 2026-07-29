@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
 import { RecipeCard } from "@/components/recipe-card"
@@ -11,7 +10,9 @@ import { IncidentPanel } from "@/components/incident-panel"
 import { LockedPreview } from "@/components/locked-preview"
 import { RoutineBanner } from "@/components/routine-banner"
 import { LoginBanner } from "@/components/login-banner"
-import { BARRIER_SCORE_START_DAY, useDiary } from "@/lib/use-diary"
+import { SettingsPanel } from "@/components/settings-panel"
+import { OnboardingFlow } from "@/components/onboarding-flow"
+import { useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { getCompletionCopy, getOrientationCopy } from "@/lib/routine-copy"
 
@@ -22,6 +23,14 @@ export default function Page() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [justStampedDay, setJustStampedDay] = useState<number | null>(null)
   const [dismissedOrientationDay, setDismissedOrientationDay] = useState<number | null>(null)
+
+  // 하이드레이션 전엔 아무것도 그리지 않는다 — localStorage/원격 상태를 아직 못 읽은 채로
+  // 온보딩 화면을 잠깐 보여줬다가 메인 화면으로 튀는 깜빡임을 피하기 위해서다.
+  if (!diary.hydrated) return null
+
+  // 아직 온보딩(간격 슬라이더 질문)을 마치지 않았으면 메인 화면 대신 온보딩만 보여준다.
+  // 온보딩을 마치기 전까지는 가입일(Day 1)도 아직 찍히지 않은 상태다.
+  if (!diary.onboarded) return <OnboardingFlow onComplete={diary.completeOnboarding} />
 
   // 선택된 날이 없으면 오늘을 기본값으로 사용
   const activeDay = selectedDay ?? currentDay
@@ -49,74 +58,16 @@ export default function Page() {
 
   const hasReportedReactionToday = diary.reactionLog.some((entry) => entry.day === currentDay)
 
-  // 로그인 계정에 이미 진행 중인 루틴이 있는데 체커에서 새 진단을 들고 돌아온 경우 —
-  // 조용히 덮어쓰지 않고 먼저 확인을 받는다. 이 화면이 해소되기 전까지는 캘린더를
-  // 포함한 나머지 화면(의료 상담 안내 포함)을 렌더링하지 않는다.
-  if (diary.pendingReDiagnosis) {
-    return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-4 px-4 py-10 text-center">
-        <h1 className="font-display text-lg font-bold text-foreground">이미 진행 중인 루틴이 있어요</h1>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          Day {currentDay}/{totalDays}까지 기록해두셨어요. 새 진단 결과로 다시 시작하시겠어요?
-        </p>
-        <div className="mt-2 flex w-full flex-col gap-2">
-          <Button type="button" onClick={diary.confirmKeepExistingRoutine} className="w-full rounded-full">
-            기존 루틴 계속하기
-          </Button>
-          <Button type="button" variant="outline" onClick={diary.confirmStartFreshRoutine} className="w-full rounded-full">
-            새로 시작하기
-          </Button>
-        </div>
-        <p className="text-xs font-medium text-destructive">새로 시작하면 지금까지 기록한 Day와 기록이 모두 사라져요.</p>
-      </main>
-    )
-  }
-
-  // 9-2. symptom === 'bad'인 경우 캘린더 대신 의료 상담 안내만 노출한다
-  if (diary.medicalReferral) {
-    return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-4 px-4 py-10 text-center">
-        <span aria-hidden className="text-4xl">
-          🏥
-        </span>
-        <h1 className="font-display text-lg font-bold text-foreground">피부과 방문을 권장합니다</h1>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          현재 증상은 앱의 셀프 케어 루틴만으로 관리하기 어려울 수 있어요. 호빵이 스킨 다이어리는 진료를 대체하지
-          않으니, 가까운 피부과에서 먼저 상담받아 보세요.
-        </p>
-      </main>
-    )
-  }
-
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
-      <ProgressHeader currentDay={currentDay} totalDays={totalDays} completedCount={completedDays.length} />
-
-      {isCourseComplete && <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />}
-
-      {showWeekOrientation && orientationCopy && (
-        <RoutineBanner copy={orientationCopy} onDismiss={() => setDismissedOrientationDay(currentDay)} />
-      )}
-
-      {(diary.pregnant || diary.prescriptionMeds) && (
-        <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
-          {diary.pregnant && <p>🤰 임신·수유 중으로 확인됐어요. 레티놀 성분은 이 코스에서 제외돼요.</p>}
-          {diary.prescriptionMeds && <p>💊 처방약을 사용 중이시군요. 담당 병원의 처방 지도가 이 앱의 가이드보다 항상 우선이에요.</p>}
-        </div>
-      )}
-
-      <LoginBanner />
-
-      <CalendarGrid
-        totalDays={totalDays}
+      <ProgressHeader
         currentDay={currentDay}
-        selectedDay={activeDay}
-        completedDays={completedDays}
-        justStampedDay={justStampedDay}
-        onSelect={setSelectedDay}
-        getRecipe={diary.getRecipeForDay}
+        totalDays={totalDays}
+        completedCount={completedDays.length}
+        heroImageSrc={diary.heroImageSrc}
       />
 
+      {/* "오늘 뭘 해야 하는지"가 최대한 빨리 보이도록 스페셜케어 카드를 배너들보다 위로 끌어올린다 */}
       <RecipeCard
         day={activeDay}
         currentDay={currentDay}
@@ -129,6 +80,31 @@ export default function Page() {
         supportOwned={diary.supportOwned}
       />
 
+      {isCourseComplete && <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />}
+
+      <IncidentPanel currentDay={currentDay} incidentLog={diary.incidentLog} onReportIncident={handleReportIncident} />
+
+      {(diary.pregnant || diary.prescriptionMeds) && (
+        <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
+          {diary.pregnant && <p>🤰 임신·수유 중으로 확인됐어요. 레티놀 성분은 이 코스에서 제외돼요.</p>}
+          {diary.prescriptionMeds && <p>💊 처방약을 사용 중이시군요. 담당 병원의 처방 지도가 이 앱의 가이드보다 항상 우선이에요.</p>}
+        </div>
+      )}
+
+      <CalendarGrid
+        totalDays={totalDays}
+        currentDay={currentDay}
+        selectedDay={activeDay}
+        completedDays={completedDays}
+        justStampedDay={justStampedDay}
+        onSelect={setSelectedDay}
+        getRecipe={diary.getRecipeForDay}
+      />
+
+      {showWeekOrientation && orientationCopy && (
+        <RoutineBanner copy={orientationCopy} onDismiss={() => setDismissedOrientationDay(currentDay)} />
+      )}
+
       <DailyHabits
         day={activeDay}
         habit={diary.getHabit(activeDay)}
@@ -137,15 +113,13 @@ export default function Page() {
         onWater={(delta) => diary.setWater(activeDay, delta)}
       />
 
-      {/* 진단(Tier/Type)이 있어야 개인화 캘린더가 있고, 인시던트·장벽 점수가 실제로 반영된다 */}
-      {diary.tier !== null && (
-        <>
-          <BarrierScoreChart log={diary.barrierScoreLog} unlockDay={BARRIER_SCORE_START_DAY} />
-          <IncidentPanel currentDay={currentDay} incidentLog={diary.incidentLog} onReportIncident={handleReportIncident} />
-        </>
-      )}
+      <BarrierScoreChart currentDay={currentDay} totalDays={totalDays} />
 
-      <LockedPreview skinType={diary.skinType} />
+      <LoginBanner />
+
+      <LockedPreview />
+
+      <SettingsPanel onStartFresh={diary.startFresh} />
 
       <p className="mt-1.5 text-center text-[12.5px] font-semibold text-[#5C5648]">
         myroutinediet · 가입한 날부터 30일, 나만의 속도로
