@@ -237,6 +237,9 @@ const INCIDENT_OVERRIDE_ROUTINE: Record<IncidentType, RecipeType> = {
  * "기존 항목을 그 자리에서 재색칠"하는 방식 대신 항상 새 슬롯을 삽입하기 때문에,
  * 인시던트·자극 지연을 몇 번을 적용해도 캘린더에 빈 Day가 생기거나 두 일정이
  * 같은 Day를 두고 충돌하는 일이 구조적으로 발생하지 않는다.
+ *
+ * TOTAL_DAYS(30)를 넘어가는 일정은 자동으로 잘려나간다. 인시던트로 밀린 날짜만큼
+ * 뒤쪽 일정이 30일 안에서 밀리되, 그 이상은 캘린더에서 제거된다.
  */
 function insertDays(
   calendar: CalendarEntry[],
@@ -244,7 +247,7 @@ function insertDays(
   count: number,
   categoryForInsertedDay: (day: number) => RecipeType,
 ): CalendarEntry[] {
-  const past = calendar.filter((entry) => entry.day < atDay)
+  const past = calendar.filter((entry) => entry.day < atDay && entry.day <= TOTAL_DAYS)
   const baseDate = calendar.find((entry) => entry.day === atDay)?.date ?? calendar[calendar.length - 1]?.date ?? new Date().toISOString()
 
   const inserted: CalendarEntry[] = Array.from({ length: count }, (_, i) => {
@@ -259,11 +262,12 @@ function insertDays(
       reactionFlag: null,
       afterActiveRestDay: false,
     }
-  })
+  }).filter((entry) => entry.day <= TOTAL_DAYS)
 
   const shiftedFuture = calendar
     .filter((entry) => entry.day >= atDay)
     .map((entry) => ({ ...entry, day: entry.day + count, date: addDays(entry.date, count) }))
+    .filter((entry) => entry.day <= TOTAL_DAYS)
 
   return [...past, ...inserted, ...shiftedFuture]
 }
