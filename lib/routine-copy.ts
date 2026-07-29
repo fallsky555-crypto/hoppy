@@ -216,43 +216,6 @@ export function getCategoryCopy(category: RecipeType, calendar: CalendarEntry[],
   return { title: variant.title, detail, caution }
 }
 
-/** 오리엔테이션 배너는 방어/락 계열 ↔ 액티브 계열을 오갈 때만 보여준다. SOS Rest는 응급 상황이라 대상 아님 */
-type OrientationGroup = "DEFENSE" | "ACTIVE"
-
-function orientationGroup(category: RecipeType): OrientationGroup | null {
-  if (category === "bha" || category === "retinol") return "ACTIVE"
-  if (category === "sos_rest") return null
-  return "DEFENSE"
-}
-
-const GROUP_WEEKLY_GUIDE: Record<OrientationGroup, RoutineCopy> = {
-  DEFENSE: {
-    title: "반갑습니다, 당신의 피부 아군입니다.",
-    detail: "이번 코스에서는 화장대에 있는 진정·보습 성분을 활용해 장벽의 기초 체력을 다지는 데 집중합니다.",
-  },
-  ACTIVE: {
-    title: "장벽의 기초 체력이 다져졌어요.",
-    detail:
-      "이제 쌓여있는 각질과 피지를 정돈할 타이밍입니다. 성분 충돌을 막기 위해 BHA·레티놀은 정해진 간격으로, 안전 구역 안에서만 번갈아 시작해요.",
-  },
-}
-
-/**
- * day % 7 === 1 (Day 1/8/15/22/29...)에 호출한다. 오늘 카테고리가 속한 그룹이
- * 이전 주차 체크포인트(Day 1/8/15/22...)에서는 한 번도 나온 적 없는, 이번이 "처음
- * 시작"하는 그룹일 때만 오리엔테이션 문구를 반환한다. 이미 어느 체크포인트에선가
- * 보여준 적 있는 그룹이거나 SOS Rest면 null을 반환한다.
- */
-export function getOrientationCopy(getRecipeForDay: (day: number) => Recipe, day: number): RoutineCopy | null {
-  const group = orientationGroup(getRecipeForDay(day).type)
-  if (!group) return null
-
-  for (let past = day - 7; past >= 1; past -= 7) {
-    if (orientationGroup(getRecipeForDay(past).type) === group) return null
-  }
-  return GROUP_WEEKLY_GUIDE[group]
-}
-
 /** 코스 마지막 날에 보여줄 완주 화면 문구 */
 export function getCompletionCopy(totalDays: number): RoutineCopy {
   return {

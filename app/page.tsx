@@ -14,7 +14,7 @@ import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
 import { useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
-import { getCompletionCopy, getOrientationCopy } from "@/lib/routine-copy"
+import { getCompletionCopy } from "@/lib/routine-copy"
 
 export default function Page() {
   const diary = useDiary()
@@ -22,7 +22,6 @@ export default function Page() {
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [justStampedDay, setJustStampedDay] = useState<number | null>(null)
-  const [dismissedOrientationDay, setDismissedOrientationDay] = useState<number | null>(null)
 
   // 하이드레이션 전엔 아무것도 그리지 않는다 — localStorage/원격 상태를 아직 못 읽은 채로
   // 온보딩 화면을 잠깐 보여줬다가 메인 화면으로 튀는 깜빡임을 피하기 위해서다.
@@ -35,10 +34,6 @@ export default function Page() {
   // 선택된 날이 없으면 오늘을 기본값으로 사용
   const activeDay = selectedDay ?? currentDay
 
-  // Day 1/8/15/22/29... 마다, 오늘 카테고리 그룹이 처음 시작되는 경우에만 오리엔테이션을 보여준다
-  const isOrientationDay = currentDay % 7 === 1
-  const orientationCopy = isOrientationDay ? getOrientationCopy(diary.getRecipeForDay, currentDay) : null
-  const showWeekOrientation = orientationCopy !== null && dismissedOrientationDay !== currentDay
   const isCourseComplete = currentDay >= totalDays
 
   function handleRecord() {
@@ -101,10 +96,6 @@ export default function Page() {
         onSelect={setSelectedDay}
         getRecipe={diary.getRecipeForDay}
       />
-
-      {showWeekOrientation && orientationCopy && (
-        <RoutineBanner copy={orientationCopy} onDismiss={() => setDismissedOrientationDay(currentDay)} />
-      )}
 
       <DailyHabits
         day={activeDay}
