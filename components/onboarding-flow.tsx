@@ -53,7 +53,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               모공 케어는 피부 기초 체력을 만드는 단계예요
             </h1>
             <p className="text-[15px] leading-relaxed text-[#4A4438]">
-              미백·톤 개선 같은 다음 프로그램은,<br />이 기초 단계를 완주해야 열려요.
+              미백·톤 개선 같은 다음 프로그램은, 이 기초 단계를 완주해야 열려요.<br />
+              완주하시면 스케줄표 위 세 그림(동백·붉은장미·작약) 중 하나를 바탕화면용 원본으로 드려요.
             </p>
             <Button type="button" size="lg" onClick={() => setStep(2)} className="h-auto w-full rounded-full py-3 text-[15px]">
               다음
