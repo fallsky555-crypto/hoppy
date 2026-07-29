@@ -34,9 +34,9 @@ export function LockedPreview() {
 
       <LockedStage
         badge="2단계"
-        title="장벽 안정 케어"
-        description="장벽이 편안해지는 걸 느끼면, 자극 없는 선에서 결을 다듬는 케어를 조금씩 더해볼 수 있어요."
-        unlockNote="1단계를 꾸준히 마치면 장벽 안정 케어가 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다."
+        title="미백 · 톤 케어"
+        description="피부 결이 정돈되면, 미백과 톤 개선에 중점을 둔 다음 단계의 케어를 시작할 수 있어요."
+        unlockNote="1단계를 꾸준히 마치면 미백 · 톤 케어가 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다."
       />
 
       <LockedStage
