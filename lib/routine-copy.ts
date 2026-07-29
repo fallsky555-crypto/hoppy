@@ -164,9 +164,9 @@ const CAUTION_TEXT: Record<RecipeType, string | null> = {
   aha: ACTIVE_CAUTION["aha"],
   bha: ACTIVE_CAUTION["bha"],
   retinol: ACTIVE_CAUTION["retinol"],
-  barrier_lock: null,
-  hydration_lock: null,
-  toning_solo: null,
+  barrier_lock: "세라마이드 단독 · 이 시기엔 이 성분 하나만 사용하세요.",
+  hydration_lock: "히알루론산+세라마이드 · 이 시기엔 이 성분 하나만 사용하세요.",
+  toning_solo: "비타민C 단독 · 이 시기엔 이 성분 하나만 사용하세요.",
 }
 
 /** 같은 카테고리가 calendar 내 day 이전까지 몇 번 나타났는지 카운트 */
