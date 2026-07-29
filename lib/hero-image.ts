@@ -48,11 +48,29 @@ export function heroImageIndexForDay(calendar: CalendarEntry[], day: number): nu
 /**
  * index → 실제 이미지 경로. 0~5(TIER_1_HERO_IMAGE_SLOTS)가 1단계에서 실제로 쓰이고,
  * 6~19는 2단계 설계 때 채워 넣을 예비 슬롯이다.
- *
- * 지금은 20장 전부 같은 파일(public/hero/hero-01.jpeg)을 가리킨다 — 나머지
- * 19장 자산이 준비되면 이 배열만 실제 파일명으로 갈아끼우면 된다.
  */
-export const HERO_IMAGES: readonly string[] = Array.from({ length: TOTAL_HERO_IMAGES }, () => "/hero/hero-01.jpeg")
+export const HERO_IMAGES: readonly string[] = [
+  "/hero/hero-01.jpeg",
+  "/hero/hero-02.jpeg",
+  "/hero/hero-03.jpeg",
+  "/hero/hero-04.jpeg",
+  "/hero/hero-05.jpeg",
+  "/hero/hero-06.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+  "/hero/hero-01.jpeg",
+]
 
 /** heroImageIndexForDay + HERO_IMAGES를 합쳐, 해당 day에 보여줄 이미지 경로를 바로 반환한다 */
 export function heroImageSrcForDay(calendar: CalendarEntry[], day: number): string {
