@@ -46,23 +46,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-5 py-10">
       {step === 1 && (
-        <section className="relative" aria-label="프로그램 소개">
-          {/* 배경 장식(4각 프레임) — 아바타/텍스트/버튼보다 아래(-z-10), 클릭 방해 안 하도록 pointer-events-none.
-              이미지가 1500x1200(가로형)이라 카드(세로형)에 cover를 쓰면 프레임 모서리가 잘려서 contain으로 둔다 */}
-          <img
-            src="/onboarding/leaf-frame.png"
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute inset-0 -z-10 size-full object-contain"
-          />
-
+        <section className="relative min-h-[420px] flex flex-col justify-center" aria-label="프로그램 소개">
           <div className="space-y-4 text-center">
             <img src="/onboarding/intro-01.jpeg" alt="" className="mx-auto h-28 w-28 rounded-full object-cover" />
             <h1 className="font-display text-xl font-bold leading-snug text-foreground">
               모공 케어는 피부 기초 체력을 만드는 단계예요
             </h1>
             <p className="text-[15px] leading-relaxed text-[#4A4438]">
-              미백·톤 개선 같은 다음 프로그램은, 이 기초 단계를 완주해야 열려요.
+              미백·톤 개선 같은 다음 프로그램은,<br />이 기초 단계를 완주해야 열려요.
             </p>
             <Button type="button" size="lg" onClick={() => setStep(2)} className="h-auto w-full rounded-full py-3 text-[15px]">
               다음
