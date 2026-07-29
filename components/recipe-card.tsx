@@ -5,7 +5,7 @@ import type { CalendarEntry, Recipe, RecipeType } from "@/lib/schedule"
 import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-copy"
 import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 import { Button } from "@/components/ui/button"
-import { Check, ShieldAlert } from "lucide-react"
+import { Check, ShieldAlert, Droplet, Brush, CheckCircle, Clock } from "lucide-react"
 
 /** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
 const REACTIVE_CATEGORIES: RecipeType[] = ["bha", "retinol"]
@@ -104,6 +104,29 @@ export function RecipeCard({
 
       {copy.caution && (
         <p className={cn("mt-2 text-xs font-medium", isToday ? "text-white/70" : "text-muted-foreground")}>{copy.caution}</p>
+      )}
+
+      {recipe.steps && recipe.steps.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {recipe.steps.map((step, index) => (
+            <div key={index} className="flex items-center gap-1.5">
+              <div
+                className={cn(
+                  "flex size-5 items-center justify-center rounded-full text-[10px] font-bold",
+                  isToday ? "bg-white/20 text-white" : "bg-secondary text-foreground",
+                )}
+              >
+                {index + 1}
+              </div>
+              <span className={cn("text-[11px] font-medium", isToday ? "text-white/85" : "text-[#5C5648]")}>
+                {step}
+              </span>
+              {index < recipe.steps.length - 1 && (
+                <span className={cn("ml-1 text-[9px]", isToday ? "text-white/40" : "text-muted-foreground")}>·</span>
+              )}
+            </div>
+          ))}
+        </div>
       )}
 
       <div className="mt-5">
