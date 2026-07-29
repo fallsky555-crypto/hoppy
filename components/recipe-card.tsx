@@ -65,30 +65,30 @@ export function RecipeCard({
       )}
       aria-label="오늘의 레시피 상세"
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1.5">
+          <span className={cn("font-display text-[13px] font-semibold", isToday ? "text-white/85" : "text-muted-foreground")}>
+            Day {day}
+            {isToday && <span className="ml-1">· 오늘</span>}
+          </span>
+
           <span
             className={cn(
-              "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold tracking-[0.06em]",
+              "inline-flex w-fit items-center rounded-full border px-3 py-1 text-[11px] font-bold tracking-[0.06em]",
               isToday ? "border-transparent bg-white/18 text-white" : "border-border text-muted-foreground",
             )}
           >
             {recipe.tag}
           </span>
-
-          {CHARACTER_IMAGES[recipe.type] && (
-            <img
-              src={CHARACTER_IMAGES[recipe.type]!}
-              alt=""
-              className="size-6 rounded-full object-cover ring-1 ring-border"
-            />
-          )}
         </div>
 
-        <span className={cn("font-display text-[13px] font-semibold", isToday ? "text-white/85" : "text-muted-foreground")}>
-          Day {day}
-          {isToday && <span className="ml-1">· 오늘</span>}
-        </span>
+        {CHARACTER_IMAGES[recipe.type] && (
+          <img
+            src={CHARACTER_IMAGES[recipe.type]!}
+            alt=""
+            className="size-16 shrink-0 rounded-full object-cover ring-1 ring-border"
+          />
+        )}
       </div>
 
       <h3
