@@ -34,9 +34,9 @@ export function LockedPreview() {
 
       <LockedStage
         badge="2단계"
-        title="미백 · 톤 케어"
+        title="미백 · 톤 케어 프로그램"
         description="피부 결이 정돈되면, 미백과 톤 개선에 중점을 둔 다음 단계의 케어를 시작할 수 있어요."
-        unlockNote="1단계를 꾸준히 마치면 미백 · 톤 케어가 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다."
+        unlockNote="1단계를 꾸준히 마치면 미백 · 톤 케어 프로그램이 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다."
       />
 
       <LockedStage
