@@ -10,6 +10,20 @@ import { Check, ShieldAlert } from "lucide-react"
 /** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
 const REACTIVE_CATEGORIES: RecipeType[] = ["bha", "retinol"]
 
+/** 카테고리별 호빵이 캐릭터 이미지 매핑 */
+const CHARACTER_IMAGES: Record<RecipeType, string | null> = {
+  defense_barrier: "/characters/defense-barrier.jpeg",
+  defense_toning: "/characters/defense-toning.jpeg",
+  defense_hydration: "/characters/defense-hydration.jpeg",
+  sos_rest: "/characters/sos-rest.jpeg",
+  bha: "/characters/bha.jpeg",
+  aha: "/characters/aha.jpeg",
+  retinol: "/characters/retinol.jpeg",
+  barrier_lock: null,
+  hydration_lock: null,
+  toning_solo: null,
+}
+
 interface RecipeCardProps {
   day: number
   currentDay: number
@@ -51,15 +65,26 @@ export function RecipeCard({
       )}
       aria-label="오늘의 레시피 상세"
     >
-      <div className="flex items-center justify-between">
-        <span
-          className={cn(
-            "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold tracking-[0.06em]",
-            isToday ? "border-transparent bg-white/18 text-white" : "border-border text-muted-foreground",
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold tracking-[0.06em]",
+              isToday ? "border-transparent bg-white/18 text-white" : "border-border text-muted-foreground",
+            )}
+          >
+            {recipe.tag}
+          </span>
+
+          {CHARACTER_IMAGES[recipe.type] && (
+            <img
+              src={CHARACTER_IMAGES[recipe.type]!}
+              alt=""
+              className="size-6 rounded-full object-cover ring-1 ring-border"
+            />
           )}
-        >
-          {recipe.tag}
-        </span>
+        </div>
+
         <span className={cn("font-display text-[13px] font-semibold", isToday ? "text-white/85" : "text-muted-foreground")}>
           Day {day}
           {isToday && <span className="ml-1">· 오늘</span>}
