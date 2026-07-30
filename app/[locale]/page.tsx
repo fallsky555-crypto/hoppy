@@ -112,7 +112,7 @@ export default function Page({ params }: PageProps) {
         onWater={(delta) => diary.setWater(activeDay, delta)}
       />
 
-      <BarrierScoreChart currentDay={currentDay} totalDays={totalDays} />
+      <BarrierScoreChart currentDay={currentDay} totalDays={totalDays} locale={locale} />
 
       <LoginBanner />
 

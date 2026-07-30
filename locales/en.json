@@ -364,7 +364,29 @@
     "restart_button": "Start from day 1 again"
   },
   "recipe_card": {
-    "today": "Today"
+    "today": "Today",
+    "recorded": "Logged",
+    "record_button": "Log it",
+    "not_yet_available": "This day hasn't arrived yet. You'll be able to log when it does.",
+    "past_routine": "A routine from the past.",
+    "reaction_reported": "You reported a reaction today. This ingredient is delayed by {{days}} days.",
+    "report_reaction": "I had a reaction to this ingredient today"
+  },
+  "daily_habits": {
+    "title": "Daily essentials",
+    "sunscreen_label": "Applied sunscreen",
+    "sunscreen_description": "Sun protection is the foundation of barrier repair",
+    "water_label": "Cups of water",
+    "water_description": "Aim for {{maxWater}} cups a day",
+    "decrease_water": "Decrease cups",
+    "increase_water": "Increase cups"
+  },
+  "routine_banner": {
+    "wallpaper_camellia": "Camellia",
+    "wallpaper_rose": "Rose",
+    "wallpaper_peony": "Peony",
+    "completion_wallpaper_title": "Your 30-day wallpaper",
+    "download": "Download"
   },
   "metadata": {
     "title": "Hoppy Skin Diary · 30-Day Barrier Reset for Glass Skin",

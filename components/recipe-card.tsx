@@ -6,6 +6,8 @@ import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-cop
 import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 import { Button } from "@/components/ui/button"
 import { Check, ShieldAlert, Droplet, Brush, CheckCircle, Clock } from "lucide-react"
+import { t, interpolate } from "@/lib/i18n"
+import { useLocale } from "@/lib/locale-context"
 
 /** 자극 신고 대상이 될 수 있는 카테고리 — 실제로 도입 스케줄이 있는 액티브만 해당 */
 const REACTIVE_CATEGORIES: RecipeType[] = ["bha", "retinol"]
@@ -51,8 +53,9 @@ export function RecipeCard({
   concern = "none",
   supportOwned = [],
 }: RecipeCardProps) {
+  const locale = useLocale()
   const recipe = getRecipe(day)
-  const copy = getCategoryCopy(recipe.type, calendar, day, concern, supportOwned)
+  const copy = getCategoryCopy(recipe.type, calendar, day, concern, supportOwned, locale)
   const isToday = day === currentDay
   const isFuture = day > currentDay
   const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)
@@ -69,7 +72,7 @@ export function RecipeCard({
         <div className="flex flex-col gap-1.5">
           <span className={cn("font-display text-[13px] font-semibold", isToday ? "text-white/85" : "text-muted-foreground")}>
             Day {day}
-            {isToday && <span className="ml-1">· 오늘</span>}
+            {isToday && <span className="ml-1">· {t("recipe_card.today", locale)}</span>}
           </span>
 
           <span
@@ -138,7 +141,7 @@ export function RecipeCard({
             )}
           >
             <Check className="size-4" aria-hidden />
-            기록 완료했어요
+            {t("recipe_card.recorded", locale)}
           </div>
         ) : isToday ? (
           <Button
@@ -146,14 +149,14 @@ export function RecipeCard({
             size="lg"
             className="h-auto w-full rounded-full bg-background p-[14px] text-[14px] font-bold tracking-[0.01em]"
           >
-            기록 완료
+            {t("recipe_card.record_button", locale)}
           </Button>
         ) : isFuture ? (
           <p className="text-center text-xs font-medium text-muted-foreground">
-            아직 오지 않은 날이에요. 그날이 되면 기록할 수 있어요.
+            {t("recipe_card.not_yet_available", locale)}
           </p>
         ) : (
-          <p className="text-center text-xs font-medium text-muted-foreground">지나간 날의 루틴이에요.</p>
+          <p className="text-center text-xs font-medium text-muted-foreground">{t("recipe_card.past_routine", locale)}</p>
         )}
       </div>
 
@@ -167,7 +170,7 @@ export function RecipeCard({
               )}
             >
               <ShieldAlert className="size-3.5" aria-hidden />
-              오늘 자극을 신고했어요. 이 성분은 {REACTION_DELAY_DAYS}일 뒤로 미뤄져요.
+              {interpolate(t("recipe_card.reaction_reported", locale), { days: String(REACTION_DELAY_DAYS) })}
             </p>
           ) : (
             <Button
@@ -181,7 +184,7 @@ export function RecipeCard({
               )}
             >
               <ShieldAlert className="size-3.5" aria-hidden />
-              오늘 이 성분에 자극이 있었어요
+              {t("recipe_card.report_reaction", locale)}
             </Button>
           )}
         </div>

@@ -364,7 +364,29 @@
     "restart_button": "루틴 처음부터 다시 시작하기"
   },
   "recipe_card": {
-    "today": "오늘"
+    "today": "오늘",
+    "recorded": "기록 완료했어요",
+    "record_button": "기록 완료",
+    "not_yet_available": "아직 오지 않은 날이에요. 그날이 되면 기록할 수 있어요.",
+    "past_routine": "지나간 날의 루틴이에요.",
+    "reaction_reported": "오늘 자극을 신고했어요. 이 성분은 {{days}}일 뒤로 미뤄져요.",
+    "report_reaction": "오늘 이 성분에 자극이 있었어요"
+  },
+  "daily_habits": {
+    "title": "매일 기본 습관",
+    "sunscreen_label": "선크림 발랐어요",
+    "sunscreen_description": "자외선 차단은 장벽 회복의 기본이에요",
+    "water_label": "물 마신 잔 수",
+    "water_description": "하루 {{maxWater}}잔을 목표로 해요",
+    "decrease_water": "물 잔 수 줄이기",
+    "increase_water": "물 잔 수 늘리기"
+  },
+  "routine_banner": {
+    "wallpaper_camellia": "동백",
+    "wallpaper_rose": "장미",
+    "wallpaper_peony": "작약",
+    "completion_wallpaper_title": "완주 기념 배경화면",
+    "download": "다운로드"
   },
   "metadata": {
     "title": "호빵이 스킨 다이어리 · 장벽 리셋 캘린더",

@@ -41,7 +41,7 @@ function pickVariantIndex(category: RecipeType, appearanceCount: number): number
 }
 
 /** 카테고리별 variant 배열 반환 */
-function getVariantsForCategory(category: RecipeType): readonly CategoryCopyVariant[] {
+function getVariantsForCategory(category: RecipeType, locale: Locale = "ko"): readonly CategoryCopyVariant[] {
   const keyMap: Record<RecipeType, string> = {
     defense_barrier: "routine.defense_barrier.variants",
     defense_toning: "routine.defense_toning.variants",
@@ -54,7 +54,7 @@ function getVariantsForCategory(category: RecipeType): readonly CategoryCopyVari
     bha: "routine.active.variants",
     retinol: "routine.active.variants",
   }
-  return t(keyMap[category]) || []
+  return t(keyMap[category], locale) || []
 }
 
 /** concern별 관련 카테고리 (언제 노출될지 결정) */
@@ -77,20 +77,21 @@ export function getCategoryCopy(
   day: number,
   concern: Concern = "none",
   supportOwned: SupportId[] = [],
+  locale: Locale = "ko",
 ): RoutineCopy {
   const appearanceCount = countCategoryAppearances(calendar, category, day)
 
   // 스페셜케어 첫 등장: 별도 문구 사용
   if ((category === "aha" || category === "bha" || category === "retinol") && appearanceCount === 0) {
-    const firstVariant = t("routine.active_first")
-    const label = t(`routine.active_label.${category}`)
+    const firstVariant = t("routine.active_first", locale)
+    const label = t(`routine.active_label.${category}`, locale)
     let detail = interpolate(firstVariant.detail, { name: label })
-    const caution = t(`routine.active.caution.${category}`)
+    const caution = t(`routine.active.caution.${category}`, locale)
     return { title: firstVariant.title, detail, caution }
   }
 
   const index = pickVariantIndex(category, appearanceCount)
-  const variant = getVariantsForCategory(category)[index]
+  const variant = getVariantsForCategory(category, locale)[index]
 
   if (!variant) {
     return { title: "", detail: "" }
@@ -99,21 +100,21 @@ export function getCategoryCopy(
   let detail = variant.detail
 
   if ((category === "aha" || category === "bha" || category === "retinol") && detail.includes("{{name}}")) {
-    const label = t(`routine.active_label.${category}`)
+    const label = t(`routine.active_label.${category}`, locale)
     detail = interpolate(detail, { name: label })
   }
 
-  let caution = getCautionForCategory(category)
+  let caution = getCautionForCategory(category, locale)
 
   // concern 기반 구매 가이드: 해당 카테고리에 처음 또는 두 번째 등장할 때만 노출
-  if (concern !== "none" && concern in t("routine.concern_purchase_guide")) {
+  if (concern !== "none" && concern in t("routine.concern_purchase_guide", locale)) {
     const concernCategories = CONCERN_CATEGORIES[concern]
     const categoryMatches = concernCategories.includes(category)
 
     if (categoryMatches && appearanceCount < 2) {
       const supportId = concern as SupportId
       if (!supportOwned.includes(supportId)) {
-        const guide = t(`routine.concern_purchase_guide.${concern}`)
+        const guide = t(`routine.concern_purchase_guide.${concern}`, locale)
         if (caution) {
           caution = `${caution} · ${guide}`
         } else {
@@ -127,7 +128,7 @@ export function getCategoryCopy(
 }
 
 /** 카테고리별 caution 반환 */
-function getCautionForCategory(category: RecipeType): string | null {
+function getCautionForCategory(category: RecipeType, locale: Locale = "ko"): string | null {
   const cautionMap: Record<RecipeType, string> = {
     defense_barrier: "routine.defense_barrier.caution",
     defense_toning: "routine.defense_toning.caution",
@@ -140,7 +141,7 @@ function getCautionForCategory(category: RecipeType): string | null {
     hydration_lock: "routine.hydration_lock.caution",
     toning_solo: "routine.toning_solo.caution",
   }
-  return t(cautionMap[category]) || null
+  return t(cautionMap[category], locale) || null
 }
 
 /** 코스 마지막 날에 보여줄 완주 화면 문구 */
