@@ -34,7 +34,7 @@ export default function Page({ params }: PageProps) {
 
   if (!diary.hydrated) return null
 
-  if (!diary.onboarded) return <OnboardingFlow onComplete={diary.completeOnboarding} />
+  if (!diary.onboarded) return <OnboardingFlow locale={locale} onComplete={diary.completeOnboarding} />
 
   const activeDay = selectedDay ?? currentDay
 
