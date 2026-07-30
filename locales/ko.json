@@ -291,6 +291,81 @@
     "lockedPreviewElasticityDesc": "장벽이 자리를 잡으면, 탄력을 돕는 재생 케어를 천천히 시작해 볼 수 있어요.",
     "onboardingExample": "예: 7"
   },
+  "onboarding": {
+    "intro": {
+      "title": "모공 케어는 피부 기초 체력을 만드는 단계예요",
+      "description": "미백·톤 개선 같은 다음 프로그램은, 이 기초 단계를 완주해야 열려요.\n완주하시면 스케줄표 위 세 그림(동백·붉은장미·작약) 중 하나를 바탕화면용 원본으로 드려요.",
+      "next": "다음"
+    },
+    "habitCheck": {
+      "question": "지금 스킨케어할 때, 스페셜케어(각질제거/레티놀 등)는 보통 며칠에 한 번 하시나요?",
+      "placeholder": "예: 7",
+      "interval_suffix": "일마다",
+      "never_uses": "스페셜케어는 잘 안 써요",
+      "next": "다음"
+    },
+    "mappingResult": {
+      "mapping_with_interval": "{{days}}일마다 쓰신다고 하셨으니,",
+      "mapping_never_uses": "스페셜케어를 잘 안 쓰신다고 하셨으니,",
+      "interval_display": "{{days}}일마다 시작할게요",
+      "comment_too_short": "지금보다 여유 있게 시작하는 게 피부에 더 좋아요",
+      "comment_too_frequent": "지금보다 조금 더 자주 챙겨야 30일 안에 변화를 체감하기 쉬워요",
+      "comment_similar": "지금 루틴이랑 비슷하게 시작해요",
+      "start": "시작하기"
+    }
+  },
+  "completionFeedback": {
+    "title": "이 30일, 어떠셨어요?",
+    "placeholder": "가장 기억에 남는 하루가 있었나요?",
+    "send": "보내기",
+    "skip": "건너뛰기",
+    "success": "소감 감사합니다! 다음 단계도 함께하길 기대할게요 🤍"
+  },
+  "dailyHabits": {
+    "title": "매일 기본 습관",
+    "sunscreen": "선크림 발랐어요",
+    "sunscreen_detail": "자외선 차단은 장벽 회복의 기본이에요",
+    "water": "물 마신 잔 수",
+    "water_goal": "하루 {{maxWater}}잔을 목표로 해요"
+  },
+  "progressHeader": {
+    "tagline": "SKIN DIET DIARY",
+    "title": "30일 도자기 피부 프로젝트",
+    "progress": "진행일",
+    "completed": "완료",
+    "remaining": "남음"
+  },
+  "routineBanner": {
+    "wallpaper_title": "완주 기념 배경화면",
+    "download": "다운로드"
+  },
+  "lockedPreview": {
+    "title": "다음 단계 미리보기",
+    "stage2": "2단계",
+    "stage2_title": "미백 · 톤 케어 프로그램",
+    "stage2_desc": "피부 결이 정돈되면, 미백과 톤 개선에 중점을 둔 다음 단계의 케어를 시작할 수 있어요.",
+    "stage2_unlock": "1단계를 꾸준히 마치면 미백 · 톤 케어 프로그램이 열려요. 내 피부 속도에 맞춰 진행하시면 됩니다.",
+    "stage3": "3단계",
+    "stage3_title": "탄력 재생 프로그램",
+    "stage3_desc": "장벽이 자리를 잡으면, 탄력을 돕는 재생 케어를 천천히 시작해 볼 수 있어요.",
+    "stage3_unlock": "2단계까지 마치면 탄력 재생 프로그램이 열려요. 서두르지 않아도 괜찮습니다."
+  },
+  "barrierScoreChart": {
+    "weekly_title": "{{week}}주, 잘 지나왔어요",
+    "weekly_detail": "매일 조금씩 쌓아온 기록이 벌써 {{week}}주가 됐어요. 남은 시간도 이 속도로 충분해요.",
+    "course_complete_title": "30일, 끝까지 해냈어요",
+    "course_complete_detail": "중간에 쉬어간 날이 있었어도 괜찮아요. 다시 돌아와서 여기까지 온 게 중요해요."
+  },
+  "settings": {
+    "title": "설정",
+    "restart_confirm": "새로 시작하면 지금까지 기록한 Day와 기록이 모두 사라져요. 정말 처음부터 다시 시작할까요?",
+    "cancel": "취소",
+    "restart": "새로 시작하기",
+    "restart_button": "루틴 처음부터 다시 시작하기"
+  },
+  "recipe_card": {
+    "today": "오늘"
+  },
   "metadata": {
     "title": "호빵이 스킨 다이어리 · 장벽 리셋 캘린더",
     "description": "무너진 피부 장벽을 30일 동안 부드럽게 복구하는 초보자 장벽 리셋 캘린더. 매일 피부 레시피를 기록해요."

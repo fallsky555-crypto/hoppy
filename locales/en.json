@@ -1,0 +1,373 @@
+{
+  "routine": {
+    "defense_barrier": {
+      "caution": "Strengthen with ceramide cream · Use only this ingredient during this phase.",
+      "variants": [
+        {
+          "title": "Building a solid foundation",
+          "detail": "Simple basics are better than fancy ingredients. Apply ceramide and cica cream generously to give your skin barrier time to naturally recover."
+        },
+        {
+          "title": "Strength that builds quietly",
+          "detail": "Even without visible changes, every day like today is making a real difference. Let ceramide and cica cream reinforce your skin's protective barrier."
+        },
+        {
+          "title": "A day to protect what you have",
+          "detail": "Rather than adding more, let's protect what you've already built. Wrap your barrier in ceramide and cica for comfort."
+        }
+      ]
+    },
+    "defense_toning": {
+      "caution": "Tone refinement with vitamin C and niacinamide · Use only this ingredient during this phase.",
+      "variants": [
+        {
+          "title": "Quiet refinement",
+          "detail": "Change may not be obvious, but days like today are what truly matter. Let vitamin C and niacinamide gently refine your tone, finishing with hydration for peace."
+        },
+        {
+          "title": "Gently evening your skin",
+          "detail": "Take your time with vitamin C and niacinamide to balance tone and oil. Finish with hydration."
+        },
+        {
+          "title": "Clarity comes slowly",
+          "detail": "Today's focus is on tone refinement. Apply vitamin C and niacinamide lightly, then finish with hydration."
+        }
+      ]
+    },
+    "defense_hydration": {
+      "caution": "Hydration boost with hyaluronic acid · Use only this ingredient during this phase.",
+      "variants": [
+        {
+          "title": "Little by little becomes change",
+          "detail": "Day after day of the same routine builds trust with your skin. Let hyaluronic acid fill your skin with moisture from within, then gently layer to keep it comfortable."
+        },
+        {
+          "title": "Comfort through hydration",
+          "detail": "Today we focus on hydration. Layer hyaluronic acid gently along skin texture to create a comfortable, plump feeling."
+        },
+        {
+          "title": "Hydration from within",
+          "detail": "The foundation comes first. Let hyaluronic acid hydrate from deep within so your skin can find its own balance."
+        }
+      ]
+    },
+    "barrier_lock": {
+      "caution": "Ceramide alone · Use only this ingredient during this phase.",
+      "variants": [
+        {
+          "title": "A day to protect what you have",
+          "detail": "Rather than adding more, let's protect what you've already built. Wrap your barrier generously in ceramide."
+        }
+      ]
+    },
+    "hydration_lock": {
+      "caution": "Hyaluronic acid + ceramide · Use only these ingredients during this phase.",
+      "variants": [
+        {
+          "title": "Sealing in what you've built",
+          "detail": "After hydrating with hyaluronic acid, seal it in with ceramide cream so your skin doesn't lose that moisture."
+        }
+      ]
+    },
+    "toning_solo": {
+      "caution": "Vitamin C alone · Use only this ingredient during this phase.",
+      "variants": [
+        {
+          "title": "Focusing on tone today",
+          "detail": "Today is all about tone with vitamin C. Apply gently along your skin texture to brighten and refine."
+        }
+      ]
+    },
+    "sos_rest": {
+      "caution": "Cica for calm and reset · Use only this ingredient during this phase.",
+      "variants": [
+        {
+          "title": "Rest is okay today",
+          "detail": "Take a break from everything else. Just cica is enough to give your skin the recovery time it needs."
+        },
+        {
+          "title": "A day to pause",
+          "detail": "It's okay to slow down. Today is for calming care—that's all your skin needs."
+        },
+        {
+          "title": "A day without effort",
+          "detail": "You don't have to do anything today. Cica can take care of things while you rest."
+        },
+        {
+          "title": "A day to let go",
+          "detail": "Just for today, don't decide anything. A gentle cica product is all you need."
+        }
+      ]
+    },
+    "active_first": {
+      "title": "Starting {{name}} today",
+      "detail": "You're beginning {{name}} today. Just one tiny drop at a time—that's enough. Don't mix with other actives, and please don't forget sunscreen tomorrow morning."
+    },
+    "active": {
+      "caution": {
+        "aha": "Gentle exfoliation & sebum control with AHA · Use only this ingredient during this phase.",
+        "bha": "Gentle exfoliation & sebum control with BHA · Use only this ingredient during this phase.",
+        "retinol": "Renewal boost with Retinol · Use only this ingredient during this phase."
+      },
+      "variants": [
+        {
+          "title": "What you've built brought you here",
+          "detail": "Today you're meeting {{name}}. Every little choice you've made has led to this moment. One tiny drop is enough—your sunscreen tomorrow will protect all this effort."
+        },
+        {
+          "title": "Your skin is ready",
+          "detail": "{{name}} is here, and your skin is ready. You've come this far, and one drop won't go to waste. Don't forget sunscreen tomorrow."
+        },
+        {
+          "title": "A special night ahead",
+          "detail": "Tonight is special—it's {{name}}'s turn. Every small choice has created this moment. Seal it all in with sunscreen tomorrow morning."
+        }
+      ]
+    },
+    "active_label": {
+      "aha": "AHA",
+      "bha": "BHA",
+      "retinol": "Retinol"
+    },
+    "concern_purchase_guide": {
+      "nia": "Looking for niacinamide? Search '2-5% niacinamide serum' on your favorite shopping site—it's gentle and easy to start with.",
+      "hya": "Looking for hyaluronic acid? Search 'hyaluronic acid ampoule or serum' online. Mixed-weight molecules matter more than high concentration.",
+      "cica": "Looking for cica? Search 'cica' or 'centella asiatica' online. Cream formulas give longer-lasting calm.",
+      "cer": "Looking for ceramide? Search 'ceramide cream' online. Look for 'ceramide complex' or 'barrier cream' labels for safety."
+    },
+    "completion": {
+      "title": "You completed the barrier reset course",
+      "detail_template": "Your {{totalDays}}-day record shows how your barrier has changed. Thank you for staying with us. Check below if you'd like to explore the next phase."
+    }
+  },
+  "schedule": {
+    "bha": {
+      "tag": "Active Care",
+      "title": "BHA Exfoliation Day",
+      "guide": "After cleansing, saturate a cotton pad with BHA toner. Focus on your T-zone and pores, gently wiping in light strokes. Follow with a hydrating cream to balance moisture.",
+      "steps": ["Gentle cleanse", "Apply BHA with cotton pad", "Finish with hydrating cream"],
+      "caution": "Active exfoliation day for pores · Next morning, sunscreen is essential"
+    },
+    "retinol": {
+      "tag": "Active Care",
+      "title": "Retinol Introduction Day",
+      "guide": "After evening cleanse, mix just half a rice grain of retinol into your regular hydrating cream. Go slow—this is an introduction.",
+      "steps": ["Cleanse in evening", "Mix retinol (rice grain amount) into hydrating cream", "Apply gently to face", "Sunscreen in morning"],
+      "caution": "Renewal support day · Morning sunscreen is essential · Tomorrow, rest with barrier and hydration focus"
+    },
+    "defense_barrier": {
+      "tag": "Barrier Strengthening",
+      "title": "Barrier Strengthening Day",
+      "guide": "After gentle cleanse, apply ceramide and cica-rich cream generously. Let your barrier rebuild naturally—this is rest time for your skin.",
+      "steps": ["Gentle cleanse", "Apply ceramide + cica cream generously"],
+      "caution": "Ceramide + cica for barrier support · Use only this ingredient during this phase."
+    },
+    "defense_toning": {
+      "tag": "Tone Refinement",
+      "title": "Tone Refinement Day",
+      "guide": "Cleanse, then use vitamin C and niacinamide to gently balance tone and oil. Finish with light hydration.",
+      "steps": ["Gentle cleanse", "Apply vitamin C · niacinamide toner or serum", "Finish with hydrating cream"],
+      "caution": "Vitamin C + niacinamide for tone · Use only this ingredient during this phase."
+    },
+    "defense_hydration": {
+      "tag": "Hydration Boost",
+      "title": "Hydration Boost Day",
+      "guide": "Use hyaluronic acid to fill your skin with moisture from within. Apply in thin layers along your skin texture for lasting comfort.",
+      "steps": ["Apply hyaluronic acid ampoule", "Layer gently along texture", "Seal with hydrating cream"],
+      "caution": "Hyaluronic acid for deep moisture · Use only this ingredient during this phase."
+    },
+    "barrier_lock": {
+      "tag": "Barrier Seal",
+      "title": "Barrier Seal Day",
+      "guide": "Use ceramide cream alone today—focus on sealing and strengthening. No other actives, just protection.",
+      "steps": ["Gentle cleanse", "Apply ceramide cream generously"],
+      "caution": "Ceramide alone · Use only this ingredient during this phase."
+    },
+    "hydration_lock": {
+      "tag": "Hydration Lock",
+      "title": "Hydration Lock Day",
+      "guide": "First, hydrate with hyaluronic acid. Then seal everything in with ceramide cream so moisture can't escape.",
+      "steps": ["Apply hyaluronic acid ampoule first", "Seal with ceramide cream"],
+      "caution": "Hyaluronic acid + ceramide · Use only these ingredients during this phase."
+    },
+    "toning_solo": {
+      "tag": "Vitamin C Boost",
+      "title": "Vitamin C Day",
+      "guide": "Use vitamin C alone to brighten and refine tone. Apply gently along your skin texture, then finish with hydration.",
+      "steps": ["Gentle cleanse", "Apply vitamin C along texture", "Finish with hydrating cream"],
+      "caution": "Vitamin C alone · Use only this ingredient during this phase."
+    },
+    "sos_rest": {
+      "tag": "Calm & Reset",
+      "title": "Skin Calm Day",
+      "guide": "Give your skin a break. Use only cica to soothe and reset. Skip other actives—just gentle care today.",
+      "steps": ["Gentle cleanse", "Apply cica product gently", "Skip other actives"],
+      "caution": "Cica for calm and reset · Use only this ingredient during this phase."
+    }
+  },
+  "calendar": {
+    "ariaLabel": "30-day barrier reset calendar",
+    "title": "30-Day Routine Calendar",
+    "dayIndicator": "Day {{totalDays}}",
+    "labels": {
+      "bha": "BHA",
+      "retinol": "Retinol",
+      "defense_barrier": "Barrier",
+      "defense_toning": "Tone",
+      "defense_hydration": "Hydrate",
+      "barrier_lock": "Lock",
+      "hydration_lock": "Seal",
+      "toning_solo": "C-Boost",
+      "sos_rest": "Calm"
+    },
+    "dayAriaLabel": "Day {{day}} {{recipe}}{{completed}}{{today}}",
+    "completed": ", logged",
+    "today": ", today",
+    "todayBadge": "Today"
+  },
+  "incident": {
+    "ariaLabel": "Skin care incident",
+    "title": "Something happened?",
+    "description": "Choose one, and we'll switch to a calming routine for you. Your schedule will shift to give your skin the care it needs.",
+    "medical_notice": "If you have severe burns or post-procedure pain, please follow your dermatologist's care first. This routine doesn't replace medical advice.",
+    "labels": {
+      "period": "Period started",
+      "sunburn": "Sun damage",
+      "treatment": "Post-treatment"
+    },
+    "active": "{{label}} calm routine is active. Your regular calendar resumes on Day {{resumeDay}}.",
+    "cancel": "Cancel",
+    "confirm": "Confirm, start calm routine"
+  },
+  "login": {
+    "error": {
+      "link": "Something went wrong connecting. Please try again soon.",
+      "link_conflict": "Can't connect right now. Please try again soon.",
+      "signin": "Can't sign in right now. Please try again soon.",
+      "signout": "Can't sign out right now. Please try again soon."
+    },
+    "linked": {
+      "ariaLabel": "Account linked",
+      "status": "Signed in with {{provider}}"
+    },
+    "conflict": {
+      "ariaLabel": "Account already linked",
+      "status": "This {{provider}} account is already linked on another device."
+    },
+    "connect": {
+      "ariaLabel": "Link your account"
+    },
+    "provider_label": {
+      "kakao": "Kakao",
+      "google": "Google"
+    },
+    "button": {
+      "signout": "Sign out",
+      "signout_pending": "Signing out...",
+      "signin_existing": "Sign in with that {{provider}} account",
+      "signin_existing_pending": "Signing in...",
+      "kakao": "Continue with Kakao",
+      "kakao_pending": "Connecting...",
+      "google": "Continue with Google",
+      "google_pending": "Connecting...",
+      "close": "Close"
+    }
+  },
+  "common": {
+    "increaseWater": "Add water",
+    "decreaseWater": "Remove water",
+    "viewRecipeDetails": "Today's recipe detail",
+    "settings": "Settings",
+    "programIntro": "Program intro",
+    "habitCheck": "Current habits",
+    "mappingResult": "Your schedule",
+    "nextStepPreview": "What's next",
+    "completionFeedback": "What stood out to you?",
+    "weeklyEncourage": "Weekly check-in",
+    "weeklyOrientation": "Weekly intro",
+    "lockedPreviewCeramide": "Tone Care Program",
+    "lockedPreviewCeramideDesc": "Once your skin texture is refined, you can begin the tone and brightening phase.",
+    "lockedPreviewElasticity": "Elasticity Renewal Program",
+    "lockedPreviewElasticityDesc": "Once your barrier is strong, you can slowly start renewal care for elasticity.",
+    "onboardingExample": "e.g. 7"
+  },
+  "onboarding": {
+    "intro": {
+      "title": "Pore care builds your skin's foundation",
+      "description": "Brighter tone and elasticity work best when your foundation is strong. Complete this first phase, and you'll unlock the next level. Plus, you'll get a desktop wallpaper when you finish—choose from three designs.",
+      "next": "Next"
+    },
+    "habitCheck": {
+      "question": "How often do you usually do active care (exfoliating or retinol)?",
+      "placeholder": "e.g. 7",
+      "interval_suffix": "days",
+      "never_uses": "I rarely do active care",
+      "next": "Next"
+    },
+    "mappingResult": {
+      "mapping_with_interval": "You said every {{days}} days, so",
+      "mapping_never_uses": "You said active care is rare, so",
+      "interval_display": "we'll start you at every {{days}} days",
+      "comment_too_short": "Going a bit slower might be kinder to your skin",
+      "comment_too_frequent": "A little more often will help you see changes in 30 days",
+      "comment_similar": "This is close to what you're doing now—great fit",
+      "start": "Let's go"
+    }
+  },
+  "completionFeedback": {
+    "title": "These 30 days—how were they?",
+    "placeholder": "What day stood out to you?",
+    "send": "Send",
+    "skip": "Skip",
+    "success": "Thank you for sharing. Can't wait to see what comes next together 🤍"
+  },
+  "dailyHabits": {
+    "title": "Daily essentials",
+    "sunscreen": "I wore sunscreen",
+    "sunscreen_detail": "Sunscreen is the foundation of barrier recovery",
+    "water": "Water glasses",
+    "water_goal": "Aim for {{maxWater}} glasses today"
+  },
+  "progressHeader": {
+    "tagline": "SKIN BARRIER RESET",
+    "title": "30-Day Gentle Recovery",
+    "progress": "Days in",
+    "completed": "Logged",
+    "remaining": "Left"
+  },
+  "routineBanner": {
+    "wallpaper_title": "Completion wallpaper",
+    "download": "Download"
+  },
+  "lockedPreview": {
+    "title": "What's next",
+    "stage2": "Phase 2",
+    "stage2_title": "Tone Care Program",
+    "stage2_desc": "Once your texture is refined, you can focus on tone and brightening.",
+    "stage2_unlock": "Finish phase 1 consistently, and tone care unlocks. Go at your own pace—there's no rush.",
+    "stage3": "Phase 3",
+    "stage3_title": "Elasticity Renewal Program",
+    "stage3_desc": "Once your barrier is settled, you can slowly start renewal care.",
+    "stage3_unlock": "Phase 2 complete? Elasticity care opens up. No need to hurry."
+  },
+  "barrierScoreChart": {
+    "weekly_title": "Week {{week}}, you're doing great",
+    "weekly_detail": "Look at what you've built day by day. {{week}} weeks in. You're keeping the pace—that's what matters.",
+    "course_complete_title": "30 days—you did it",
+    "course_complete_detail": "Some days you rested, and that's okay. Coming back and getting this far? That's what counts."
+  },
+  "settings": {
+    "title": "Settings",
+    "restart_confirm": "Starting over will erase all your logged days and records. Are you sure?",
+    "cancel": "Cancel",
+    "restart": "Start over",
+    "restart_button": "Start from day 1 again"
+  },
+  "recipe_card": {
+    "today": "Today"
+  },
+  "metadata": {
+    "title": "Hoppy Skin Diary · 30-Day Barrier Reset",
+    "description": "Gentle, science-backed skincare routine to rebuild your barrier in 30 days. Log your routine daily, watch your skin settle."
+  }
+}
