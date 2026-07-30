@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { IncidentLogEntry, IncidentType } from "@/lib/scheduling-engine"
-import { t } from "@/lib/i18n"
+import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { Droplet, Sun, Syringe } from "lucide-react"
 
@@ -48,7 +48,7 @@ export function IncidentPanel({ currentDay, incidentLog, onReportIncident }: Inc
 
       {activeIncident ? (
         <div className="rounded-2xl bg-secondary p-3.5 text-xs leading-relaxed text-foreground/80">
-          {INCIDENT_META[activeIncident.incidentType].label} 진정 루틴 진행 중이에요. Day {activeIncident.resumesNormalAtDay}부터 원래 캘린더가 다시 시작돼요.
+          {interpolate(t("incident.active", locale), { label: INCIDENT_META[activeIncident.incidentType].label, resumeDay: String(activeIncident.resumesNormalAtDay) })}
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-2">
