@@ -1,10 +1,11 @@
 import koMessages from "@/locales/ko.json"
+import enMessages from "@/locales/en.json"
 
 export type Locale = "ko" | "en"
 
 const messages: Record<Locale, typeof koMessages> = {
   ko: koMessages,
-  en: koMessages, // TODO: 영어 번역 파일 생성 후 교체
+  en: enMessages,
 }
 
 export function getMessages(locale: Locale = "ko") {
