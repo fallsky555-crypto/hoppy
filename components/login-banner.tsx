@@ -14,7 +14,7 @@ import {
 } from "@/lib/supabase/auth"
 import { ensureAnonSession } from "@/lib/supabase/sync"
 import { STORAGE_KEY as DIARY_STORAGE_KEY } from "@/lib/use-diary"
-import { t } from "@/lib/i18n"
+import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { X } from "lucide-react"
 
@@ -138,11 +138,14 @@ export function LoginBanner() {
 
   if (linkedIdentity) {
     const label = PROVIDER_LABEL[linkedIdentity.provider]
+    const statusText = linkedIdentity.nickname
+      ? interpolate(t("login.linked.with_nickname", locale), { nickname: linkedIdentity.nickname, provider: label })
+      : interpolate(t("login.linked.without_nickname", locale), { provider: label })
     return (
-      <section className="flex items-center justify-between gap-3 rounded-4xl bg-card px-[22px] py-4 ring-1 ring-border" aria-label="계정 연결 상태">
+      <section className="flex items-center justify-between gap-3 rounded-4xl bg-card px-[22px] py-4 ring-1 ring-border" aria-label={t("login.linked.ariaLabel", locale)}>
         <div className="min-w-0">
           <p className="truncate text-[13px] font-semibold text-foreground">
-            {linkedIdentity.nickname ? `${linkedIdentity.nickname}님, ${label} 계정으로 연결됨` : `${label} 계정으로 연결됨`}
+            {statusText}
           </p>
           {error && <p className="mt-1 text-xs font-medium text-destructive">{error}</p>}
         </div>
@@ -154,7 +157,7 @@ export function LoginBanner() {
           disabled={signingOut}
           className="shrink-0 rounded-full"
         >
-          {signingOut ? "로그아웃 중..." : "로그아웃"}
+          {signingOut ? t("login.button.signout_pending", locale) : t("login.button.signout", locale)}
         </Button>
       </section>
     )
@@ -163,19 +166,20 @@ export function LoginBanner() {
   if (identityConflict) {
     const label = PROVIDER_LABEL[identityConflict]
     return (
-      <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label="이미 연결된 계정 안내">
+      <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label={t("login.conflict.ariaLabel", locale)}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="text-[13px] font-semibold text-foreground">이미 연결된 {label} 계정이에요</h2>
+            <h2 className="text-[13px] font-semibold text-foreground">
+              {interpolate(t("login.conflict.title", locale), { provider: label })}
+            </h2>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              이 {label} 계정은 이미 다른 기기에서 연결돼 있어요. 그 계정으로 로그인하면 지금 이 브라우저의 기록
-              대신 그 계정에 저장된 기록을 보게 돼요.
+              {interpolate(t("login.conflict.description", locale), { provider: label })}
             </p>
           </div>
           <button
             type="button"
             onClick={dismiss}
-            aria-label="닫기"
+            aria-label={t("login.button.close", locale)}
             className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card/70"
           >
             <X className="size-3.5" aria-hidden />
@@ -184,7 +188,9 @@ export function LoginBanner() {
 
         <div className="mt-3">
           <Button type="button" onClick={handleUseExisting} disabled={pending !== null} className="w-full rounded-full">
-            {pending === identityConflict ? "로그인하는 중이에요..." : `그 ${label} 계정으로 로그인`}
+            {pending === identityConflict
+              ? t("login.button.signin_existing_pending", locale)
+              : interpolate(t("login.button.signin_existing", locale), { provider: label })}
           </Button>
         </div>
 
@@ -194,18 +200,18 @@ export function LoginBanner() {
   }
 
   return (
-    <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label="계정 연결 안내">
+    <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label={t("login.connect.ariaLabel", locale)}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="text-[13px] font-semibold text-foreground">기기가 바뀌어도 기록을 이어가시려면</h2>
+          <h2 className="text-[13px] font-semibold text-foreground">{t("login.connect.title", locale)}</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            지금 쓰던 기록은 그대로 두고, 계정만 연결해두면 다른 기기에서도 이어서 볼 수 있어요.
+            {t("login.connect.description", locale)}
           </p>
         </div>
         <button
           type="button"
           onClick={dismiss}
-          aria-label="닫기"
+          aria-label={t("login.button.close", locale)}
           className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card/70"
         >
           <X className="size-3.5" aria-hidden />
@@ -219,7 +225,7 @@ export function LoginBanner() {
           disabled={pending !== null}
           className="w-full rounded-full bg-[#FEE500] text-[#191919] hover:bg-[#FEE500]/90"
         >
-          {pending === "kakao" ? "연결하는 중이에요..." : "카카오로 계속하기"}
+          {pending === "kakao" ? t("login.button.kakao_pending", locale) : t("login.button.kakao", locale)}
         </Button>
         <Button
           type="button"
@@ -228,7 +234,7 @@ export function LoginBanner() {
           disabled={pending !== null}
           className="w-full rounded-full"
         >
-          {pending === "google" ? "연결하는 중이에요..." : "Google로 계속하기"}
+          {pending === "google" ? t("login.button.google_pending", locale) : t("login.button.google", locale)}
         </Button>
       </div>
 

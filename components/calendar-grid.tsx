@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils"
 import type { Recipe, RecipeType } from "@/lib/schedule"
-import { t } from "@/lib/i18n"
+import { getRecipes } from "@/lib/schedule"
+import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { Check } from "lucide-react"
 
@@ -45,12 +46,13 @@ export function CalendarGrid({
     <section className="rounded-4xl bg-card px-5 py-6 ring-1 ring-border" aria-label={t("calendar.ariaLabel", locale)}>
       <div className="mb-4 flex items-baseline justify-between gap-2 px-0.5">
         <h2 className="text-[13px] font-semibold text-foreground">{t("calendar.title", locale)}</h2>
-        <span className="text-[11px] text-muted-foreground">Day {totalDays}까지</span>
+        <span className="text-[11px] text-muted-foreground">{interpolate(t("calendar.dayIndicator", locale), { totalDays: String(totalDays) })}</span>
       </div>
 
       <div className="grid grid-cols-7 gap-1.5">
         {days.map((day) => {
           const recipe = getRecipe(day)
+          const localizedRecipe = getRecipes(locale)[recipe.type]
           const isToday = day === currentDay
           const isSelected = day === selectedDay
           const isCompleted = completedDays.includes(day)
@@ -63,7 +65,7 @@ export function CalendarGrid({
               key={day}
               type="button"
               onClick={() => onSelect(day)}
-              aria-label={`Day ${day} ${recipe.title}${isCompleted ? t("calendar.completed", locale) : ""}${isToday ? t("calendar.today", locale) : ""}`}
+              aria-label={`Day ${day} ${localizedRecipe.title}${isCompleted ? t("calendar.completed", locale) : ""}${isToday ? t("calendar.today", locale) : ""}`}
               aria-pressed={isSelected}
               className={cn(
                 "relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-2xl border bg-card p-0.5 shadow-[0_1px_2px_rgba(30,29,26,0.04)] transition-all",

@@ -248,14 +248,20 @@
     },
     "linked": {
       "ariaLabel": "계정 연결 상태",
-      "status": "{{provider}}으로 로그인 중"
+      "status": "{{provider}}으로 로그인 중",
+      "with_nickname": "{{nickname}}님, {{provider}} 계정으로 연결됨",
+      "without_nickname": "{{provider}} 계정으로 연결됨"
     },
     "conflict": {
       "ariaLabel": "이미 연결된 계정 안내",
-      "status": "다른 계정에 이미 연결된 {{provider}} 계정입니다."
+      "status": "다른 계정에 이미 연결된 {{provider}} 계정입니다.",
+      "title": "이미 연결된 {{provider}} 계정이에요",
+      "description": "이 {{provider}} 계정은 이미 다른 기기에서 연결돼 있어요. 그 계정으로 로그인하면 지금 이 브라우저의 기록 대신 그 계정에 저장된 기록을 보게 돼요."
     },
     "connect": {
-      "ariaLabel": "계정 연결 안내"
+      "ariaLabel": "계정 연결 안내",
+      "title": "기기가 바뀌어도 기록을 이어가시려면",
+      "description": "지금 쓰던 기록은 그대로 두고, 계정만 연결해두면 다른 기기에서도 이어서 볼 수 있어요."
     },
     "provider_label": {
       "kakao": "카카오",
@@ -390,6 +396,7 @@
   },
   "metadata": {
     "title": "호빵이 스킨 다이어리 · 장벽 리셋 캘린더",
-    "description": "무너진 피부 장벽을 30일 동안 부드럽게 복구하는 초보자 장벽 리셋 캘린더. 매일 피부 레시피를 기록해요."
+    "description": "무너진 피부 장벽을 30일 동안 부드럽게 복구하는 초보자 장벽 리셋 캘린더. 매일 피부 레시피를 기록해요.",
+    "tagline": "myroutinediet · 가입한 날부터 30일, 나만의 속도로"
   }
 }

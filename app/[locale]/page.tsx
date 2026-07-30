@@ -16,6 +16,7 @@ import { CompletionFeedback } from "@/components/completion-feedback"
 import { useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { getCompletionCopy } from "@/lib/routine-copy"
+import { t } from "@/lib/i18n"
 
 interface PageProps {
   params: {
@@ -121,7 +122,7 @@ export default function Page({ params }: PageProps) {
       <SettingsPanel onStartFresh={diary.startFresh} />
 
       <p className="mt-1.5 text-center text-[12.5px] font-semibold text-[#5C5648]">
-        myroutinediet · 가입한 날부터 30일, 나만의 속도로
+        {t("metadata.tagline", locale)}
       </p>
     </main>
   )

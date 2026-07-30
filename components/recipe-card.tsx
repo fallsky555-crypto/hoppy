@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import type { CalendarEntry, Recipe, RecipeType } from "@/lib/schedule"
+import { getRecipes } from "@/lib/schedule"
 import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-copy"
 import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 import { Button } from "@/components/ui/button"
@@ -55,6 +56,7 @@ export function RecipeCard({
 }: RecipeCardProps) {
   const locale = useLocale()
   const recipe = getRecipe(day)
+  const localizedRecipe = getRecipes(locale)[recipe.type]
   const copy = getCategoryCopy(recipe.type, calendar, day, concern, supportOwned, locale)
   const isToday = day === currentDay
   const isFuture = day > currentDay
@@ -81,7 +83,7 @@ export function RecipeCard({
               isToday ? "border-transparent bg-white/18 text-white" : "border-border text-muted-foreground",
             )}
           >
-            {recipe.tag}
+            {localizedRecipe.tag}
           </span>
         </div>
 
@@ -109,9 +111,9 @@ export function RecipeCard({
         <p className={cn("mt-2 text-xs font-medium", isToday ? "text-white/70" : "text-muted-foreground")}>{copy.caution}</p>
       )}
 
-      {recipe.steps && recipe.steps.length > 0 && (
+      {localizedRecipe.steps && localizedRecipe.steps.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          {recipe.steps.map((step, index) => (
+          {localizedRecipe.steps.map((step, index) => (
             <div key={index} className="flex items-center gap-1.5">
               <div
                 className={cn(
@@ -124,7 +126,7 @@ export function RecipeCard({
               <span className={cn("text-[11px] font-medium", isToday ? "text-white/85" : "text-[#5C5648]")}>
                 {step}
               </span>
-              {index < recipe.steps.length - 1 && (
+              {index < localizedRecipe.steps.length - 1 && (
                 <span className={cn("ml-1 text-[9px]", isToday ? "text-white/40" : "text-muted-foreground")}>·</span>
               )}
             </div>
