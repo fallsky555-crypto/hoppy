@@ -2,19 +2,20 @@
 
 import { cn } from "@/lib/utils"
 import type { Recipe, RecipeType } from "@/lib/schedule"
+import { t } from "@/lib/i18n"
 import { Check } from "lucide-react"
 
 /** 캘린더 그리드 셀에 표시할 짧은 한글 라벨 — 카테고리 구분은 색이 아니라 이 텍스트 라벨만으로 표현한다 */
 const SHORT_LABEL: Record<RecipeType, string> = {
-  bha: "BHA",
-  retinol: "레티놀",
-  defense_barrier: "장벽",
-  defense_toning: "톤정돈",
-  defense_hydration: "수분",
-  barrier_lock: "밀폐",
-  hydration_lock: "수분잠금",
-  toning_solo: "비타민C",
-  sos_rest: "SOS",
+  bha: t("calendar.labels.bha"),
+  retinol: t("calendar.labels.retinol"),
+  defense_barrier: t("calendar.labels.defense_barrier"),
+  defense_toning: t("calendar.labels.defense_toning"),
+  defense_hydration: t("calendar.labels.defense_hydration"),
+  barrier_lock: t("calendar.labels.barrier_lock"),
+  hydration_lock: t("calendar.labels.hydration_lock"),
+  toning_solo: t("calendar.labels.toning_solo"),
+  sos_rest: t("calendar.labels.sos_rest"),
 }
 
 interface CalendarGridProps {
@@ -39,9 +40,9 @@ export function CalendarGrid({
   const days = Array.from({ length: totalDays }, (_, i) => i + 1)
 
   return (
-    <section className="rounded-4xl bg-card px-5 py-6 ring-1 ring-border" aria-label="30일 도자기 피부 루틴 캘린더">
+    <section className="rounded-4xl bg-card px-5 py-6 ring-1 ring-border" aria-label={t("calendar.ariaLabel")}>
       <div className="mb-4 flex items-baseline justify-between gap-2 px-0.5">
-        <h2 className="text-[13px] font-semibold text-foreground">30일 루틴 캘린더</h2>
+        <h2 className="text-[13px] font-semibold text-foreground">{t("calendar.title")}</h2>
         <span className="text-[11px] text-muted-foreground">Day {totalDays}까지</span>
       </div>
 
@@ -60,7 +61,7 @@ export function CalendarGrid({
               key={day}
               type="button"
               onClick={() => onSelect(day)}
-              aria-label={`Day ${day} ${recipe.title}${isCompleted ? ", 기록 완료" : ""}${isToday ? ", 오늘" : ""}`}
+              aria-label={`Day ${day} ${recipe.title}${isCompleted ? t("calendar.completed") : ""}${isToday ? t("calendar.today") : ""}`}
               aria-pressed={isSelected}
               className={cn(
                 "relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-2xl border bg-card p-0.5 shadow-[0_1px_2px_rgba(30,29,26,0.04)] transition-all",
@@ -75,7 +76,7 @@ export function CalendarGrid({
 
               {isToday && (
                 <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-primary-foreground">
-                  오늘
+                  {t("calendar.todayBadge")}
                 </span>
               )}
 

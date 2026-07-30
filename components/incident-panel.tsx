@@ -3,16 +3,13 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { IncidentLogEntry, IncidentType } from "@/lib/scheduling-engine"
+import { t } from "@/lib/i18n"
 import { Droplet, Sun, Syringe } from "lucide-react"
 
-/** 5-2. 선번/시술 버튼 클릭 시 함께 노출해야 하는 필수 고지 문구 */
-const MEDICAL_NOTICE =
-  "화상이 심하거나 시술 직후 통증이 있다면 앱의 루틴보다 담당 병원·피부과의 안내를 우선하세요. 이 루틴은 진료를 대체하지 않습니다."
-
 const INCIDENT_META: Record<IncidentType, { label: string; icon: typeof Droplet; needsNotice: boolean }> = {
-  period: { label: "생리 시작", icon: Droplet, needsNotice: false },
-  sunburn: { label: "선번", icon: Sun, needsNotice: true },
-  treatment: { label: "시술 후", icon: Syringe, needsNotice: true },
+  period: { label: t("incident.labels.period"), icon: Droplet, needsNotice: false },
+  sunburn: { label: t("incident.labels.sunburn"), icon: Sun, needsNotice: true },
+  treatment: { label: t("incident.labels.treatment"), icon: Syringe, needsNotice: true },
 }
 
 interface IncidentPanelProps {
@@ -41,16 +38,15 @@ export function IncidentPanel({ currentDay, incidentLog, onReportIncident }: Inc
   }
 
   return (
-    <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label="스킨 인시던트">
-      <h2 className="mb-1 text-base font-bold text-foreground">특별한 일이 있었나요?</h2>
+    <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label={t("incident.ariaLabel")}>
+      <h2 className="mb-1 text-base font-bold text-foreground">{t("incident.title")}</h2>
       <p className="mb-3.5 text-[13.5px] leading-relaxed text-[#6B6558]">
-        선택하면 오늘부터 응급 진정 루틴으로 자동 전환되고, 남은 일정은 그만큼 뒤로 밀려요.
+        {t("incident.description")}
       </p>
 
       {activeIncident ? (
         <div className="rounded-2xl bg-secondary p-3.5 text-xs leading-relaxed text-foreground/80">
-          {INCIDENT_META[activeIncident.incidentType].label} 진정 루틴 진행 중이에요. Day{" "}
-          {activeIncident.resumesNormalAtDay}부터 원래 캘린더가 다시 시작돼요.
+          {INCIDENT_META[activeIncident.incidentType].label} 진정 루틴 진행 중이에요. Day {activeIncident.resumesNormalAtDay}부터 원래 캘린더가 다시 시작돼요.
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-2">
@@ -74,13 +70,13 @@ export function IncidentPanel({ currentDay, incidentLog, onReportIncident }: Inc
 
       {pending && (
         <div className="mt-3 rounded-2xl bg-secondary p-3.5">
-          <p className="text-xs leading-relaxed text-foreground/80">{MEDICAL_NOTICE}</p>
+          <p className="text-xs leading-relaxed text-foreground/80">{t("incident.medical_notice")}</p>
           <div className="mt-3 flex gap-2">
             <Button type="button" size="sm" variant="outline" className="flex-1 rounded-full" onClick={() => setPending(null)}>
-              취소
+              {t("incident.cancel")}
             </Button>
             <Button type="button" size="sm" className="flex-1 rounded-full" onClick={confirmPending}>
-              확인, 진정 루틴 시작
+              {t("incident.confirm")}
             </Button>
           </div>
         </div>

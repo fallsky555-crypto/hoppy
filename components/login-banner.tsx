@@ -14,10 +14,11 @@ import {
 } from "@/lib/supabase/auth"
 import { ensureAnonSession } from "@/lib/supabase/sync"
 import { STORAGE_KEY as DIARY_STORAGE_KEY } from "@/lib/use-diary"
+import { t } from "@/lib/i18n"
 import { X } from "lucide-react"
 
 const DISMISSED_KEY = "hoppy-login-banner-dismissed"
-const PROVIDER_LABEL: Record<LoginProvider, string> = { kakao: "카카오", google: "Google" }
+const PROVIDER_LABEL: Record<LoginProvider, string> = { kakao: t("login.provider_label.kakao"), google: t("login.provider_label.google") }
 
 /**
  * 13-1/13-2/13-4. 로그인을 강제하지 않는다 — 익명 세션으로도 기존처럼 계속 이용
@@ -45,7 +46,7 @@ export function LoginBanner() {
       if (oauthError.errorCode === "identity_already_exists" && oauthError.provider) {
         setIdentityConflict(oauthError.provider)
       } else {
-        setError("계정을 연결하는 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.")
+        setError(t("login.error.link"))
       }
       setVisible(true)
       return
@@ -94,7 +95,7 @@ export function LoginBanner() {
     setPending(provider)
     const result = await linkIdentity(provider)
     setPending(null)
-    if (result.error) setError("지금은 계정을 연결할 수 없어요. 잠시 후 다시 시도해주세요.")
+    if (result.error) setError(t("login.error.link_conflict"))
   }
 
   async function handleUseExisting() {
@@ -103,7 +104,7 @@ export function LoginBanner() {
     setPending(identityConflict)
     const result = await signInExistingIdentity(identityConflict)
     setPending(null)
-    if (result.error) setError("지금은 로그인할 수 없어요. 잠시 후 다시 시도해주세요.")
+    if (result.error) setError(t("login.error.signin"))
   }
 
   async function handleSignOut() {
@@ -112,7 +113,7 @@ export function LoginBanner() {
     const result = await signOut()
     if (result.error) {
       setSigningOut(false)
-      setError("지금은 로그아웃할 수 없어요. 잠시 후 다시 시도해주세요.")
+      setError(t("login.error.signout"))
       return
     }
     // 로그아웃 자체는 세션만 종료할 뿐 로컬 캐시는 그대로 남아있어, 다음 방문 시 새

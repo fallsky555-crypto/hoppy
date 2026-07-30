@@ -1,10 +1,11 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { t } from '@/lib/i18n'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '호빵이 스킨 다이어리 · 장벽 리셋 캘린더',
-  description: '무너진 피부 장벽을 30일 동안 부드럽게 복구하는 초보자 장벽 리셋 캘린더. 매일 피부 레시피를 기록해요.',
+  title: t('metadata.title'),
+  description: t('metadata.description'),
   generator: 'v0.app',
   icons: {
     apple: '/apple-touch-icon.png',
