@@ -37,8 +37,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // 모든 경로에 대해 middleware 실행
-    // 다만 위의 excludePatterns에서 제외됨
-    '/((?!_next/static|_next/image|favicon\\.ico|manifest|public).*)',
+    // 정적 파일 및 이미지 경로 제외
+    '/((?!_next/static|_next/image|favicon\\.ico|manifest|public|characters|onboarding|hero-|wallpapers).*)',
   ],
 }
