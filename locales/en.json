@@ -248,14 +248,20 @@
     },
     "linked": {
       "ariaLabel": "Account linked",
-      "status": "Signed in with {{provider}}"
+      "status": "Signed in with {{provider}}",
+      "with_nickname": "{{nickname}}, linked with {{provider}}",
+      "without_nickname": "Linked with {{provider}}"
     },
     "conflict": {
       "ariaLabel": "Account already linked",
-      "status": "This {{provider}} account is already linked on another device."
+      "status": "This {{provider}} account is already linked on another device.",
+      "title": "This {{provider}} account is already linked",
+      "description": "This {{provider}} account is linked to another device. If you sign in with it, you'll see the data from that account instead of your current progress here."
     },
     "connect": {
-      "ariaLabel": "Link your account"
+      "ariaLabel": "Link your account",
+      "title": "Keep your progress across devices",
+      "description": "Your current progress stays as-is. Just link your account, and you can continue from any device."
     },
     "provider_label": {
       "kakao": "Kakao",
@@ -329,8 +335,8 @@
     "water_goal": "Aim for {{maxWater}} glasses today"
   },
   "progressHeader": {
-    "tagline": "SKIN BARRIER RESET",
-    "title": "30-Day Gentle Recovery",
+    "tagline": "SKIN DIET DIARY",
+    "title": "30-Day Glass Skin: Pore Refining Program",
     "progress": "Days in",
     "completed": "Logged",
     "remaining": "Left"
@@ -342,13 +348,13 @@
   "lockedPreview": {
     "title": "What's next",
     "stage2": "Phase 2",
-    "stage2_title": "Tone Care Program",
-    "stage2_desc": "Once your texture is refined, you can focus on tone and brightening.",
-    "stage2_unlock": "Finish phase 1 consistently, and tone care unlocks. Go at your own pace—there's no rush.",
+    "stage2_title": "Tone Care Program (Radiance & Brightening)",
+    "stage2_desc": "Unlock Clear, Glowing Skin After Texture Refinement\nTarget dullness, dark spots, and uneven tone once your skin texture is smoothed out in Phase 1.",
+    "stage2_unlock": "",
     "stage3": "Phase 3",
-    "stage3_title": "Elasticity Renewal Program",
-    "stage3_desc": "Once your barrier is settled, you can slowly start renewal care.",
-    "stage3_unlock": "Phase 2 complete? Elasticity care opens up. No need to hurry."
+    "stage3_title": "Elasticity Renewal Program (Firming & Lifting)",
+    "stage3_desc": "The Final Step for Plump, Youthful Skin Density\nRebuild firmness and elasticity to lock in your Glass Skin results for the long term.",
+    "stage3_unlock": ""
   },
   "barrierScoreChart": {
     "weekly_title": "Week {{week}}, you're doing great",
@@ -364,10 +370,33 @@
     "restart_button": "Start from day 1 again"
   },
   "recipe_card": {
-    "today": "Today"
+    "today": "Today",
+    "recorded": "Logged",
+    "record_button": "Log it",
+    "not_yet_available": "This day hasn't arrived yet. You'll be able to log when it does.",
+    "past_routine": "A routine from the past.",
+    "reaction_reported": "You reported a reaction today. This ingredient is delayed by {{days}} days.",
+    "report_reaction": "I had a reaction to this ingredient today"
+  },
+  "daily_habits": {
+    "title": "Daily essentials",
+    "sunscreen_label": "Applied sunscreen",
+    "sunscreen_description": "Sun protection is the foundation of barrier repair",
+    "water_label": "Cups of water",
+    "water_description": "Aim for {{maxWater}} cups a day",
+    "decrease_water": "Decrease cups",
+    "increase_water": "Increase cups"
+  },
+  "routine_banner": {
+    "wallpaper_camellia": "Camellia",
+    "wallpaper_rose": "Rose",
+    "wallpaper_peony": "Peony",
+    "completion_wallpaper_title": "Your 30-day wallpaper",
+    "download": "Download"
   },
   "metadata": {
     "title": "Hoppy Skin Diary · 30-Day Barrier Reset for Glass Skin",
-    "description": "Gentle, science-backed skincare routine to rebuild your barrier and get that K-beauty glass skin glow. Log your routine daily, watch your skin settle."
+    "description": "Gentle, science-backed skincare routine to rebuild your barrier and get that K-beauty glass skin glow. Log your routine daily, watch your skin settle.",
+    "tagline": "myroutinediet · 30 days from your start date, at your own pace"
   }
 }

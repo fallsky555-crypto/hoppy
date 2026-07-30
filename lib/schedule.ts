@@ -1,4 +1,5 @@
 import { t } from "@/lib/i18n"
+import type { Locale } from "@/lib/i18n"
 
 export type RecipeType =
   // 액티브 (기능성 공격일)
@@ -82,6 +83,20 @@ export const RECIPES: Record<RecipeType, Recipe> = {
     emoji: "🤍",
     ...t("schedule.sos_rest"),
   },
+}
+
+export function getRecipes(locale: Locale = "ko"): Record<RecipeType, Recipe> {
+  return {
+    bha: { type: "bha", color: "bha", emoji: "🧴", ...t("schedule.bha", locale) },
+    retinol: { type: "retinol", color: "retinol", emoji: "🧪", ...t("schedule.retinol", locale) },
+    defense_barrier: { type: "defense_barrier", color: "defense_barrier", emoji: "🛡️", ...t("schedule.defense_barrier", locale) },
+    defense_toning: { type: "defense_toning", color: "defense_toning", emoji: "🌤️", ...t("schedule.defense_toning", locale) },
+    defense_hydration: { type: "defense_hydration", color: "defense_hydration", emoji: "💧", ...t("schedule.defense_hydration", locale) },
+    barrier_lock: { type: "barrier_lock", color: "barrier_lock", emoji: "🔐", ...t("schedule.barrier_lock", locale) },
+    hydration_lock: { type: "hydration_lock", color: "hydration_lock", emoji: "💦", ...t("schedule.hydration_lock", locale) },
+    toning_solo: { type: "toning_solo", color: "toning_solo", emoji: "🍊", ...t("schedule.toning_solo", locale) },
+    sos_rest: { type: "sos_rest", color: "sos_rest", emoji: "🤍", ...t("schedule.sos_rest", locale) },
+  }
 }
 
 export const TOTAL_DAYS = 30

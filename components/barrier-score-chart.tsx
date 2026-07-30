@@ -1,6 +1,9 @@
+import { t, interpolate, type Locale } from "@/lib/i18n"
+
 interface BarrierScoreChartProps {
   currentDay: number
   totalDays: number
+  locale: Locale
 }
 
 /**
@@ -13,25 +16,22 @@ interface BarrierScoreChartProps {
  * 밀리면 totalDays가 30보다 커지는데(예: 생리 인시던트 1회면 36일), 그
  * 경우에도 "코스 마지막 날"이 정확히 걸리게 하려면 totalDays 기준이어야 한다.
  */
-function weeklyEncouragementCopy(week: number) {
-  return {
-    title: `${week}주, 잘 지나왔어요`,
-    detail: `매일 조금씩 쌓아온 기록이 벌써 ${week}주가 됐어요. 남은 시간도 이 속도로 충분해요.`,
-  }
-}
 
-const COURSE_COMPLETE_COPY = {
-  title: "30일, 끝까지 해냈어요",
-  detail: "중간에 쉬어간 날이 있었어도 괜찮아요. 다시 돌아와서 여기까지 온 게 중요해요.",
-}
-
-export function BarrierScoreChart({ currentDay, totalDays }: BarrierScoreChartProps) {
+export function BarrierScoreChart({ currentDay, totalDays, locale }: BarrierScoreChartProps) {
   const isCourseEnd = currentDay === totalDays
   const isWeeklyBoundary = currentDay === 7 || currentDay === 14 || currentDay === 21
 
   if (!isCourseEnd && !isWeeklyBoundary) return null
 
-  const copy = isCourseEnd ? COURSE_COMPLETE_COPY : weeklyEncouragementCopy(currentDay / 7)
+  const copy = isCourseEnd
+    ? {
+        title: t("barrierScoreChart.course_complete_title", locale),
+        detail: t("barrierScoreChart.course_complete_detail", locale),
+      }
+    : {
+        title: interpolate(t("barrierScoreChart.weekly_title", locale), { week: String(Math.floor(currentDay / 7)) }),
+        detail: interpolate(t("barrierScoreChart.weekly_detail", locale), { week: String(Math.floor(currentDay / 7)) }),
+      }
 
   return (
     <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label="주차 완주 격려">

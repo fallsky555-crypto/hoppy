@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { use, useState } from "react"
 import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
 import { RecipeCard } from "@/components/recipe-card"
@@ -16,23 +16,26 @@ import { CompletionFeedback } from "@/components/completion-feedback"
 import { useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { getCompletionCopy } from "@/lib/routine-copy"
+import { t } from "@/lib/i18n"
 
-export default function Page() {
+interface PageProps {
+  params: {
+    locale: 'ko' | 'en'
+  }
+}
+
+export default function Page({ params }: PageProps) {
+  const locale = use(params).locale as 'ko' | 'en'
   const diary = useDiary()
   const { currentDay, totalDays, completedDays } = diary
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [justStampedDay, setJustStampedDay] = useState<number | null>(null)
 
-  // 하이드레이션 전엔 아무것도 그리지 않는다 — localStorage/원격 상태를 아직 못 읽은 채로
-  // 온보딩 화면을 잠깐 보여줬다가 메인 화면으로 튀는 깜빡임을 피하기 위해서다.
   if (!diary.hydrated) return null
 
-  // 아직 온보딩(간격 슬라이더 질문)을 마치지 않았으면 메인 화면 대신 온보딩만 보여준다.
-  // 온보딩을 마치기 전까지는 가입일(Day 1)도 아직 찍히지 않은 상태다.
   if (!diary.onboarded) return <OnboardingFlow onComplete={diary.completeOnboarding} />
 
-  // 선택된 날이 없으면 오늘을 기본값으로 사용
   const activeDay = selectedDay ?? currentDay
 
   const isCourseComplete = currentDay >= totalDays
@@ -63,7 +66,6 @@ export default function Page() {
         heroImageSrc={diary.heroImageSrc}
       />
 
-      {/* "오늘 뭘 해야 하는지"가 최대한 빨리 보이도록 스페셜케어 카드를 배너들보다 위로 끌어올린다 */}
       <RecipeCard
         day={activeDay}
         currentDay={currentDay}
@@ -79,7 +81,7 @@ export default function Page() {
 
       {isCourseComplete && (
         <>
-          <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />
+          <RoutineBanner copy={getCompletionCopy(totalDays, locale)} tone="celebrate" />
           <CompletionFeedback onSubmit={diary.submitFeedback} />
         </>
       )}
@@ -111,7 +113,7 @@ export default function Page() {
         onWater={(delta) => diary.setWater(activeDay, delta)}
       />
 
-      <BarrierScoreChart currentDay={currentDay} totalDays={totalDays} />
+      <BarrierScoreChart currentDay={currentDay} totalDays={totalDays} locale={locale} />
 
       <LoginBanner />
 
@@ -120,7 +122,7 @@ export default function Page() {
       <SettingsPanel onStartFresh={diary.startFresh} />
 
       <p className="mt-1.5 text-center text-[12.5px] font-semibold text-[#5C5648]">
-        myroutinediet · 가입한 날부터 30일, 나만의 속도로
+        {t("metadata.tagline", locale)}
       </p>
     </main>
   )

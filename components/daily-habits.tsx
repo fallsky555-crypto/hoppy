@@ -3,6 +3,8 @@
 import { cn } from "@/lib/utils"
 import type { DailyHabit } from "@/lib/use-diary"
 import { Check, Droplet, Minus, Plus, Sun } from "lucide-react"
+import { t, interpolate } from "@/lib/i18n"
+import { useLocale } from "@/lib/locale-context"
 
 interface DailyHabitsProps {
   day: number
@@ -13,10 +15,11 @@ interface DailyHabitsProps {
 }
 
 export function DailyHabits({ day, habit, maxWater, onToggleSunscreen, onWater }: DailyHabitsProps) {
+  const locale = useLocale()
   return (
     <section className="rounded-4xl bg-card px-5 py-5 ring-1 ring-border" aria-label="매일 기본 습관 체크리스트">
       <div className="mb-3.5 flex items-baseline justify-between">
-        <h2 className="text-[13px] font-semibold text-foreground">매일 기본 습관</h2>
+        <h2 className="text-[13px] font-semibold text-foreground">{t("daily_habits.title", locale)}</h2>
         <span className="text-[11px] text-muted-foreground">Day {day}</span>
       </div>
 
@@ -39,8 +42,8 @@ export function DailyHabits({ day, habit, maxWater, onToggleSunscreen, onWater }
           <Sun className="size-4" aria-hidden />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[13px] font-semibold text-foreground">선크림 발랐어요</span>
-          <span className="mt-0.5 block text-[12.5px] text-[#6B6558]">자외선 차단은 장벽 회복의 기본이에요</span>
+          <span className="block text-[13px] font-semibold text-foreground">{t("daily_habits.sunscreen_label", locale)}</span>
+          <span className="mt-0.5 block text-[12.5px] text-[#6B6558]">{t("daily_habits.sunscreen_description", locale)}</span>
         </span>
         <span
           className={cn(
@@ -59,15 +62,15 @@ export function DailyHabits({ day, habit, maxWater, onToggleSunscreen, onWater }
           <Droplet className="size-4" aria-hidden />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[13px] font-semibold text-foreground">물 마신 잔 수</span>
-          <span className="mt-0.5 block text-[12.5px] text-[#6B6558]">하루 {maxWater}잔을 목표로 해요</span>
+          <span className="block text-[13px] font-semibold text-foreground">{t("daily_habits.water_label", locale)}</span>
+          <span className="mt-0.5 block text-[12.5px] text-[#6B6558]">{interpolate(t("daily_habits.water_description", locale), { maxWater: String(maxWater) })}</span>
         </span>
         <div className="flex shrink-0 items-center gap-2.5">
           <button
             type="button"
             onClick={() => onWater(-1)}
             disabled={habit.water <= 0}
-            aria-label="물 잔 수 줄이기"
+            aria-label={t("daily_habits.decrease_water", locale)}
             className="flex size-7 items-center justify-center rounded-full border border-border bg-card text-foreground transition-opacity disabled:opacity-40"
           >
             <Minus className="size-3" aria-hidden />
@@ -79,7 +82,7 @@ export function DailyHabits({ day, habit, maxWater, onToggleSunscreen, onWater }
             type="button"
             onClick={() => onWater(1)}
             disabled={habit.water >= maxWater}
-            aria-label="물 잔 수 늘리기"
+            aria-label={t("daily_habits.increase_water", locale)}
             className="flex size-7 items-center justify-center rounded-full bg-primary text-white transition-opacity disabled:opacity-40"
           >
             <Plus className="size-3" aria-hidden />

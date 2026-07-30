@@ -4,6 +4,8 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import type { RoutineCopy } from "@/lib/routine-copy"
 import { PartyPopper, Sparkles, X, Download } from "lucide-react"
+import { t } from "@/lib/i18n"
+import { useLocale } from "@/lib/locale-context"
 
 interface RoutineBannerProps {
   copy: RoutineCopy
@@ -13,14 +15,21 @@ interface RoutineBannerProps {
 
 const WALLPAPERS = [
   { name: "동백", path: "/wallpapers/동백.jpeg" },
-  { name: "붉은장미", path: "/wallpapers/붉은장미.jpeg" },
+  { name: "장미", path: "/wallpapers/장미.jpeg" },
   { name: "작약", path: "/wallpapers/작약.jpeg" },
 ]
 
 /** 주차 오리엔테이션 / 완주 화면처럼, 특정 날에만 뜨는 상단 배너 */
 export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerProps) {
+  const locale = useLocale()
   const isCelebrate = tone === "celebrate"
   const [selectedWallpaper, setSelectedWallpaper] = useState(0)
+
+  const wallpaperDisplayNames = [
+    t("routine_banner.wallpaper_camellia", locale),
+    t("routine_banner.wallpaper_rose", locale),
+    t("routine_banner.wallpaper_peony", locale),
+  ]
 
   const handleDownload = (wallpaper: { name: string; path: string }) => {
     const link = document.createElement("a")
@@ -54,7 +63,7 @@ export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerP
 
           {isCelebrate && (
             <div className="mt-3 space-y-2">
-              <p className="text-xs font-medium text-foreground">완주 기념 배경화면</p>
+              <p className="text-xs font-medium text-foreground">{t("routine_banner.completion_wallpaper_title", locale)}</p>
               <div className="flex gap-2">
                 {WALLPAPERS.map((wallpaper, idx) => (
                   <button
@@ -68,7 +77,7 @@ export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerP
                         : "border-border text-muted-foreground hover:border-border/70",
                     )}
                   >
-                    {wallpaper.name}
+                    {wallpaperDisplayNames[idx]}
                   </button>
                 ))}
               </div>
@@ -78,7 +87,7 @@ export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerP
                 className="flex w-fit items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
               >
                 <Download className="size-3.5" aria-hidden />
-                다운로드
+                {t("routine_banner.download", locale)}
               </button>
             </div>
           )}

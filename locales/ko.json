@@ -248,14 +248,20 @@
     },
     "linked": {
       "ariaLabel": "계정 연결 상태",
-      "status": "{{provider}}으로 로그인 중"
+      "status": "{{provider}}으로 로그인 중",
+      "with_nickname": "{{nickname}}님, {{provider}} 계정으로 연결됨",
+      "without_nickname": "{{provider}} 계정으로 연결됨"
     },
     "conflict": {
       "ariaLabel": "이미 연결된 계정 안내",
-      "status": "다른 계정에 이미 연결된 {{provider}} 계정입니다."
+      "status": "다른 계정에 이미 연결된 {{provider}} 계정입니다.",
+      "title": "이미 연결된 {{provider}} 계정이에요",
+      "description": "이 {{provider}} 계정은 이미 다른 기기에서 연결돼 있어요. 그 계정으로 로그인하면 지금 이 브라우저의 기록 대신 그 계정에 저장된 기록을 보게 돼요."
     },
     "connect": {
-      "ariaLabel": "계정 연결 안내"
+      "ariaLabel": "계정 연결 안내",
+      "title": "기기가 바뀌어도 기록을 이어가시려면",
+      "description": "지금 쓰던 기록은 그대로 두고, 계정만 연결해두면 다른 기기에서도 이어서 볼 수 있어요."
     },
     "provider_label": {
       "kakao": "카카오",
@@ -294,7 +300,7 @@
   "onboarding": {
     "intro": {
       "title": "모공 케어는 피부 기초 체력을 만드는 단계예요",
-      "description": "미백·톤 개선 같은 다음 프로그램은, 이 기초 단계를 완주해야 열려요.\n완주하시면 스케줄표 위 세 그림(동백·붉은장미·작약) 중 하나를 바탕화면용 원본으로 드려요.",
+      "description": "미백·톤 개선 같은 다음 프로그램은, 이 기초 단계를 완주해야 열려요.\n완주하시면 스케줄표 위 세 그림(동백·장미·작약) 중 하나를 바탕화면용 원본으로 드려요.",
       "next": "다음"
     },
     "habitCheck": {
@@ -364,10 +370,33 @@
     "restart_button": "루틴 처음부터 다시 시작하기"
   },
   "recipe_card": {
-    "today": "오늘"
+    "today": "오늘",
+    "recorded": "기록 완료했어요",
+    "record_button": "기록 완료",
+    "not_yet_available": "아직 오지 않은 날이에요. 그날이 되면 기록할 수 있어요.",
+    "past_routine": "지나간 날의 루틴이에요.",
+    "reaction_reported": "오늘 자극을 신고했어요. 이 성분은 {{days}}일 뒤로 미뤄져요.",
+    "report_reaction": "오늘 이 성분에 자극이 있었어요"
+  },
+  "daily_habits": {
+    "title": "매일 기본 습관",
+    "sunscreen_label": "선크림 발랐어요",
+    "sunscreen_description": "자외선 차단은 장벽 회복의 기본이에요",
+    "water_label": "물 마신 잔 수",
+    "water_description": "하루 {{maxWater}}잔을 목표로 해요",
+    "decrease_water": "물 잔 수 줄이기",
+    "increase_water": "물 잔 수 늘리기"
+  },
+  "routine_banner": {
+    "wallpaper_camellia": "동백",
+    "wallpaper_rose": "장미",
+    "wallpaper_peony": "작약",
+    "completion_wallpaper_title": "완주 기념 배경화면",
+    "download": "다운로드"
   },
   "metadata": {
     "title": "호빵이 스킨 다이어리 · 장벽 리셋 캘린더",
-    "description": "무너진 피부 장벽을 30일 동안 부드럽게 복구하는 초보자 장벽 리셋 캘린더. 매일 피부 레시피를 기록해요."
+    "description": "무너진 피부 장벽을 30일 동안 부드럽게 복구하는 초보자 장벽 리셋 캘린더. 매일 피부 레시피를 기록해요.",
+    "tagline": "myroutinediet · 가입한 날부터 30일, 나만의 속도로"
   }
 }
