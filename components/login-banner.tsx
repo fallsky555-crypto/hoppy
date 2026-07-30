@@ -15,10 +15,10 @@ import {
 import { ensureAnonSession } from "@/lib/supabase/sync"
 import { STORAGE_KEY as DIARY_STORAGE_KEY } from "@/lib/use-diary"
 import { t } from "@/lib/i18n"
+import { useLocale } from "@/lib/locale-context"
 import { X } from "lucide-react"
 
 const DISMISSED_KEY = "hoppy-login-banner-dismissed"
-const PROVIDER_LABEL: Record<LoginProvider, string> = { kakao: t("login.provider_label.kakao"), google: t("login.provider_label.google") }
 
 /**
  * 13-1/13-2/13-4. 로그인을 강제하지 않는다 — 익명 세션으로도 기존처럼 계속 이용
@@ -27,6 +27,11 @@ const PROVIDER_LABEL: Record<LoginProvider, string> = { kakao: t("login.provider
  * 이미 카카오/구글로 연결된 세션이거나, 유저가 닫은 적이 있으면 노출하지 않는다.
  */
 export function LoginBanner() {
+  const locale = useLocale()
+  const PROVIDER_LABEL: Record<LoginProvider, string> = {
+    kakao: t("login.provider_label.kakao", locale),
+    google: t("login.provider_label.google", locale)
+  }
   const [visible, setVisible] = useState(false)
   const [pending, setPending] = useState<LoginProvider | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -46,7 +51,7 @@ export function LoginBanner() {
       if (oauthError.errorCode === "identity_already_exists" && oauthError.provider) {
         setIdentityConflict(oauthError.provider)
       } else {
-        setError(t("login.error.link"))
+        setError(t("login.error.link", locale))
       }
       setVisible(true)
       return
@@ -95,7 +100,7 @@ export function LoginBanner() {
     setPending(provider)
     const result = await linkIdentity(provider)
     setPending(null)
-    if (result.error) setError(t("login.error.link_conflict"))
+    if (result.error) setError(t("login.error.link_conflict", locale))
   }
 
   async function handleUseExisting() {
@@ -104,7 +109,7 @@ export function LoginBanner() {
     setPending(identityConflict)
     const result = await signInExistingIdentity(identityConflict)
     setPending(null)
-    if (result.error) setError(t("login.error.signin"))
+    if (result.error) setError(t("login.error.signin", locale))
   }
 
   async function handleSignOut() {
@@ -113,7 +118,7 @@ export function LoginBanner() {
     const result = await signOut()
     if (result.error) {
       setSigningOut(false)
-      setError(t("login.error.signout"))
+      setError(t("login.error.signout", locale))
       return
     }
     // 로그아웃 자체는 세션만 종료할 뿐 로컬 캐시는 그대로 남아있어, 다음 방문 시 새

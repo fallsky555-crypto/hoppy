@@ -4,13 +4,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import type { IncidentLogEntry, IncidentType } from "@/lib/scheduling-engine"
 import { t } from "@/lib/i18n"
+import { useLocale } from "@/lib/locale-context"
 import { Droplet, Sun, Syringe } from "lucide-react"
-
-const INCIDENT_META: Record<IncidentType, { label: string; icon: typeof Droplet; needsNotice: boolean }> = {
-  period: { label: t("incident.labels.period"), icon: Droplet, needsNotice: false },
-  sunburn: { label: t("incident.labels.sunburn"), icon: Sun, needsNotice: true },
-  treatment: { label: t("incident.labels.treatment"), icon: Syringe, needsNotice: true },
-}
 
 interface IncidentPanelProps {
   currentDay: number
@@ -19,7 +14,14 @@ interface IncidentPanelProps {
 }
 
 export function IncidentPanel({ currentDay, incidentLog, onReportIncident }: IncidentPanelProps) {
+  const locale = useLocale()
   const [pending, setPending] = useState<IncidentType | null>(null)
+
+  const INCIDENT_META: Record<IncidentType, { label: string; icon: typeof Droplet; needsNotice: boolean }> = {
+    period: { label: t("incident.labels.period", locale), icon: Droplet, needsNotice: false },
+    sunburn: { label: t("incident.labels.sunburn", locale), icon: Sun, needsNotice: true },
+    treatment: { label: t("incident.labels.treatment", locale), icon: Syringe, needsNotice: true },
+  }
 
   const activeIncident = incidentLog.find((entry) => currentDay >= entry.day && currentDay < entry.resumesNormalAtDay)
 
@@ -38,10 +40,10 @@ export function IncidentPanel({ currentDay, incidentLog, onReportIncident }: Inc
   }
 
   return (
-    <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label={t("incident.ariaLabel")}>
-      <h2 className="mb-1 text-base font-bold text-foreground">{t("incident.title")}</h2>
+    <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label={t("incident.ariaLabel", locale)}>
+      <h2 className="mb-1 text-base font-bold text-foreground">{t("incident.title", locale)}</h2>
       <p className="mb-3.5 text-[13.5px] leading-relaxed text-[#6B6558]">
-        {t("incident.description")}
+        {t("incident.description", locale)}
       </p>
 
       {activeIncident ? (
@@ -70,13 +72,13 @@ export function IncidentPanel({ currentDay, incidentLog, onReportIncident }: Inc
 
       {pending && (
         <div className="mt-3 rounded-2xl bg-secondary p-3.5">
-          <p className="text-xs leading-relaxed text-foreground/80">{t("incident.medical_notice")}</p>
+          <p className="text-xs leading-relaxed text-foreground/80">{t("incident.medical_notice", locale)}</p>
           <div className="mt-3 flex gap-2">
             <Button type="button" size="sm" variant="outline" className="flex-1 rounded-full" onClick={() => setPending(null)}>
-              {t("incident.cancel")}
+              {t("incident.cancel", locale)}
             </Button>
             <Button type="button" size="sm" className="flex-1 rounded-full" onClick={confirmPending}>
-              {t("incident.confirm")}
+              {t("incident.confirm", locale)}
             </Button>
           </div>
         </div>
