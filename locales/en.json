@@ -208,7 +208,7 @@
   "calendar": {
     "ariaLabel": "30-day barrier reset calendar",
     "title": "30-Day Routine Calendar",
-    "dayIndicator": "Day {{totalDays}}",
+    "dayIndicator": "Through Day {{totalDays}}",
     "labels": {
       "bha": "BHA",
       "retinol": "Retinol",
@@ -218,7 +218,7 @@
       "barrier_lock": "Lock",
       "hydration_lock": "Seal",
       "toning_solo": "C-Boost",
-      "sos_rest": "Calm"
+      "sos_rest": "SOS"
     },
     "dayAriaLabel": "Day {{day}} {{recipe}}{{completed}}{{today}}",
     "completed": ", logged",
@@ -367,7 +367,7 @@
     "today": "Today"
   },
   "metadata": {
-    "title": "Hoppy Skin Diary · 30-Day Barrier Reset",
-    "description": "Gentle, science-backed skincare routine to rebuild your barrier in 30 days. Log your routine daily, watch your skin settle."
+    "title": "Hoppy Skin Diary · 30-Day Barrier Reset for Glass Skin",
+    "description": "Gentle, science-backed skincare routine to rebuild your barrier and get that K-beauty glass skin glow. Log your routine daily, watch your skin settle."
   }
 }
