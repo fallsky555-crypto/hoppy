@@ -1,4 +1,5 @@
 import type { CalendarEntry, Recipe, RecipeType } from "@/lib/schedule"
+import type { Locale } from "@/lib/i18n"
 import { t, interpolate } from "@/lib/i18n"
 
 /**
@@ -143,8 +144,8 @@ function getCautionForCategory(category: RecipeType): string | null {
 }
 
 /** 코스 마지막 날에 보여줄 완주 화면 문구 */
-export function getCompletionCopy(totalDays: number): RoutineCopy {
-  const completion = t("routine.completion")
+export function getCompletionCopy(totalDays: number, locale: Locale = "ko"): RoutineCopy {
+  const completion = t("routine.completion", locale)
   const detail = interpolate(completion.detail_template, { totalDays: String(totalDays) })
   return {
     title: completion.title,

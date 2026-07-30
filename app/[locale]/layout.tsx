@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { t } from '@/lib/i18n'
+import { LocaleProvider } from '@/lib/locale-provider'
 
 interface LocaleLayoutProps {
   children: React.ReactNode
@@ -23,7 +24,9 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
   return (
     <html lang={locale} className="light">
       <body className="bg-background font-sans antialiased">
-        {children}
+        <LocaleProvider locale={locale}>
+          {children}
+        </LocaleProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

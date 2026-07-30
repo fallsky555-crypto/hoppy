@@ -1,3 +1,8 @@
+"use client"
+
+import { t } from "@/lib/i18n"
+import { useLocale } from "@/lib/locale-context"
+
 interface ProgressHeaderProps {
   currentDay: number
   totalDays: number
@@ -7,6 +12,7 @@ interface ProgressHeaderProps {
 }
 
 export function ProgressHeader({ currentDay, totalDays, completedCount, heroImageSrc }: ProgressHeaderProps) {
+  const locale = useLocale()
   const remaining = totalDays - currentDay
 
   return (
@@ -15,9 +21,9 @@ export function ProgressHeader({ currentDay, totalDays, completedCount, heroImag
       <img src={heroImageSrc} alt="" className="h-40 w-full object-cover" />
 
       <div className="px-6 py-7">
-        <p className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">SKIN DIET DIARY</p>
+        <p className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("progressHeader.tagline", locale)}</p>
         <h1 className="mt-2.5 font-display text-lg font-semibold leading-tight text-foreground text-balance">
-          30일 도자기 피부 프로젝트
+          {t("progressHeader.title", locale)}
         </h1>
 
         <div className="mt-6 grid grid-cols-3 gap-2">
@@ -26,23 +32,23 @@ export function ProgressHeader({ currentDay, totalDays, completedCount, heroImag
               {currentDay}
               <span className="font-sans text-xs font-medium text-muted-foreground">/{totalDays}</span>
             </span>
-            <span className="text-[11px] font-semibold text-muted-foreground">진행일</span>
+            <span className="text-[11px] font-semibold text-muted-foreground">{t("progressHeader.progress", locale)}</span>
           </div>
 
           <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary py-3">
             <span className="font-display text-2xl font-semibold text-foreground">
               {completedCount}
-              <span className="font-sans text-xs font-medium text-muted-foreground">일</span>
+              <span className="font-sans text-xs font-medium text-muted-foreground">{locale === "en" ? "" : "일"}</span>
             </span>
-            <span className="text-[11px] font-semibold text-muted-foreground">완료</span>
+            <span className="text-[11px] font-semibold text-muted-foreground">{t("progressHeader.completed", locale)}</span>
           </div>
 
           <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary py-3">
             <span className="font-display text-2xl font-semibold text-primary">
               {remaining}
-              <span className="font-sans text-xs font-medium text-muted-foreground">일</span>
+              <span className="font-sans text-xs font-medium text-muted-foreground">{locale === "en" ? "" : "일"}</span>
             </span>
-            <span className="text-[11px] font-semibold text-muted-foreground">남음</span>
+            <span className="text-[11px] font-semibold text-muted-foreground">{t("progressHeader.remaining", locale)}</span>
           </div>
         </div>
       </div>

@@ -80,7 +80,7 @@ export default function Page({ params }: PageProps) {
 
       {isCourseComplete && (
         <>
-          <RoutineBanner copy={getCompletionCopy(totalDays)} tone="celebrate" />
+          <RoutineBanner copy={getCompletionCopy(totalDays, locale)} tone="celebrate" />
           <CompletionFeedback onSubmit={diary.submitFeedback} />
         </>
       )}
