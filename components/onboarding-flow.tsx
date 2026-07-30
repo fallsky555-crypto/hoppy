@@ -5,8 +5,11 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { MAX_INTERVAL_DAYS, MIN_INTERVAL_DAYS } from "@/lib/schedule"
 import { normalizeInterval } from "@/lib/scheduling-engine"
+import { t, interpolate } from "@/lib/i18n"
+import type { Locale } from "@/lib/locale-context"
 
 interface OnboardingFlowProps {
+  locale: Locale
   /** 4단계 "시작하기" — 최종 clamp된 간격(일)을 넘긴다. useDiary().completeOnboarding에 그대로 연결한다 */
   onComplete: (intervalDays: number) => void
 }
@@ -16,10 +19,10 @@ type Step = 1 | 2 | 3
 /** "잘 안 써요"는 사실상 무한대 간격으로 보고, MAX_INTERVAL_DAYS 초과 구간(3단계 코멘트 분기)에 태운다 */
 const NEVER_USES_RAW_DAYS = 999
 
-function commentFor(rawDays: number): string {
-  if (rawDays < MIN_INTERVAL_DAYS) return "지금보다 여유 있게 시작하는 게 피부에 더 좋아요"
-  if (rawDays > MAX_INTERVAL_DAYS) return "지금보다 조금 더 자주 챙겨야 30일 안에 변화를 체감하기 쉬워요"
-  return "지금 루틴이랑 비슷하게 시작해요"
+function commentFor(rawDays: number, locale: Locale): string {
+  if (rawDays < MIN_INTERVAL_DAYS) return t("onboarding.mappingResult.comment_too_short", locale)
+  if (rawDays > MAX_INTERVAL_DAYS) return t("onboarding.mappingResult.comment_too_frequent", locale)
+  return t("onboarding.mappingResult.comment_similar", locale)
 }
 
 /**
@@ -27,7 +30,7 @@ function commentFor(rawDays: number): string {
  * 한 화면으로 합쳤다. 완료 전까지는 가입일(Day 1)이 아직 찍히지 않은 상태다 —
  * 실제 스탬프는 onComplete를 호출하는 useDiary().completeOnboarding에서 한다.
  */
-export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
+export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>(1)
   const [inputValue, setInputValue] = useState("")
   const [neverUses, setNeverUses] = useState(false)
@@ -46,27 +49,26 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-5 py-10">
       {step === 1 && (
-        <section className="relative min-h-[420px] flex flex-col justify-center" aria-label="프로그램 소개">
+        <section className="relative min-h-[420px] flex flex-col justify-center" aria-label={t("common.programIntro", locale)}>
           <div className="space-y-4 text-center">
             <img src="/onboarding/intro-01.jpeg" alt="" className="mx-auto h-28 w-28 rounded-full object-cover" />
             <h1 className="font-display text-xl font-bold leading-snug text-foreground">
-              모공 케어는 피부 기초 체력을 만드는 단계예요
+              {t("onboarding.intro.title", locale)}
             </h1>
             <p className="text-[15px] leading-relaxed text-[#4A4438]">
-              미백·톤 개선 같은 다음 프로그램은, 이 기초 단계를 완주해야 열려요.<br />
-              완주하시면 스케줄표 위 세 그림(동백·붉은장미·작약) 중 하나를 바탕화면용 원본으로 드려요.
+              {t("onboarding.intro.description", locale)}
             </p>
             <Button type="button" size="lg" onClick={() => setStep(2)} className="h-auto w-full rounded-full py-3 text-[15px]">
-              다음
+              {t("onboarding.intro.next", locale)}
             </Button>
           </div>
         </section>
       )}
 
       {step === 2 && (
-        <section className="space-y-5" aria-label="현재 습관 체크">
+        <section className="space-y-5" aria-label={t("common.habitCheck", locale)}>
           <h1 className="font-display text-lg font-bold leading-snug text-foreground">
-            지금 스킨케어할 때, 스페셜케어(각질제거/레티놀 등)는 보통 며칠에 한 번 하시나요?
+            {t("onboarding.habitCheck.question", locale)}
           </h1>
 
           <div className="space-y-2.5">
@@ -75,13 +77,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 type="number"
                 inputMode="numeric"
                 min={1}
-                placeholder="예: 7"
+                placeholder={t("onboarding.habitCheck.placeholder", locale)}
                 value={inputValue}
                 disabled={neverUses}
                 onChange={(event) => setInputValue(event.target.value)}
                 className="w-full bg-transparent text-base font-semibold text-foreground outline-none disabled:opacity-40"
               />
-              <span className="shrink-0 text-sm font-medium text-muted-foreground">일마다</span>
+              <span className="shrink-0 text-sm font-medium text-muted-foreground">{t("onboarding.habitCheck.interval_suffix", locale)}</span>
             </div>
 
             <button
@@ -96,7 +98,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               )}
               aria-pressed={neverUses}
             >
-              스페셜케어는 잘 안 써요
+              {t("onboarding.habitCheck.never_uses", locale)}
             </button>
           </div>
 
@@ -107,18 +109,18 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             onClick={handleHabitNext}
             className="h-auto w-full rounded-full py-3 text-[15px]"
           >
-            다음
+            {t("onboarding.habitCheck.next", locale)}
           </Button>
         </section>
       )}
 
       {step === 3 && (
-        <section className="space-y-5 text-center" aria-label="매핑 결과">
+        <section className="space-y-5 text-center" aria-label={t("common.mappingResult", locale)}>
           <p className="text-sm font-medium text-muted-foreground">
-            {neverUses ? "스페셜케어를 잘 안 쓰신다고 하셨으니," : `${rawDays}일마다 쓰신다고 하셨으니,`}
+            {neverUses ? t("onboarding.mappingResult.mapping_never_uses", locale) : interpolate(t("onboarding.mappingResult.mapping_with_interval", locale), { days: String(rawDays) })}
           </p>
-          <h1 className="font-display text-2xl font-bold text-foreground">{clampedDays}일마다 시작할게요</h1>
-          <p className="text-[15px] leading-relaxed text-[#4A4438]">{commentFor(rawDays ?? MIN_INTERVAL_DAYS)}</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">{interpolate(t("onboarding.mappingResult.interval_display", locale), { days: String(clampedDays) })}</h1>
+          <p className="text-[15px] leading-relaxed text-[#4A4438]">{commentFor(rawDays ?? MIN_INTERVAL_DAYS, locale)}</p>
 
           <Button
             type="button"
@@ -126,7 +128,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             onClick={() => onComplete(clampedDays)}
             className="h-auto w-full rounded-full py-3 text-[15px]"
           >
-            시작하기
+            {t("onboarding.mappingResult.start", locale)}
           </Button>
         </section>
       )}
