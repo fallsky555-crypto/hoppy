@@ -37,7 +37,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // 정적 파일 및 이미지 경로 제외
-    '/((?!_next/static|_next/image|favicon\\.ico|manifest|public|characters|onboarding|hero-|wallpapers).*)',
+    // 정적 파일 및 이미지 확장자 제외 (이미지 추가 시 matcher 수정 불필요)
+    '/((?!_next|favicon\\.ico|manifest|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2?)).*)',
   ],
 }

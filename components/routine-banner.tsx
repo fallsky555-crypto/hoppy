@@ -13,7 +13,7 @@ interface RoutineBannerProps {
 
 const WALLPAPERS = [
   { name: "동백", path: "/wallpapers/동백.jpeg" },
-  { name: "붉은장미", path: "/wallpapers/붉은장미.jpeg" },
+  { name: "장미", path: "/wallpapers/장미.jpeg" },
   { name: "작약", path: "/wallpapers/작약.jpeg" },
 ]
 
