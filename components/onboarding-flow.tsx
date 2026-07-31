@@ -36,6 +36,16 @@ function getPrivacyPolicyUrl(locale: Locale): string {
     : "https://myroutinediet.com/policy-en.html"
 }
 
+function StepIndicator({ step }: { step: Step }) {
+  return (
+    <div className="flex justify-center gap-2">
+      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step >= 1 ? "bg-primary" : "bg-border")} />
+      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step >= 2 ? "bg-primary" : "bg-border")} />
+      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step >= 3 ? "bg-primary" : "bg-border")} />
+    </div>
+  )
+}
+
 export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>(1)
   const [inputValue, setInputValue] = useState("")
@@ -56,8 +66,10 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-5 py-10">
+      <StepIndicator step={step} />
+
       {step === 1 && (
-        <section className="relative min-h-[420px] flex flex-col justify-center" aria-label={t("common.programIntro", locale)}>
+        <section key="step-1" className="relative min-h-[420px] flex flex-col justify-center transition-opacity duration-200" aria-label={t("common.programIntro", locale)}>
           <div className="space-y-4 text-center">
             <img src="/onboarding/intro-01.jpeg" alt="" className="mx-auto h-28 w-28 rounded-full object-cover" />
             <h1 className="font-display text-xl font-bold leading-snug text-foreground">
@@ -67,7 +79,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
               {t("onboarding.intro.description", locale)}
             </p>
 
-            <div className="flex items-start gap-3 rounded-lg bg-secondary/30 p-3.5">
+            <div className="flex items-start gap-3 rounded-3xl bg-secondary/30 p-3.5">
               <input
                 type="checkbox"
                 id="data-consent"
@@ -96,13 +108,14 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
       )}
 
       {step === 2 && (
-        <section className="space-y-5" aria-label={t("common.habitCheck", locale)}>
-          <h1 className="font-display text-lg font-bold leading-snug text-foreground">
+        <section key="step-2" className="space-y-5 transition-opacity duration-200" aria-label={t("common.habitCheck", locale)}>
+          <img src="/onboarding/intro-02.jpeg" alt="" className="mx-auto h-28 w-28 rounded-full object-cover" />
+          <h1 className="font-display text-xl font-bold leading-snug text-foreground text-center">
             {t("onboarding.habitCheck.question", locale)}
           </h1>
 
           <div className="space-y-2.5">
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3">
+            <div className="flex items-center gap-2 rounded-3xl border border-border bg-card px-4 py-3">
               <input
                 type="number"
                 inputMode="numeric"
@@ -123,7 +136,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
                 setInputValue("")
               }}
               className={cn(
-                "w-full rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition-colors",
+                "w-full rounded-3xl border px-4 py-3 text-left text-sm font-semibold transition-colors",
                 neverUses ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
               )}
               aria-pressed={neverUses}
@@ -145,21 +158,22 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
       )}
 
       {step === 3 && (
-        <section className="space-y-5 text-center" aria-label={t("common.mappingResult", locale)}>
+        <section key="step-3" className="space-y-5 text-center transition-opacity duration-200" aria-label={t("common.mappingResult", locale)}>
+          <img src="/onboarding/intro-03.jpeg" alt="" className="mx-auto h-28 w-28 rounded-full object-cover" />
           <p className="text-sm font-medium text-muted-foreground">
             {neverUses ? t("onboarding.mappingResult.mapping_never_uses", locale) : interpolate(t("onboarding.mappingResult.mapping_with_interval", locale), { days: String(rawDays) })}
           </p>
-          <h1 className="font-display text-2xl font-bold text-foreground">{interpolate(t("onboarding.mappingResult.interval_display", locale), { days: String(clampedDays) })}</h1>
+          <h1 className="font-display text-xl font-bold text-foreground">{interpolate(t("onboarding.mappingResult.interval_display", locale), { days: String(clampedDays) })}</h1>
           <p className="text-[15px] leading-relaxed text-[#4A4438]">{commentFor(rawDays ?? MIN_INTERVAL_DAYS, locale)}</p>
 
-          <div className="space-y-3">
+          <div className="rounded-3xl border border-border bg-card/50 p-4 space-y-3">
             <p className="text-sm font-medium text-foreground">{t("onboarding.mappingResult.conditionQuestion", locale)}</p>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setCondition("good")}
                 className={cn(
-                  "flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors",
+                  "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors",
                   condition === "good" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
                 )}
                 aria-pressed={condition === "good"}
@@ -170,7 +184,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
                 type="button"
                 onClick={() => setCondition("neutral")}
                 className={cn(
-                  "flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors",
+                  "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors",
                   condition === "neutral" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
                 )}
                 aria-pressed={condition === "neutral"}
@@ -181,7 +195,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
                 type="button"
                 onClick={() => setCondition("bad")}
                 className={cn(
-                  "flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors",
+                  "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors",
                   condition === "bad" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
                 )}
                 aria-pressed={condition === "bad"}
