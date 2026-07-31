@@ -50,6 +50,7 @@ interface DiaryState {
   joinDate: string
   completedDays: number[]
   habits: Record<number, DailyHabit>
+  conditions: Record<number, "good" | "neutral" | "bad">
   /** BHA/레티놀 도입 간격 슬라이더. 아무것도 안 건드리면 워크북 기본값(7/7)을 그대로 쓴다 */
   settings: ScheduleSettings
   events: ScheduleEvent[]
@@ -85,6 +86,7 @@ function freshState(): DiaryState {
     joinDate: todayISO(),
     completedDays: [],
     habits: {},
+    conditions: {},
     settings: {},
     events: [],
     pregnant: false,
@@ -108,6 +110,7 @@ function loadLocalState(): DiaryState | null {
       joinDate: parsed.joinDate ?? fresh.joinDate,
       completedDays: parsed.completedDays ?? [],
       habits: parsed.habits ?? {},
+      conditions: parsed.conditions ?? {},
       settings: parsed.settings ?? {},
       events: parsed.events ?? [],
       pregnant: parsed.pregnant ?? false,
@@ -456,13 +459,26 @@ export function useDiary() {
     })
   }, [userId])
 
+  const recordCondition = useCallback(
+    (day: number, condition: "good" | "neutral" | "bad") => {
+      setState((prev) => {
+        if (userId) {
+          const recipe = getRecipeForDay(day)
+          saveConditionLog(userId, day, condition, "daily_checkin", recipe.type)
+        }
+        return { ...prev, conditions: { ...prev.conditions, [day]: condition } }
+      })
+    },
+    [userId, getRecipeForDay],
+  )
+
   /**
    * 설정 화면의 "루틴 처음부터 다시 시작하기" 버튼 전용. 체커 재방문 흐름과는 완전히
    * 분리된, 유저가 직접 요청한 명시적 초기화다 — 가입일을 오늘로 재설정해 진행 기록을
    * 지우되, 슬라이더 설정·관심사·보유 성분 등 개인화 정보는 그대로 유지한다.
    */
   const startFresh = useCallback(() => {
-    setState((prev) => ({ ...prev, joinDate: todayISO(), completedDays: [], habits: {}, events: [] }))
+    setState((prev) => ({ ...prev, joinDate: todayISO(), completedDays: [], habits: {}, conditions: {}, events: [] }))
   }, [])
 
   const submitFeedback = useCallback(
@@ -487,6 +503,8 @@ export function useDiary() {
     toggleSunscreen,
     setWater,
     maxWater: MAX_WATER,
+    conditions: state.conditions,
+    recordCondition,
     settings: state.settings,
     setSettings,
     getRecipeForDay,

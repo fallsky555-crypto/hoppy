@@ -77,6 +77,8 @@ export default function Page({ params }: PageProps) {
         onReportReaction={handleReportReaction}
         concern={diary.concern}
         supportOwned={diary.supportOwned}
+        condition={diary.conditions[activeDay]}
+        onConditionRecord={(condition) => diary.recordCondition(activeDay, condition)}
       />
 
       {isCourseComplete && (

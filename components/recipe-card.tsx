@@ -6,7 +6,8 @@ import { getRecipes } from "@/lib/schedule"
 import { getCategoryCopy, type Concern, type SupportId } from "@/lib/routine-copy"
 import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 import { Button } from "@/components/ui/button"
-import { Check, ShieldAlert, Droplet, Brush, CheckCircle, Clock } from "lucide-react"
+import { Check, ShieldAlert, Droplet, Brush, CheckCircle, Clock, Smile, Meh, Frown } from "lucide-react"
+import { useState } from "react"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 
@@ -40,6 +41,10 @@ interface RecipeCardProps {
   /** 방어/락 계열 문구에 강조할 관심사 + 보유 성분 */
   concern?: Concern
   supportOwned?: SupportId[]
+  /** 이 day에 이미 기록된 컨디션 */
+  condition?: "good" | "neutral" | "bad"
+  /** 컨디션 기록 콜백 */
+  onConditionRecord?: (condition: "good" | "neutral" | "bad") => void
 }
 
 export function RecipeCard({
@@ -53,7 +58,10 @@ export function RecipeCard({
   onReportReaction,
   concern = "none",
   supportOwned = [],
+  condition,
+  onConditionRecord,
 }: RecipeCardProps) {
+  const [showConditionPrompt, setShowConditionPrompt] = useState(false)
   const locale = useLocale()
   const recipe = getRecipe(day)
   const localizedRecipe = getRecipes(locale)[recipe.type]
@@ -136,18 +144,92 @@ export function RecipeCard({
 
       <div className="mt-5">
         {isCompleted ? (
-          <div
-            className={cn(
-              "flex items-center justify-center gap-1.5 rounded-full p-[13px] text-[13px] font-semibold",
-              isToday ? "bg-white/15 text-white" : "bg-secondary text-foreground",
-            )}
-          >
-            <Check className="size-4" aria-hidden />
-            {t("recipe_card.recorded", locale)}
-          </div>
+          condition ? (
+            <div
+              className={cn(
+                "flex items-center justify-center gap-1.5 rounded-full p-[13px] text-[13px] font-semibold",
+                isToday ? "bg-white/15 text-white" : "bg-secondary text-foreground",
+              )}
+            >
+              {condition === "good" && <Smile className="size-4" aria-hidden />}
+              {condition === "neutral" && <Meh className="size-4" aria-hidden />}
+              {condition === "bad" && <Frown className="size-4" aria-hidden />}
+              {t("recipe_card.recorded", locale)}
+            </div>
+          ) : showConditionPrompt ? (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onConditionRecord?.("good")
+                    setShowConditionPrompt(false)
+                  }}
+                  className={cn(
+                    "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
+                    "border-border bg-card text-foreground",
+                  )}
+                  aria-label={t("onboarding.mappingResult.condition_good", locale)}
+                >
+                  <Smile className="size-4" aria-hidden />
+                  {t("onboarding.mappingResult.condition_good", locale)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onConditionRecord?.("neutral")
+                    setShowConditionPrompt(false)
+                  }}
+                  className={cn(
+                    "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
+                    "border-border bg-card text-foreground",
+                  )}
+                  aria-label={t("onboarding.mappingResult.condition_neutral", locale)}
+                >
+                  <Meh className="size-4" aria-hidden />
+                  {t("onboarding.mappingResult.condition_neutral", locale)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onConditionRecord?.("bad")
+                    setShowConditionPrompt(false)
+                  }}
+                  className={cn(
+                    "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
+                    "border-border bg-card text-foreground",
+                  )}
+                  aria-label={t("onboarding.mappingResult.condition_bad", locale)}
+                >
+                  <Frown className="size-4" aria-hidden />
+                  {t("onboarding.mappingResult.condition_bad", locale)}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowConditionPrompt(false)}
+                className="w-full text-xs font-medium text-muted-foreground py-2"
+              >
+                {t("common.later", locale)}
+              </button>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "flex items-center justify-center gap-1.5 rounded-full p-[13px] text-[13px] font-semibold",
+                isToday ? "bg-white/15 text-white" : "bg-secondary text-foreground",
+              )}
+            >
+              <Check className="size-4" aria-hidden />
+              {t("recipe_card.recorded", locale)}
+            </div>
+          )
         ) : isToday ? (
           <Button
-            onClick={onRecord}
+            onClick={() => {
+              onRecord()
+              setShowConditionPrompt(true)
+            }}
             size="lg"
             className="h-auto w-full rounded-full bg-background p-[14px] text-[14px] font-bold tracking-[0.01em]"
           >

@@ -223,19 +223,22 @@ export async function saveConditionLog(
   day: number,
   condition: "good" | "neutral" | "bad",
   source: "onboarding" | "daily_checkin",
+  linkedCategory?: string,
 ): Promise<void> {
   const supabase = getSupabaseClient()
   if (!supabase) return
 
-  const { error } = await supabase.from("condition_log").upsert(
-    {
-      user_id: userId,
-      day,
-      condition,
-      source,
-    },
-    { onConflict: "user_id,day" },
-  )
+  const payload: Record<string, unknown> = {
+    user_id: userId,
+    day,
+    condition,
+    source,
+  }
+  if (linkedCategory !== undefined) {
+    payload.linked_category = linkedCategory
+  }
+
+  const { error } = await supabase.from("condition_log").upsert(payload, { onConflict: "user_id,day" })
   if (error) console.warn("[supabase] saveConditionLog failed:", error.message)
 }
 
