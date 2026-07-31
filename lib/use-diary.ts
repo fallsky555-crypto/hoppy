@@ -25,6 +25,7 @@ import {
   saveCompletionFeedback,
   saveContextFlags,
   saveEngineVersion,
+  saveHabitLog,
   saveSettings,
 } from "@/lib/supabase/sync"
 import type { Concern, SupportId } from "@/lib/routine-copy"
@@ -433,17 +434,25 @@ export function useDiary() {
   const toggleSunscreen = useCallback((day: number) => {
     setState((prev) => {
       const cur = prev.habits[day] ?? { sunscreen: false, water: 0 }
-      return { ...prev, habits: { ...prev.habits, [day]: { ...cur, sunscreen: !cur.sunscreen } } }
+      const newHabit = { ...cur, sunscreen: !cur.sunscreen }
+      if (userId) {
+        saveHabitLog(userId, day, newHabit)
+      }
+      return { ...prev, habits: { ...prev.habits, [day]: newHabit } }
     })
-  }, [])
+  }, [userId])
 
   const setWater = useCallback((day: number, delta: number) => {
     setState((prev) => {
       const cur = prev.habits[day] ?? { sunscreen: false, water: 0 }
       const water = Math.min(Math.max(cur.water + delta, 0), MAX_WATER)
-      return { ...prev, habits: { ...prev.habits, [day]: { ...cur, water } } }
+      const newHabit = { ...cur, water }
+      if (userId) {
+        saveHabitLog(userId, day, newHabit)
+      }
+      return { ...prev, habits: { ...prev.habits, [day]: newHabit } }
     })
-  }, [])
+  }, [userId])
 
   /**
    * 설정 화면의 "루틴 처음부터 다시 시작하기" 버튼 전용. 체커 재방문 흐름과는 완전히

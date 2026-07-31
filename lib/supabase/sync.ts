@@ -2,6 +2,7 @@ import { getSupabaseClient } from "@/lib/supabase/client"
 import type { RecipeType, ScheduleSettings } from "@/lib/schedule"
 import type { BarrierScorePoint, CalendarEntry, IncidentLogEntry, IncidentType, ReactionLogEntry } from "@/lib/scheduling-engine"
 import type { Concern, SupportId } from "@/lib/routine-copy"
+import type { DailyHabit } from "@/lib/use-diary"
 
 /**
  * Supabase 연동. 이 모듈의 모든 함수는 실패해도(오프라인, 마이그레이션 미적용 등)
@@ -199,6 +200,22 @@ export async function saveBarrierScoreLog(userId: string, points: BarrierScorePo
   const rows = points.map((point) => ({ user_id: userId, day: point.day, score: point.score }))
   const { error } = await supabase.from("barrier_score_log").upsert(rows, { onConflict: "user_id,day" })
   if (error) console.warn("[supabase] saveBarrierScoreLog failed:", error.message)
+}
+
+export async function saveHabitLog(userId: string, day: number, habit: DailyHabit): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("habit_log").upsert(
+    {
+      user_id: userId,
+      day,
+      sunscreen: habit.sunscreen,
+      water: habit.water,
+    },
+    { onConflict: "user_id,day" },
+  )
+  if (error) console.warn("[supabase] saveHabitLog failed:", error.message)
 }
 
 /** 완주 30일 기념 소감을 completion_feedback에 저장한다 */
