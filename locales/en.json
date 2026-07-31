@@ -404,6 +404,12 @@
     "completion_wallpaper_title": "Your 30-day wallpaper",
     "download": "Download"
   },
+  "installBanner": {
+    "title": "Add to home screen for faster access",
+    "iosInstruction": "Tap share, then select 'Add to Home Screen'",
+    "installButton": "Install",
+    "dismiss": "Dismiss"
+  },
   "metadata": {
     "title": "Hoppy Skin Diary · 30-Day Barrier Reset for Glass Skin",
     "description": "Gentle, science-backed skincare routine to rebuild your barrier and get that K-beauty glass skin glow. Log your routine daily, watch your skin settle.",

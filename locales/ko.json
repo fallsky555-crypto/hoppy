@@ -404,6 +404,12 @@
     "completion_wallpaper_title": "완주 기념 배경화면",
     "download": "다운로드"
   },
+  "installBanner": {
+    "title": "홈 화면에 추가하고 더 빠르게 써보세요",
+    "iosInstruction": "공유 버튼을 누른 다음 '홈 화면에 추가'를 선택하세요",
+    "installButton": "설치하기",
+    "dismiss": "닫기"
+  },
   "metadata": {
     "title": "호빵이 스킨 다이어리 · 장벽 리셋 캘린더",
     "description": "무너진 피부 장벽을 30일 동안 부드럽게 복구하는 초보자 장벽 리셋 캘린더. 매일 피부 레시피를 기록해요.",

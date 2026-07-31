@@ -13,6 +13,7 @@ import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
 import { CompletionFeedback } from "@/components/completion-feedback"
+import { InstallBanner } from "@/components/install-banner"
 import { useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { getCompletionCopy } from "@/lib/routine-copy"
@@ -59,6 +60,8 @@ export default function Page({ params }: PageProps) {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
+      <InstallBanner />
+
       <ProgressHeader
         currentDay={currentDay}
         totalDays={totalDays}
