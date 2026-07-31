@@ -64,6 +64,10 @@ interface DiaryState {
    * 레거시 상태 — CURRENT_ENGINE_VERSION과 다르면 하이드레이션 직후 갱신한다.
    */
   engineVersion: string | null
+  /** 피부 기록 수집에 동의했는지 여부 (온보딩 1단계) */
+  dataConsent: boolean
+  /** 동의한 시점 (ISO 8601 형식, UTC) */
+  dataConsentAt: string | null
 }
 
 /** 로그아웃 시 로컬 캐시를 지우는 용도로도 쓰인다(login-banner.tsx) */
@@ -86,6 +90,8 @@ function freshState(): DiaryState {
     concern: "none",
     supportOwned: [],
     engineVersion: null,
+    dataConsent: false,
+    dataConsentAt: null,
   }
 }
 
@@ -107,6 +113,8 @@ function loadLocalState(): DiaryState | null {
       concern: parsed.concern ?? "none",
       supportOwned: parsed.supportOwned ?? [],
       engineVersion: parsed.engineVersion ?? null,
+      dataConsent: parsed.dataConsent ?? false,
+      dataConsentAt: parsed.dataConsentAt ?? null,
     }
   } catch {
     return null
@@ -333,8 +341,8 @@ export function useDiary() {
   // 임신/처방약 플래그
   useEffect(() => {
     if (!userId) return
-    saveContextFlags(userId, state.joinDate, state.pregnant, state.prescriptionMeds)
-  }, [userId, state.joinDate, state.pregnant, state.prescriptionMeds])
+    saveContextFlags(userId, { pregnant: state.pregnant, prescriptionMeds: state.prescriptionMeds })
+  }, [userId, state.pregnant, state.prescriptionMeds])
 
   // 루틴 문구에 강조할 관심사 + 보유 성분
   useEffect(() => {
@@ -384,13 +392,22 @@ export function useDiary() {
    * 안 된다), 가입일(Day 1)도 이 순간으로 스탬프한다 — 온보딩을 보는 동안은 아직
    * Day 1이 시작되지 않은 것으로 취급한다.
    */
-  const completeOnboarding = useCallback((intervalDays: number) => {
-    setState((prev) => ({
-      ...prev,
-      joinDate: todayISO(),
-      settings: { activeIntervalDays: intervalDays, bhaIntervalDays: intervalDays },
-    }))
-  }, [])
+  const completeOnboarding = useCallback(
+    async (intervalDays: number, dataConsent: boolean) => {
+      const now = todayISO()
+      setState((prev) => ({
+        ...prev,
+        joinDate: now,
+        settings: { activeIntervalDays: intervalDays, bhaIntervalDays: intervalDays },
+        dataConsent,
+        dataConsentAt: dataConsent ? now : null,
+      }))
+      if (userId) {
+        await saveContextFlags(userId, { dataConsent })
+      }
+    },
+    [userId],
+  )
 
   /** [Period] / [Sunburn] / [Treatment] 버튼에서 호출 — 캘린더를 응급 루틴으로 전환한다 */
   const reportIncident = useCallback((day: number, incidentType: IncidentType, durationDays?: number) => {

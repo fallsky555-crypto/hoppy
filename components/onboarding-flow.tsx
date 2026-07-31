@@ -10,8 +10,8 @@ import type { Locale } from "@/lib/locale-context"
 
 interface OnboardingFlowProps {
   locale: Locale
-  /** 4단계 "시작하기" — 최종 clamp된 간격(일)을 넘긴다. useDiary().completeOnboarding에 그대로 연결한다 */
-  onComplete: (intervalDays: number) => void
+  /** 4단계 "시작하기" — 최종 clamp된 간격(일)과 데이터 수집 동의를 넘긴다. useDiary().completeOnboarding에 그대로 연결한다 */
+  onComplete: (intervalDays: number, dataConsent: boolean) => void
 }
 
 type Step = 1 | 2 | 3
@@ -30,11 +30,18 @@ function commentFor(rawDays: number, locale: Locale): string {
  * 한 화면으로 합쳤다. 완료 전까지는 가입일(Day 1)이 아직 찍히지 않은 상태다 —
  * 실제 스탬프는 onComplete를 호출하는 useDiary().completeOnboarding에서 한다.
  */
+function getPrivacyPolicyUrl(locale: Locale): string {
+  return locale === "ko"
+    ? "https://myroutinediet.com/privacy-policy.html"
+    : "https://myroutinediet.com/policy-en.html"
+}
+
 export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>(1)
   const [inputValue, setInputValue] = useState("")
   const [neverUses, setNeverUses] = useState(false)
   const [rawDays, setRawDays] = useState<number | null>(null)
+  const [dataConsent, setDataConsent] = useState(false)
 
   const parsedValue = Number(inputValue)
   const canSubmitHabit = neverUses || (inputValue.trim() !== "" && Number.isFinite(parsedValue) && parsedValue > 0)
@@ -55,10 +62,32 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
             <h1 className="font-display text-xl font-bold leading-snug text-foreground">
               {t("onboarding.intro.title", locale)}
             </h1>
-            <p className="text-[15px] leading-relaxed text-[#4A4438]">
+            <p className="text-[15px] leading-relaxed text-[#4A4438] text-left">
               {t("onboarding.intro.description", locale)}
             </p>
-            <Button type="button" size="lg" onClick={() => setStep(2)} className="h-auto w-full rounded-full py-3 text-[15px]">
+
+            <div className="flex items-start gap-3 rounded-lg bg-secondary/30 p-3.5">
+              <input
+                type="checkbox"
+                id="data-consent"
+                checked={dataConsent}
+                onChange={(e) => setDataConsent(e.target.checked)}
+                className="shrink-0 mt-0.5 w-4 h-4 rounded border border-border cursor-pointer accent-primary"
+              />
+              <label htmlFor="data-consent" className="cursor-pointer text-[13px] leading-relaxed text-foreground">
+                {t("onboarding.intro.dataConsentLabel", locale)}{" "}
+                <a
+                  href={getPrivacyPolicyUrl(locale)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline hover:text-primary/80 transition-colors"
+                >
+                  {t("onboarding.intro.dataConsentLink", locale)}
+                </a>
+              </label>
+            </div>
+
+            <Button type="button" size="lg" onClick={() => setStep(2)} disabled={!dataConsent} className="h-auto w-full rounded-full py-3 text-[15px]">
               {t("onboarding.intro.next", locale)}
             </Button>
           </div>
@@ -125,7 +154,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
           <Button
             type="button"
             size="lg"
-            onClick={() => onComplete(clampedDays)}
+            onClick={() => onComplete(clampedDays, dataConsent)}
             className="h-auto w-full rounded-full py-3 text-[15px]"
           >
             {t("onboarding.mappingResult.start", locale)}

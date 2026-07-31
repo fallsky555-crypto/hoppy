@@ -74,17 +74,39 @@ export async function saveSettings(userId: string, signupDate: string, settings:
   if (error) console.warn("[supabase] saveSettings failed:", error.message)
 }
 
-/** 임신/처방약 플래그를 diary_profiles에 반영한다 */
-export async function saveContextFlags(userId: string, signupDate: string, pregnant: boolean, prescriptionMeds: boolean): Promise<void> {
+/** 임신/처방약 플래그 + 데이터 수집 동의를 diary_profiles에 반영한다 */
+export async function saveContextFlags(
+  userId: string,
+  flags: {
+    pregnant?: boolean
+    prescriptionMeds?: boolean
+    concern?: string
+    supportOwned?: string[]
+    dataConsent?: boolean
+  },
+): Promise<void> {
   const supabase = getSupabaseClient()
   if (!supabase) return
 
+  const updatePayload: Record<string, unknown> = {
+    user_id: userId,
+  }
+
+  if (flags.pregnant !== undefined) updatePayload.pregnant = flags.pregnant
+  if (flags.prescriptionMeds !== undefined) updatePayload.prescription_meds = flags.prescriptionMeds
+  if (flags.concern !== undefined) updatePayload.concern = flags.concern
+  if (flags.supportOwned !== undefined) updatePayload.support_owned = flags.supportOwned
+
+  if (flags.dataConsent !== undefined) {
+    updatePayload.data_consent = flags.dataConsent
+    if (flags.dataConsent) {
+      updatePayload.data_consent_at = new Date().toISOString()
+    }
+  }
+
   const { error } = await supabase
     .from("diary_profiles")
-    .upsert(
-      { user_id: userId, signup_date: signupDate.slice(0, 10), pregnant, prescription_meds: prescriptionMeds },
-      { onConflict: "user_id" },
-    )
+    .upsert(updatePayload, { onConflict: "user_id" })
   if (error) console.warn("[supabase] saveContextFlags failed:", error.message)
 }
 

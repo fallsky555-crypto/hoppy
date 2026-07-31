@@ -301,6 +301,8 @@
     "intro": {
       "title": "This is where your personal skin profile begins",
       "description": "Every bit of information you enter from here on becomes part of a lifelong record — yours alone. What you used, what worked, what didn't — no one else has this data but you. After 30 days, you'll get your own personal profile built entirely from what you've logged. We'll start with the pore care foundation. Complete it to unlock the next stages, like tone and brightening.",
+      "dataConsentLabel": "[Required] I agree to have my skin records collected. This is used only to build your personal profile, and you can delete it anytime.",
+      "dataConsentLink": "View full policy",
       "next": "Next"
     },
     "habitCheck": {
