@@ -299,8 +299,10 @@
   },
   "onboarding": {
     "intro": {
-      "title": "Pore care builds your skin's foundation",
-      "description": "Brighter tone and elasticity work best when your foundation is strong. Complete this first phase, and you'll unlock the next level. Plus, you'll get a desktop wallpaper when you finish—choose from three designs.",
+      "title": "This is where your personal skin profile begins",
+      "description": "Everything you log from here on is yours alone. After 30 days, you'll get a personal profile built from it. We'll start with pore care — the foundation for what comes next, like tone and brightening.",
+      "dataConsentLabel": "[Required] I agree to have my skin records collected. This is used only to build your personal profile, and you can delete it anytime.",
+      "dataConsentLink": "View full policy",
       "next": "Next"
     },
     "habitCheck": {
