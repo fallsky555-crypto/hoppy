@@ -218,6 +218,27 @@ export async function saveHabitLog(userId: string, day: number, habit: DailyHabi
   if (error) console.warn("[supabase] saveHabitLog failed:", error.message)
 }
 
+export async function saveConditionLog(
+  userId: string,
+  day: number,
+  condition: "good" | "neutral" | "bad",
+  source: "onboarding" | "daily_checkin",
+): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("condition_log").upsert(
+    {
+      user_id: userId,
+      day,
+      condition,
+      source,
+    },
+    { onConflict: "user_id,day" },
+  )
+  if (error) console.warn("[supabase] saveConditionLog failed:", error.message)
+}
+
 /** 완주 30일 기념 소감을 completion_feedback에 저장한다 */
 export async function saveCompletionFeedback(userId: string, feedbackText: string): Promise<void> {
   const supabase = getSupabaseClient()

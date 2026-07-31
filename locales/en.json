@@ -319,6 +319,10 @@
       "comment_too_short": "Going a bit slower might be kinder to your skin",
       "comment_too_frequent": "A little more often will help you see changes in 30 days",
       "comment_similar": "This is close to what you're doing now—great fit",
+      "conditionQuestion": "How's your skin feeling today?",
+      "condition_good": "Good",
+      "condition_neutral": "Okay",
+      "condition_bad": "Not great",
       "start": "Let's go"
     }
   },

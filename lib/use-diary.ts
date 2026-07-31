@@ -23,6 +23,7 @@ import {
   saveCalendar,
   saveConcern,
   saveCompletionFeedback,
+  saveConditionLog,
   saveContextFlags,
   saveEngineVersion,
   saveHabitLog,
@@ -394,7 +395,7 @@ export function useDiary() {
    * Day 1이 시작되지 않은 것으로 취급한다.
    */
   const completeOnboarding = useCallback(
-    async (intervalDays: number, dataConsent: boolean) => {
+    async (intervalDays: number, dataConsent: boolean, condition: "good" | "neutral" | "bad") => {
       const now = todayISO()
       setState((prev) => ({
         ...prev,
@@ -405,6 +406,7 @@ export function useDiary() {
       }))
       if (userId) {
         await saveContextFlags(userId, now, { dataConsent })
+        saveConditionLog(userId, 0, condition, "onboarding")
       }
     },
     [userId],

@@ -10,8 +10,8 @@ import type { Locale } from "@/lib/locale-context"
 
 interface OnboardingFlowProps {
   locale: Locale
-  /** 4단계 "시작하기" — 최종 clamp된 간격(일)과 데이터 수집 동의를 넘긴다. useDiary().completeOnboarding에 그대로 연결한다 */
-  onComplete: (intervalDays: number, dataConsent: boolean) => void
+  /** 4단계 "시작하기" — 최종 clamp된 간격(일), 데이터 수집 동의, 피부 컨디션을 넘긴다. useDiary().completeOnboarding에 그대로 연결한다 */
+  onComplete: (intervalDays: number, dataConsent: boolean, condition: "good" | "neutral" | "bad") => void
 }
 
 type Step = 1 | 2 | 3
@@ -42,6 +42,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
   const [neverUses, setNeverUses] = useState(false)
   const [rawDays, setRawDays] = useState<number | null>(null)
   const [dataConsent, setDataConsent] = useState(false)
+  const [condition, setCondition] = useState<"good" | "neutral" | "bad" | null>(null)
 
   const parsedValue = Number(inputValue)
   const canSubmitHabit = neverUses || (inputValue.trim() !== "" && Number.isFinite(parsedValue) && parsedValue > 0)
@@ -151,10 +152,50 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
           <h1 className="font-display text-2xl font-bold text-foreground">{interpolate(t("onboarding.mappingResult.interval_display", locale), { days: String(clampedDays) })}</h1>
           <p className="text-[15px] leading-relaxed text-[#4A4438]">{commentFor(rawDays ?? MIN_INTERVAL_DAYS, locale)}</p>
 
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-foreground">{t("onboarding.mappingResult.conditionQuestion", locale)}</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setCondition("good")}
+                className={cn(
+                  "flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors",
+                  condition === "good" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
+                )}
+                aria-pressed={condition === "good"}
+              >
+                {t("onboarding.mappingResult.condition_good", locale)}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCondition("neutral")}
+                className={cn(
+                  "flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors",
+                  condition === "neutral" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
+                )}
+                aria-pressed={condition === "neutral"}
+              >
+                {t("onboarding.mappingResult.condition_neutral", locale)}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCondition("bad")}
+                className={cn(
+                  "flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors",
+                  condition === "bad" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
+                )}
+                aria-pressed={condition === "bad"}
+              >
+                {t("onboarding.mappingResult.condition_bad", locale)}
+              </button>
+            </div>
+          </div>
+
           <Button
             type="button"
             size="lg"
-            onClick={() => onComplete(clampedDays, dataConsent)}
+            disabled={condition === null}
+            onClick={() => onComplete(clampedDays, dataConsent, condition!)}
             className="h-auto w-full rounded-full py-3 text-[15px]"
           >
             {t("onboarding.mappingResult.start", locale)}
