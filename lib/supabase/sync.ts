@@ -77,6 +77,7 @@ export async function saveSettings(userId: string, signupDate: string, settings:
 /** 임신/처방약 플래그 + 데이터 수집 동의를 diary_profiles에 반영한다 */
 export async function saveContextFlags(
   userId: string,
+  signupDate: string,
   flags: {
     pregnant?: boolean
     prescriptionMeds?: boolean
@@ -90,6 +91,7 @@ export async function saveContextFlags(
 
   const updatePayload: Record<string, unknown> = {
     user_id: userId,
+    signup_date: signupDate.slice(0, 10),
   }
 
   if (flags.pregnant !== undefined) updatePayload.pregnant = flags.pregnant

@@ -341,8 +341,8 @@ export function useDiary() {
   // 임신/처방약 플래그
   useEffect(() => {
     if (!userId) return
-    saveContextFlags(userId, { pregnant: state.pregnant, prescriptionMeds: state.prescriptionMeds })
-  }, [userId, state.pregnant, state.prescriptionMeds])
+    saveContextFlags(userId, state.joinDate, { pregnant: state.pregnant, prescriptionMeds: state.prescriptionMeds })
+  }, [userId, state.joinDate, state.pregnant, state.prescriptionMeds])
 
   // 루틴 문구에 강조할 관심사 + 보유 성분
   useEffect(() => {
@@ -403,7 +403,7 @@ export function useDiary() {
         dataConsentAt: dataConsent ? now : null,
       }))
       if (userId) {
-        await saveContextFlags(userId, { dataConsent })
+        await saveContextFlags(userId, now, { dataConsent })
       }
     },
     [userId],
