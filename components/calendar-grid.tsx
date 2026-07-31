@@ -5,7 +5,7 @@ import type { Recipe, RecipeType } from "@/lib/schedule"
 import { getRecipes } from "@/lib/schedule"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
-import { Check } from "lucide-react"
+import { Check, Smile, Meh, Frown } from "lucide-react"
 
 interface CalendarGridProps {
   totalDays: number
@@ -15,6 +15,7 @@ interface CalendarGridProps {
   justStampedDay: number | null
   onSelect: (day: number) => void
   getRecipe: (day: number) => Recipe
+  conditions?: Record<number, "good" | "neutral" | "bad">
 }
 
 export function CalendarGrid({
@@ -25,6 +26,7 @@ export function CalendarGrid({
   justStampedDay,
   onSelect,
   getRecipe,
+  conditions = {},
 }: CalendarGridProps) {
   const locale = useLocale()
   const days = Array.from({ length: totalDays }, (_, i) => i + 1)
@@ -65,7 +67,7 @@ export function CalendarGrid({
               key={day}
               type="button"
               onClick={() => onSelect(day)}
-              aria-label={`Day ${day} ${localizedRecipe.title}${isCompleted ? t("calendar.completed", locale) : ""}${isToday ? t("calendar.today", locale) : ""}`}
+              aria-label={`Day ${day} ${localizedRecipe.title}${isCompleted ? ` ${t("calendar.completed", locale)}` : ""}${conditions[day] ? ` ${t(`calendar.condition_${conditions[day]}`, locale)}` : ""}${isToday ? t("calendar.today", locale) : ""}`}
               aria-pressed={isSelected}
               className={cn(
                 "relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-2xl border bg-card p-0.5 shadow-[0_1px_2px_rgba(30,29,26,0.04)] transition-all",
@@ -85,14 +87,31 @@ export function CalendarGrid({
               )}
 
               {isCompleted && (
-                <span
-                  className={cn(
-                    "absolute -bottom-1 -right-1 flex size-[15px] items-center justify-center rounded-full bg-foreground",
-                    justStamped ? "animate-stamp" : "",
-                  )}
-                >
-                  <Check className="size-2 text-white" aria-hidden strokeWidth={3.5} />
-                </span>
+                (() => {
+                  const condition = conditions[day]
+                  const bgColor =
+                    condition === "good"
+                      ? "bg-today-accent"
+                      : condition === "neutral"
+                        ? "bg-defense-hydration"
+                        : condition === "bad"
+                          ? "bg-toning-solo"
+                          : "bg-foreground"
+                  const Icon =
+                    condition === "good" ? Smile : condition === "neutral" ? Meh : condition === "bad" ? Frown : Check
+
+                  return (
+                    <span
+                      className={cn(
+                        "absolute -bottom-1 -right-1 flex size-[20px] items-center justify-center rounded-full",
+                        bgColor,
+                        justStamped ? "animate-stamp" : "",
+                      )}
+                    >
+                      <Icon className="size-4 text-white" aria-hidden strokeWidth={3} />
+                    </span>
+                  )
+                })()
               )}
             </button>
           )

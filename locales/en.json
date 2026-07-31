@@ -223,7 +223,10 @@
     "dayAriaLabel": "Day {{day}} {{recipe}}{{completed}}{{today}}",
     "completed": ", logged",
     "today": ", today",
-    "todayBadge": "Today"
+    "todayBadge": "Today",
+    "condition_good": "good",
+    "condition_neutral": "okay",
+    "condition_bad": "not great"
   },
   "incident": {
     "ariaLabel": "Skin care incident",

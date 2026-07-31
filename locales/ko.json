@@ -223,7 +223,10 @@
     "dayAriaLabel": "Day {{day}} {{recipe}}{{completed}}{{today}}",
     "completed": ", 기록 완료",
     "today": ", 오늘",
-    "todayBadge": "오늘"
+    "todayBadge": "오늘",
+    "condition_good": "좋음",
+    "condition_neutral": "보통",
+    "condition_bad": "안 좋음"
   },
   "incident": {
     "ariaLabel": "스킨 인시던트",

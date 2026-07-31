@@ -105,6 +105,7 @@ export default function Page({ params }: PageProps) {
         justStampedDay={justStampedDay}
         onSelect={setSelectedDay}
         getRecipe={diary.getRecipeForDay}
+        conditions={diary.conditions}
       />
 
       <DailyHabits
