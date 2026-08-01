@@ -2,7 +2,7 @@ import { getSupabaseClient } from "@/lib/supabase/client"
 import type { RecipeType, ScheduleSettings } from "@/lib/schedule"
 import type { BarrierScorePoint, CalendarEntry, IncidentLogEntry, IncidentType, ReactionLogEntry } from "@/lib/scheduling-engine"
 import type { Concern, SupportId } from "@/lib/routine-copy"
-import type { DailyHabit } from "@/lib/use-diary"
+import type { DailyHabit, UsedProduct } from "@/lib/use-diary"
 
 /**
  * Supabase 연동. 이 모듈의 모든 함수는 실패해도(오프라인, 마이그레이션 미적용 등)
@@ -135,6 +135,29 @@ export async function saveEngineVersion(userId: string, signupDate: string, engi
     { onConflict: "user_id" },
   )
   if (error) console.warn("[supabase] saveEngineVersion failed:", error.message)
+}
+
+/**
+ * 체커에서 전달받은 제품 목록(items)을 diary_profiles에 저장한다 — fire-and-forget
+ * Day 0 온보딩 시에만 호출된다. 갱신(self-report)은 별도 기능에서 처리 예정.
+ */
+export async function saveUsedProducts(
+  userId: string,
+  signupDate: string,
+  usedProducts: UsedProduct[] | null,
+): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    {
+      user_id: userId,
+      signup_date: signupDate.slice(0, 10),
+      used_products: usedProducts,
+    },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveUsedProducts failed:", error.message)
 }
 
 /** 현재 계산된 캘린더 전체를 calendar_entries에 반영한다 (일정이 통째로 밀리는 경우가 있어 매번 upsert) */
