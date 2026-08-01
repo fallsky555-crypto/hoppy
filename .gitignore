@@ -18,5 +18,6 @@ package-lock.json
 *.tsbuildinfo
 
 # Data files — products.json must always be tracked (checker integration)
-lib/data/
+# Use file pattern (lib/data/*) instead of directory (lib/data/) so negation works
+lib/data/*
 !lib/data/products.json
