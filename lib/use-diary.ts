@@ -28,9 +28,11 @@ import {
   saveEngineVersion,
   saveHabitLog,
   saveSettings,
+  saveUsedProducts,
 } from "@/lib/supabase/sync"
 import type { Concern, SupportId } from "@/lib/routine-copy"
 import { heroImageSrcForDay } from "@/lib/hero-image"
+import PRODUCTS_DATA from "@/lib/data/products.json"
 
 /** 장벽 점수 그래프는 2주차(Day 8)부터 노출된다 */
 export const BARRIER_SCORE_START_DAY = 8
@@ -38,6 +40,13 @@ export const BARRIER_SCORE_START_DAY = 8
 export interface DailyHabit {
   sunscreen: boolean
   water: number // 0 ~ 8
+}
+
+export interface UsedProduct {
+  id: string
+  brand: string
+  name: string
+  lang: "ko" | "en"
 }
 
 /** 유저가 실시간으로 트리거하는 캘린더 조정 이벤트 (인시던트 / 자극 신고). day 순서로 재생(replay)한다 */
@@ -62,6 +71,8 @@ interface DiaryState {
   concern: Concern
   /** 유저가 이미 갖고 있다고 답한 성분 id 목록 */
   supportOwned: SupportId[]
+  /** 체커에서 전달받은 제품 목록 (Day 0 온보딩 시에만 저장, 갱신은 별도 self-report 기능에서 처리 예정) */
+  usedProducts: UsedProduct[] | null
   /**
    * 이 유저의 데이터가 마지막으로 확인된 엔진 버전. null이면 이 필드가 생기기 전의
    * 레거시 상태 — CURRENT_ENGINE_VERSION과 다르면 하이드레이션 직후 갱신한다.
@@ -93,6 +104,7 @@ function freshState(): DiaryState {
     prescriptionMeds: false,
     concern: "none",
     supportOwned: [],
+    usedProducts: null,
     engineVersion: null,
     dataConsent: false,
     dataConsentAt: null,
@@ -117,6 +129,7 @@ function loadLocalState(): DiaryState | null {
       prescriptionMeds: parsed.prescriptionMeds ?? false,
       concern: parsed.concern ?? "none",
       supportOwned: parsed.supportOwned ?? [],
+      usedProducts: parsed.usedProducts ?? null,
       engineVersion: parsed.engineVersion ?? null,
       dataConsent: parsed.dataConsent ?? false,
       dataConsentAt: parsed.dataConsentAt ?? null,
@@ -152,12 +165,19 @@ function applyEvents(baseCalendar: CalendarEntry[], events: ScheduleEvent[]) {
   return { calendar, incidentLog, reactionLog }
 }
 
+/** 동적으로 생성: products.json에서 모든 id 추출 */
+const VALID_PRODUCT_IDS = new Set(PRODUCTS_DATA.map(p => p.id))
+const PRODUCTS_BY_ID = new Map(
+  PRODUCTS_DATA.map(p => [p.id, p])
+)
+
 /** 체커(checker.html)에서 돌아올 때 실려오는, 스케줄과 무관한 부가 정보 */
 interface URLContextPayload {
   pregnant: boolean
   prescriptionMeds: boolean
   concern: Concern
   supportOwned: SupportId[]
+  usedProducts: UsedProduct[] | null
 }
 
 const VALID_CONCERNS: Concern[] = ["dry", "flush", "flaky", "trouble", "none"]
@@ -175,6 +195,30 @@ function parseSupportOwned(raw: string | null): SupportId[] {
     .filter((id): id is SupportId => VALID_SUPPORT_IDS.includes(id as SupportId))
 }
 
+function parseItems(raw: string | null): string[] {
+  if (!raw) return []
+  return raw
+    .split(",")
+    .map(id => id.trim())
+    .filter(id => VALID_PRODUCT_IDS.has(id))
+}
+
+function buildProductDetails(itemIds: string[]): UsedProduct[] {
+  return itemIds
+    .map(id => {
+      const product = PRODUCTS_BY_ID.get(id)
+      return product
+        ? {
+            id: product.id,
+            brand: product.brand,
+            name: product.name,
+            lang: product.lang,
+          }
+        : null
+    })
+    .filter((p): p is UsedProduct => p !== null)
+}
+
 /**
  * 외부 진단 화면(myroutinediet.com의 checker.html)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
  * ?type={A/B/C}&preg={0/1}&rx={0/1}&concern={dry/flush/flaky/trouble/none}&support={hya,cica,nia,cer 콤마 구분}
@@ -187,11 +231,14 @@ function contextFromURL(): URLContextPayload | null {
   const params = new URLSearchParams(window.location.search)
   if (params.get("type") === null) return null
 
+  const itemIds = parseItems(params.get("items"))
+
   return {
     pregnant: params.get("preg") === "1",
     prescriptionMeds: params.get("rx") === "1",
     concern: parseConcern(params.get("concern")),
     supportOwned: parseSupportOwned(params.get("support")),
+    usedProducts: itemIds.length > 0 ? buildProductDetails(itemIds) : null,
   }
 }
 
@@ -214,6 +261,7 @@ function applyURLContext(base: DiaryState, context: URLContextPayload | null): D
     prescriptionMeds: context.prescriptionMeds,
     concern: context.concern,
     supportOwned: context.supportOwned,
+    usedProducts: context.usedProducts,
   }
 }
 
@@ -408,11 +456,18 @@ export function useDiary() {
         dataConsentAt: dataConsent ? now : null,
       }))
       if (userId) {
+        // diary_profiles 행이 반드시 먼저 생성되도록 await
         await saveContextFlags(userId, now, { dataConsent })
         saveConditionLog(userId, 0, condition, "onboarding")
+
+        // 이후 used_products 저장 (fire-and-forget, 위의 await로 안전성 보장)
+        // Day 0 전용: 갱신은 별도 self-report 기능에서 처리 예정
+        if (state.usedProducts) {
+          saveUsedProducts(userId, now, state.usedProducts)
+        }
       }
     },
-    [userId],
+    [userId, state.usedProducts],
   )
 
   /** [Period] / [Sunburn] / [Treatment] 버튼에서 호출 — 캘린더를 응급 루틴으로 전환한다 */
