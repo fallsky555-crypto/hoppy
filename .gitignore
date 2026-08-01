@@ -16,3 +16,7 @@ node_modules
 next-env.d.ts
 package-lock.json
 *.tsbuildinfo
+
+# Data files — products.json must always be tracked (checker integration)
+lib/data/
+!lib/data/products.json
