@@ -93,7 +93,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
                   href={getPrivacyPolicyUrl(locale)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary underline hover:text-primary/80 transition-colors"
+                  className="text-primary-text underline hover:text-primary-text/80 transition-colors"
                 >
                   {t("onboarding.intro.dataConsentLink", locale)}
                 </a>
@@ -137,7 +137,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
               }}
               className={cn(
                 "w-full rounded-3xl border px-4 py-3 text-left text-sm font-semibold transition-colors",
-                neverUses ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
+                neverUses ? "border-primary bg-primary/10 text-primary-text" : "border-border bg-card text-foreground",
               )}
               aria-pressed={neverUses}
             >
@@ -174,7 +174,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
                 onClick={() => setCondition("good")}
                 className={cn(
                   "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors",
-                  condition === "good" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
+                  condition === "good" ? "border-primary bg-primary/10 text-primary-text" : "border-border bg-card text-foreground",
                 )}
                 aria-pressed={condition === "good"}
               >
@@ -185,7 +185,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
                 onClick={() => setCondition("neutral")}
                 className={cn(
                   "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors",
-                  condition === "neutral" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
+                  condition === "neutral" ? "border-primary bg-primary/10 text-primary-text" : "border-border bg-card text-foreground",
                 )}
                 aria-pressed={condition === "neutral"}
               >
@@ -196,7 +196,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
                 onClick={() => setCondition("bad")}
                 className={cn(
                   "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors",
-                  condition === "bad" ? "border-primary bg-primary/10 text-primary" : "border-border bg-card text-foreground",
+                  condition === "bad" ? "border-primary bg-primary/10 text-primary-text" : "border-border bg-card text-foreground",
                 )}
                 aria-pressed={condition === "bad"}
               >

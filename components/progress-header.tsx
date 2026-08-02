@@ -44,7 +44,7 @@ export function ProgressHeader({ currentDay, totalDays, completedCount, heroImag
           </div>
 
           <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary py-3">
-            <span className="font-display text-2xl font-semibold text-primary">
+            <span className="font-display text-2xl font-semibold text-primary-text">
               {remaining}
               <span className="font-sans text-xs font-medium text-muted-foreground">{locale === "en" ? "" : "일"}</span>
             </span>

@@ -95,7 +95,7 @@ export function DailyHabits({ day, habit, maxWater, onToggleSunscreen, onWater }
         {Array.from({ length: maxWater }, (_, i) => (
           <Droplet
             key={i}
-            className={cn("size-4 transition-colors", i < habit.water ? "fill-primary text-primary" : "fill-transparent text-border")}
+            className={cn("size-4 transition-colors", i < habit.water ? "fill-primary text-primary-text" : "fill-transparent text-border")}
           />
         ))}
       </div>

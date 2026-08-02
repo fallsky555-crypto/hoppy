@@ -52,7 +52,7 @@ export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerP
         <span
           className={cn(
             "flex size-9 shrink-0 items-center justify-center rounded-full",
-            isCelebrate ? "bg-primary text-primary-foreground" : "bg-card text-primary",
+            isCelebrate ? "bg-primary text-primary-text-foreground" : "bg-card text-primary-text",
           )}
         >
           {isCelebrate ? <PartyPopper className="size-4" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
@@ -73,7 +73,7 @@ export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerP
                     className={cn(
                       "rounded-lg border-2 px-2.5 py-1 text-[11px] font-semibold transition-colors",
                       selectedWallpaper === idx
-                        ? "border-primary bg-primary/10 text-primary"
+                        ? "border-primary bg-primary/10 text-primary-text"
                         : "border-border text-muted-foreground hover:border-border/70",
                     )}
                   >
@@ -84,7 +84,7 @@ export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerP
               <button
                 type="button"
                 onClick={() => handleDownload(WALLPAPERS[selectedWallpaper])}
-                className="flex w-fit items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                className="flex w-fit items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-text-foreground hover:bg-primary/90"
               >
                 <Download className="size-3.5" aria-hidden />
                 {t("routine_banner.download", locale)}

@@ -53,6 +53,7 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-text-caption: var(--text-caption);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -76,48 +77,43 @@
     'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   --font-display: 'Playfair Display', 'Pretendard Variable', Pretendard, serif;
   /*
-   * 에디토리얼 뷰티 톤 디자인 토큰 (design_handoff_hoppy_home 참고 이식).
-   * 페이지 배경은 순백(#FFFFFF)으로 카드와 통일 — 카드는 얇은 회색 테두리(ring-border)만으로
-   * 구분한다. 숫자·타이틀은 Playfair Display, 본문/UI는 Pretendard 그대로.
+   * 새 팔레트: 청회색(뉴트럴) + 하늘색(포인트)
+   * 배경: #EAF4F8, 카드: #F7FBFC, 텍스트: #26424D
    */
-  --background: #ffffff;
-  --foreground: #1e1d1b;
-  --card: #ffffff;
-  --card-foreground: #1e1d1b;
-  --popover: #ffffff;
-  --popover-foreground: #1e1d1b;
-  --primary: #85B7EB;
-  --primary-foreground: #042C53;
-  /* secondary = 카드 안에 얹는 "가라앉은" 표면(물잔 카운터, 잠금 안내 박스 등) — 흰 배경과
-     구분되도록 옅은 아이보리 톤을 유지한다(카드 내부 그룹핑용, 페이지 배경과는 별개) */
-  --secondary: #f6f4ef;
-  --secondary-foreground: #1e1d1b;
-  --muted: #f6f4ef;
-  --muted-foreground: #8a8375;
-  /* accent = 프로그레스 트랙, 비활성 아이콘 원 배경 등 카드보다 한 톤 짙은 중립면 */
-  --accent: #edeae1;
-  --accent-foreground: #1e1d1b;
+  --background: #EAF4F8;
+  --foreground: #26424D;
+  --card: #F7FBFC;
+  --card-foreground: #26424D;
+  --popover: #F7FBFC;
+  --popover-foreground: #26424D;
+  --primary: #5FA8D3;
+  --primary-foreground: #ffffff;
+  --text-caption: #7FA3AF;
+  /* secondary = 카드 안 그룹핑용 옅은 배경 */
+  --secondary: #EAF4F8;
+  --secondary-foreground: #26424D;
+  --muted: #EAF4F8;
+  --muted-foreground: #4A6873;
+  /* accent = 보조 강조 배경 */
+  --accent: #D5E8F0;
+  --accent-foreground: #26424D;
   --destructive: oklch(0.62 0.2 25);
-  --border: #e7e3d9;
-  --input: #e7e3d9;
-  --ring: #33452f;
-  --chart-1: #33452f;
+  --border: #B8D4E0;
+  --input: #B8D4E0;
+  --ring: #5FA8D3;
+  --chart-1: #5FA8D3;
   --chart-2: oklch(0.82 0.09 150);
   --chart-3: oklch(0.75 0.1 230);
   --chart-4: oklch(0.72 0.13 20);
   --chart-5: oklch(0.85 0.08 90);
-  --sidebar: #ffffff;
-  --sidebar-foreground: #1e1d1b;
-  --sidebar-primary: #33452f;
+  --sidebar: #F7FBFC;
+  --sidebar-foreground: #26424D;
+  --sidebar-primary: #5FA8D3;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #edeae1;
-  --sidebar-accent-foreground: #1e1d1b;
-  --sidebar-border: #e7e3d9;
-  --sidebar-ring: #33452f;
-
-  /* "오늘" 카드 강조 — primary(#33452f)보다 명도를 올린 톤(동일 hue/채도, L 23%→36%) */
-  --today-accent: #516D4A;
-  --today-accent-foreground: #ffffff;
+  --sidebar-accent: #D5E8F0;
+  --sidebar-accent-foreground: #26424D;
+  --sidebar-border: #B8D4E0;
+  --sidebar-ring: #5FA8D3;
   --emphasis: #1e1d1b;
 
   /*

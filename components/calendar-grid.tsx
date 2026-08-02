@@ -75,13 +75,13 @@ export function CalendarGrid({
                 isFuture && "opacity-60",
               )}
             >
-              <span className={cn("text-xs font-extrabold leading-none", isToday ? "text-primary" : "text-foreground")}>
+              <span className={cn("text-xs font-extrabold leading-none", isToday ? "text-primary-text" : "text-foreground")}>
                 {day}
               </span>
               <span className="text-[9.5px] font-bold leading-none text-[#5C5648]">{SHORT_LABEL[recipe.type]}</span>
 
               {isToday && (
-                <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-primary-foreground">
+                <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-primary-text-foreground">
                   {t("calendar.todayBadge", locale)}
                 </span>
               )}

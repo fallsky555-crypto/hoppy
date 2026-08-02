@@ -73,24 +73,19 @@ export function RecipeCard({
   return (
     <section
       className={cn(
-        "rounded-4xl px-[22px] py-[26px] ring-1",
-        isToday ? "bg-today-accent ring-transparent" : "bg-card ring-border",
+        "rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border",
+        isToday && "border-l-4 border-l-primary",
       )}
       aria-label="오늘의 레시피 상세"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1.5">
-          <span className={cn("font-display text-[13px] font-semibold", isToday ? "text-white/85" : "text-muted-foreground")}>
+          <span className="font-display text-[13px] font-semibold text-muted-foreground">
             Day {day}
             {isToday && <span className="ml-1">· {t("recipe_card.today", locale)}</span>}
           </span>
 
-          <span
-            className={cn(
-              "inline-flex w-fit items-center rounded-full border px-3 py-1 text-[11px] font-bold tracking-[0.06em]",
-              isToday ? "border-transparent bg-white/18 text-white" : "border-border text-muted-foreground",
-            )}
-          >
+          <span className="inline-flex w-fit items-center rounded-full border border-border px-3 py-1 text-[11px] font-bold tracking-[0.06em] text-muted-foreground">
             {localizedRecipe.tag}
           </span>
         </div>
@@ -104,38 +99,28 @@ export function RecipeCard({
         )}
       </div>
 
-      <h3
-        className={cn(
-          "mt-3.5 font-display text-xl leading-[1.3] font-semibold text-balance",
-          isToday ? "text-white" : "text-foreground",
-        )}
-      >
+      <h3 className="mt-3.5 font-display text-xl leading-[1.3] font-semibold text-balance text-foreground">
         {copy.title}
       </h3>
 
-      <p className={cn("mt-2 text-[15.5px] leading-[1.7]", isToday ? "text-white/92" : "text-[#4A4438]")}>{copy.detail}</p>
+      <p className="mt-2 text-[15.5px] leading-[1.7] text-muted-foreground">{copy.detail}</p>
 
       {copy.caution && (
-        <p className={cn("mt-2 text-xs font-medium", isToday ? "text-white/70" : "text-muted-foreground")}>{copy.caution}</p>
+        <p className="mt-2 text-xs font-medium text-muted-foreground">{copy.caution}</p>
       )}
 
       {localizedRecipe.steps && localizedRecipe.steps.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {localizedRecipe.steps.map((step, index) => (
             <div key={index} className="flex items-center gap-1.5">
-              <div
-                className={cn(
-                  "flex size-5 items-center justify-center rounded-full text-[10px] font-bold",
-                  isToday ? "bg-white/20 text-white" : "bg-secondary text-foreground",
-                )}
-              >
+              <div className="flex size-5 items-center justify-center rounded-full text-[10px] font-bold bg-secondary text-foreground">
                 {index + 1}
               </div>
-              <span className={cn("text-[11px] font-medium", isToday ? "text-white/85" : "text-[#5C5648]")}>
+              <span className="text-[11px] font-medium text-muted-foreground">
                 {step}
               </span>
               {index < localizedRecipe.steps.length - 1 && (
-                <span className={cn("ml-1 text-[9px]", isToday ? "text-white/40" : "text-muted-foreground")}>·</span>
+                <span className="ml-1 text-[9px] text-muted-foreground">·</span>
               )}
             </div>
           ))}
@@ -145,12 +130,7 @@ export function RecipeCard({
       <div className="mt-5">
         {isCompleted ? (
           condition ? (
-            <div
-              className={cn(
-                "flex items-center justify-center gap-1.5 rounded-full p-[13px] text-[13px] font-semibold",
-                isToday ? "bg-white/15 text-white" : "bg-secondary text-foreground",
-              )}
-            >
+            <div className="flex items-center justify-center gap-1.5 rounded-full p-[13px] text-[13px] font-semibold bg-secondary text-foreground">
               {condition === "good" && <Smile className="size-4" aria-hidden />}
               {condition === "neutral" && <Meh className="size-4" aria-hidden />}
               {condition === "bad" && <Frown className="size-4" aria-hidden />}
@@ -214,12 +194,7 @@ export function RecipeCard({
               </button>
             </div>
           ) : (
-            <div
-              className={cn(
-                "flex items-center justify-center gap-1.5 rounded-full p-[13px] text-[13px] font-semibold",
-                isToday ? "bg-white/15 text-white" : "bg-secondary text-foreground",
-              )}
-            >
+            <div className="flex items-center justify-center gap-1.5 rounded-full p-[13px] text-[13px] font-semibold bg-secondary text-foreground">
               <Check className="size-4" aria-hidden />
               {t("recipe_card.recorded", locale)}
             </div>
@@ -247,12 +222,7 @@ export function RecipeCard({
       {canReportReaction && (
         <div className="mt-3">
           {hasReportedReaction ? (
-            <p
-              className={cn(
-                "flex items-center justify-center gap-1.5 rounded-full py-2 text-xs font-bold",
-                isToday ? "bg-white/15 text-white" : "bg-secondary text-foreground",
-              )}
-            >
+            <p className="flex items-center justify-center gap-1.5 rounded-full py-2 text-xs font-bold bg-secondary text-foreground">
               <ShieldAlert className="size-3.5" aria-hidden />
               {interpolate(t("recipe_card.reaction_reported", locale), { days: String(REACTION_DELAY_DAYS) })}
             </p>
@@ -262,10 +232,7 @@ export function RecipeCard({
               onClick={onReportReaction}
               variant="outline"
               size="sm"
-              className={cn(
-                "w-full rounded-full text-xs font-bold",
-                isToday && "border-white/40 bg-transparent text-white hover:bg-white/10",
-              )}
+              className="w-full rounded-full text-xs font-bold"
             >
               <ShieldAlert className="size-3.5" aria-hidden />
               {t("recipe_card.report_reaction", locale)}

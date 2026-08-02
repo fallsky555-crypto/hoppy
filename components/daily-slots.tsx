@@ -176,7 +176,7 @@ export function DailySlots({ day = 1 }: DailySlotsProps) {
 
           <button
             type="button"
-            className="w-full rounded-full bg-[#5A7D6F] hover:bg-[#4A6D5F] text-white font-semibold py-3 transition-colors"
+            className="w-full rounded-full bg-primary hover:bg-primary/85 text-white font-semibold py-3 transition-colors"
           >
             기록 완료
           </button>

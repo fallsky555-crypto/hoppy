@@ -42,7 +42,7 @@ export function IncidentPanel({ currentDay, incidentLog, onReportIncident }: Inc
   return (
     <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label={t("incident.ariaLabel", locale)}>
       <h2 className="mb-1 text-base font-bold text-foreground">{t("incident.title", locale)}</h2>
-      <p className="mb-3.5 text-[13.5px] leading-relaxed text-[#6B6558]">
+      <p className="mb-3.5 text-[13.5px] leading-relaxed text-muted-foreground">
         {t("incident.description", locale)}
       </p>
 
