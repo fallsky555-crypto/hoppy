@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>하늘색 CTA 색상 테스트</title>
+  <style>
+    :root {
+      --primary: #85B7EB;
+      --primary-foreground: #042C53;
+      --background: #ffffff;
+      --foreground: #1e1d1b;
+      --border: #e7e3d9;
+      --card: #ffffff;
+      --secondary: #f6f4ef;
+      --secondary-foreground: #1e1d1b;
+      --muted-foreground: #8a8375;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--background);
+      color: var(--foreground);
+      padding: 32px;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--muted-foreground);
+      margin-bottom: 48px;
+    }
+
+    section {
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .button-container {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      background-color: var(--card);
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+
+    .btn-record {
+      width: 100%;
+      background-color: var(--primary);
+      color: var(--primary-foreground);
+      padding: 14px;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-record:hover {
+      opacity: 0.9;
+    }
+
+    .btn-default {
+      width: 100%;
+      background-color: white;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      padding: 12px 20px;
+      font-size: 14px;
+    }
+
+    .btn-default:hover {
+      background-color: var(--secondary);
+    }
+
+    .btn-outline {
+      width: 100%;
+      background-color: var(--background);
+      color: var(--foreground);
+      border: 1px solid var(--border);
+      padding: 12px 20px;
+    }
+
+    .btn-outline:hover {
+      background-color: var(--secondary);
+    }
+
+    .btn-secondary {
+      width: 100%;
+      background-color: var(--secondary);
+      color: var(--secondary-foreground);
+      padding: 12px 20px;
+    }
+
+    .btn-secondary:hover {
+      opacity: 0.8;
+    }
+
+    .button-info {
+      font-size: 13px;
+      color: var(--muted-foreground);
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background-color: var(--secondary);
+      border-radius: 4px;
+    }
+
+    .color-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .color-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .variant-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>하늘색 CTA 색상 테스트</h1>
+    <p class="subtitle">Primary: #85B7EB, Foreground: #042C53</p>
+
+    <!-- 1. 기록 완료 버튼 -->
+    <section>
+      <h2>1. 기록 완료 버튼 (RecipeCard)</h2>
+      <div class="button-info">
+        ✓ bg-primary text-primary-foreground 적용
+      </div>
+      <div class="button-container">
+        <button class="btn-record">기록 완료</button>
+      </div>
+      <div class="color-info">
+        <div class="color-box">
+          <div class="color-swatch" style="background-color: #85B7EB;"></div>
+          <span>배경: #85B7EB (하늘색)</span>
+        </div>
+        <div class="color-box">
+          <div class="color-swatch" style="background-color: #042C53;"></div>
+          <span>텍스트: #042C53 (진한 파란색)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 기본 Button variant -->
+    <section>
+      <h2>2. 기본 Button variant (다음)</h2>
+      <div class="button-info">
+        ✓ border-primary text-primary 적용 (bg-white)
+      </div>
+      <div class="button-container">
+        <button class="btn-default">다음</button>
+      </div>
+      <div class="color-info">
+        <div class="color-box">
+          <div class="color-swatch" style="background-color: #FFFFFF; border: 2px solid #85B7EB;"></div>
+          <span>배경: #FFFFFF (흰색)</span>
+        </div>
+        <div class="color-box">
+          <div class="color-swatch" style="background-color: #85B7EB;"></div>
+          <span>텍스트/테두리: #85B7EB (하늘색)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 추가 Variants -->
+    <section>
+      <h2>3. 추가 Button Variants</h2>
+      <div class="variant-grid">
+        <div>
+          <div class="button-info">Outline 버튼</div>
+          <div class="button-container">
+            <button class="btn-outline">Outline</button>
+          </div>
+        </div>
+        <div>
+          <div class="button-info">Secondary 버튼</div>
+          <div class="button-container">
+            <button class="btn-secondary">Secondary</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 요약 -->
+    <section style="margin-top: 64px; padding-top: 32px; border-top: 2px solid var(--border);">
+      <h2>✅ 색상 변경 완료</h2>
+      <div style="color: var(--muted-foreground); line-height: 1.8; margin-top: 16px;">
+        <p><strong>globals.css 변경:</strong></p>
+        <ul style="margin-left: 16px; margin-top: 8px;">
+          <li>--primary: #33452F → #85B7EB (올리브그린 → 하늘색)</li>
+          <li>--primary-foreground: #FFFFFF → #042C53 (흰색 → 진한 파란색)</li>
+        </ul>
+        <p style="margin-top: 16px;"><strong>영향 범위:</strong></p>
+        <ul style="margin-left: 16px; margin-top: 8px;">
+          <li>✓ InstallBanner - PWA 설치 버튼</li>
+          <li>✓ RecipeCard - 기록 완료 버튼</li>
+          <li>✓ Button default variant - 모든 기본 버튼</li>
+          <li>✓ DailyHabits - 습관 토글 (조건부)</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

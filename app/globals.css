@@ -86,8 +86,8 @@
   --card-foreground: #1e1d1b;
   --popover: #ffffff;
   --popover-foreground: #1e1d1b;
-  --primary: #33452f;
-  --primary-foreground: #ffffff;
+  --primary: #85B7EB;
+  --primary-foreground: #042C53;
   /* secondary = 카드 안에 얹는 "가라앉은" 표면(물잔 카운터, 잠금 안내 박스 등) — 흰 배경과
      구분되도록 옅은 아이보리 톤을 유지한다(카드 내부 그룹핑용, 페이지 배경과는 별개) */
   --secondary: #f6f4ef;

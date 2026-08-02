@@ -231,7 +231,7 @@ export function RecipeCard({
               setShowConditionPrompt(true)
             }}
             size="lg"
-            className="h-auto w-full rounded-full bg-background p-[14px] text-[14px] font-bold tracking-[0.01em]"
+            className="h-auto w-full rounded-full bg-primary text-primary-foreground p-[14px] text-[14px] font-bold tracking-[0.01em]"
           >
             {t("recipe_card.record_button", locale)}
           </Button>
