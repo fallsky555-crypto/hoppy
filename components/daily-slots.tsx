@@ -13,17 +13,14 @@ interface Slot {
 }
 
 const SLOTS: Slot[] = [
-  { id: "prep", emoji: "🧴", label: "Prep" },
-  { id: "hydration", emoji: "💧", label: "Hydration" },
-  { id: "active", emoji: "⚡", label: "Active" },
-  { id: "barrier", emoji: "🛡️", label: "Barrier" },
-  { id: "sun_care", emoji: "☀️", label: "Sun Care" },
+  { id: "prep", emoji: "🧴", label: "클렌징" },
+  { id: "hydration", emoji: "💧", label: "수분케어" },
+  { id: "active", emoji: "⚡", label: "고민케어" },
+  { id: "barrier", emoji: "🛡️", label: "진정케어" },
+  { id: "sun_care", emoji: "☀️", label: "자외선차단" },
 ]
 
-const TODAY_RECOMMENDED = "active" // 하드코딩된 오늘의 추천 슬롯
-const CORAL_DARK = "#D85A30"
-const CORAL_LIGHT = "#FFF0E8"
-const CORAL_BORDER = "#E8B8A0"
+const TODAY_RECOMMENDED = "active"
 
 interface DailySlotsProps {
   day?: number
@@ -53,7 +50,7 @@ export function DailySlots({ day = 1 }: DailySlotsProps) {
             Day {day} · 오늘
           </span>
           <h3 className="mt-2 font-display text-xl font-semibold text-foreground">
-            어떤 케어를 했나요?
+            피부를 위해 오늘 무엇을 하셨나요?
           </h3>
         </div>
 
@@ -63,86 +60,34 @@ export function DailySlots({ day = 1 }: DailySlotsProps) {
             const isChecked = checkedSlots.has(slot.id)
             const isRecommended = slot.id === TODAY_RECOMMENDED
 
-            // 상태 결정
-            let bgColor = "bg-background"
-            let borderColor = "border-border"
-            let borderWidth = "border"
-            let textColor = "text-foreground"
-            let iconBgColor = "bg-gray-200"
-            let iconColor = "text-gray-600"
-
-            if (isChecked && isRecommended) {
-              // 상태 3: 추천 + 선택 완료
-              bgColor = "bg-white" // 옅은 배경
-              borderColor = ""
-              borderWidth = ""
-              textColor = "text-white"
-              iconBgColor = "bg-white/30"
-              iconColor = "text-white"
-              // 실제로는 배경색을 코랄로 채우려면 인라인 스타일 사용
-            } else if (isRecommended && !isChecked) {
-              // 상태 2: 오늘의 추천 (미선택)
-              bgColor = "bg-white"
-              borderColor = "border-[#E8B8A0]"
-              borderWidth = "border"
-              textColor = "text-foreground"
-              iconBgColor = "bg-orange-100"
-              iconColor = "text-orange-600"
-            } else {
-              // 상태 1: 기본 (미추천/미선택)
-              bgColor = "bg-background"
-              borderColor = "border-border"
-              borderWidth = "border"
-              textColor = "text-foreground"
-              iconBgColor = "bg-gray-200"
-              iconColor = "text-gray-600"
-            }
-
             return (
               <button
                 key={slot.id}
                 type="button"
                 onClick={() => toggleSlot(slot.id)}
-                style={isChecked && isRecommended ? { backgroundColor: CORAL_DARK } : undefined}
                 className={cn(
-                  "w-full flex items-center gap-3 rounded-3xl px-4 py-3.5 transition-all",
-                  borderWidth,
-                  borderColor,
-                  !isChecked || !isRecommended ? bgColor : "",
+                  "w-full flex items-center gap-3 rounded-3xl px-4 py-3.5 transition-all border",
+                  // Day 카드 방식: 선택 완료 시 흰 배경 + 왼쪽 세로 바
+                  isChecked
+                    ? "bg-card border-l-4 border-l-primary"
+                    : isRecommended
+                      ? "bg-accent border-primary"
+                      : "bg-card border-border",
                 )}
               >
-                {/* 아이콘 원형 배경 */}
-                <div
-                  className={cn(
-                    "flex size-10 shrink-0 items-center justify-center rounded-full text-lg",
-                    isChecked && isRecommended ? "bg-white/20" : iconBgColor,
-                  )}
-                >
-                  <span className={isChecked && isRecommended ? "text-white" : iconColor}>
-                    {slot.emoji}
-                  </span>
+                {/* 아이콘 원형 배경 — 통일색 */}
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full text-lg bg-background">
+                  <span className="text-foreground">{slot.emoji}</span>
                 </div>
 
                 {/* 라벨 + 배지 */}
                 <div className="flex flex-1 items-center justify-between min-w-0">
-                  <span
-                    className={cn(
-                      "font-semibold",
-                      isChecked && isRecommended ? "text-white" : textColor,
-                    )}
-                  >
+                  <span className="font-semibold text-foreground">
                     {slot.label}
                   </span>
 
                   {isRecommended && (
-                    <span
-                      className={cn(
-                        "text-xs font-semibold px-2 py-1 rounded-full ml-2 whitespace-nowrap",
-                        isChecked && isRecommended
-                          ? "bg-white/25 text-white"
-                          : "bg-[#D85A30] text-white",
-                      )}
-                    >
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full ml-2 whitespace-nowrap bg-primary text-white">
                       + 오늘의 추천
                     </span>
                   )}
@@ -152,10 +97,7 @@ export function DailySlots({ day = 1 }: DailySlotsProps) {
                 {isChecked && (
                   <div className="flex size-5 shrink-0 items-center justify-center">
                     <Check
-                      className={cn(
-                        "size-5",
-                        isRecommended ? "text-white" : "text-foreground",
-                      )}
+                      className="size-5 text-primary"
                       strokeWidth={3}
                       aria-hidden
                     />
@@ -170,8 +112,8 @@ export function DailySlots({ day = 1 }: DailySlotsProps) {
         <div className="mt-4 pt-4 border-t border-border space-y-3">
           <p className="text-sm font-semibold text-center text-foreground">
             {checkedSlots.size === 0
-              ? "슬롯을 선택해주세요"
-              : `${checkedSlots.size}개 슬롯 선택됨`}
+              ? "오늘 하신 일을 선택해주세요"
+              : `${checkedSlots.size}개 선택했어요`}
           </p>
 
           <button
