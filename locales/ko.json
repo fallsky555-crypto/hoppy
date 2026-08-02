@@ -355,6 +355,10 @@
     "untilReport": "리포트까지",
     "reportReady": "리포트 준비 완료"
   },
+  "weeklyInsight": {
+    "message": "{{days}}일 완주! 이번 주는 {{topTag}}에 집중한 한 주였네요 👏 (다음 리포트까지 D-{{remaining}})",
+    "close": "닫기"
+  },
   "routineBanner": {
     "wallpaper_title": "완주 기념 배경화면",
     "download": "다운로드"

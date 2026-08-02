@@ -45,6 +45,19 @@ interface RecipeCardProps {
   condition?: "good" | "neutral" | "bad"
   /** 컨디션 기록 콜백 */
   onConditionRecord?: (condition: "good" | "neutral" | "bad") => void
+  /** usage_log에 기록된 날짜 목록 */
+  loggedDays?: number[]
+  /** 날짜별 기록된 슬롯 데이터 */
+  loggedSlots?: Record<number, Array<{ slot: string; tag: string }>>
+}
+
+// Tag → 한글 라벨 매핑
+const SLOT_TAG_LABELS: Record<string, Record<"ko" | "en", string>> = {
+  "Prep": { ko: "클렌징", en: "Cleansing" },
+  "Hydration": { ko: "수분케어", en: "Hydration" },
+  "Active/Stimulate": { ko: "고민케어", en: "Concern Care" },
+  "Defense/Barrier": { ko: "진정케어", en: "Soothing Care" },
+  "Sun": { ko: "자외선차단", en: "Sun Care" },
 }
 
 export function RecipeCard({
@@ -60,15 +73,63 @@ export function RecipeCard({
   supportOwned = [],
   condition,
   onConditionRecord,
+  loggedDays = [],
+  loggedSlots = {},
 }: RecipeCardProps) {
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
   const locale = useLocale()
+
+  // Weekly Insight 표시 여부 판단
+  const loggedCount = loggedDays.length
+  const isMilestoneDay = day === currentDay && loggedCount > 0 && loggedCount % 7 === 0
+
+  // 최근 7일 슬롯 데이터에서 tag 빈도수 계산
+  const calculateTopTag = () => {
+    const tagFreq: Record<string, number> = {}
+    const startDay = currentDay - 6
+    for (let i = startDay; i <= currentDay; i++) {
+      const slots = loggedSlots[i] ?? []
+      for (const { tag } of slots) {
+        tagFreq[tag] = (tagFreq[tag] ?? 0) + 1
+      }
+    }
+
+    if (Object.keys(tagFreq).length === 0) return "Active/Stimulate"
+    return Object.entries(tagFreq).sort(([, a], [, b]) => b - a)[0][0]
+  }
+
+  const topTag = calculateTopTag()
+  const topTagLabel = SLOT_TAG_LABELS[topTag]?.[locale] || topTag
+  const remaining = 30 - loggedCount
+
   const recipe = getRecipe(day)
   const localizedRecipe = getRecipes(locale)[recipe.type]
   const copy = getCategoryCopy(recipe.type, calendar, day, concern, supportOwned, locale)
   const isToday = day === currentDay
   const isFuture = day > currentDay
   const canReportReaction = isToday && onReportReaction && REACTIVE_CATEGORIES.includes(recipe.type)
+
+  // Weekly Insight 카드 표시
+  if (isMilestoneDay) {
+    const message = interpolate(t("weeklyInsight.message", locale), {
+      days: String(loggedCount),
+      topTag: topTagLabel,
+      remaining: String(remaining),
+    })
+
+    return (
+      <section
+        className="rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border border-l-4 border-l-primary"
+        aria-label="주간 인사이트"
+      >
+        <div className="text-center">
+          <p className="text-sm font-semibold leading-relaxed text-foreground">
+            {message}
+          </p>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section

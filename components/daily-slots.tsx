@@ -47,10 +47,14 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
 
   const toggleSlot = (slotId: SlotType) => {
     const newChecked = new Set(checkedSlots)
-    if (newChecked.has(slotId)) {
+    const wasChecked = newChecked.has(slotId)
+
+    if (wasChecked) {
       newChecked.delete(slotId)
     } else {
       newChecked.add(slotId)
+      // 슬롯이 추가될 때만 로컬 기록
+      diary.recordLoggedSlot(day, slotId, SLOT_TAGS[slotId])
     }
     setCheckedSlots(newChecked)
 

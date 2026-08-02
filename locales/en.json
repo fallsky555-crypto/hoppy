@@ -355,6 +355,10 @@
     "untilReport": "Until Report",
     "reportReady": "Report Ready"
   },
+  "weeklyInsight": {
+    "message": "{{days}}-day milestone! You've been focused on {{topTag}} this week 👏 ({{remaining}} days until report)",
+    "close": "Close"
+  },
   "routineBanner": {
     "wallpaper_title": "Completion wallpaper",
     "download": "Download"

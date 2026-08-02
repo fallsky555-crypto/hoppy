@@ -91,6 +91,8 @@ export default function Page({ params }: PageProps) {
         supportOwned={diary.supportOwned}
         condition={diary.conditions[activeDay]}
         onConditionRecord={(condition) => diary.recordCondition(activeDay, condition)}
+        loggedDays={diary.loggedDays}
+        loggedSlots={diary.loggedSlots}
       />
 
       {isCourseComplete && (

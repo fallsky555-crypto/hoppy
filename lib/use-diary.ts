@@ -60,6 +60,10 @@ interface DiaryState {
   completedDays: number[]
   /** usage_log에 슬롯이 탭된 날짜 목록 */
   loggedDays: number[]
+  /** 이미 본 Weekly Mini Insight 마일스톤 (7, 14, 21, 28) */
+  seenMilestones: number[]
+  /** 날별 슬롯 기록: { day: [{ slot, tag }, ...] } */
+  loggedSlots: Record<number, Array<{ slot: string; tag: string }>>
   habits: Record<number, DailyHabit>
   conditions: Record<number, "good" | "neutral" | "bad">
   /** BHA/레티놀 도입 간격 슬라이더. 아무것도 안 건드리면 워크북 기본값(7/7)을 그대로 쓴다 */
@@ -99,6 +103,8 @@ function freshState(): DiaryState {
     joinDate: todayISO(),
     completedDays: [],
     loggedDays: [],
+    seenMilestones: [],
+    loggedSlots: {},
     habits: {},
     conditions: {},
     settings: {},
@@ -125,6 +131,8 @@ function loadLocalState(): DiaryState | null {
       joinDate: parsed.joinDate ?? fresh.joinDate,
       completedDays: parsed.completedDays ?? [],
       loggedDays: parsed.loggedDays ?? [],
+      seenMilestones: parsed.seenMilestones ?? [],
+      loggedSlots: parsed.loggedSlots ?? {},
       habits: parsed.habits ?? {},
       conditions: parsed.conditions ?? {},
       settings: parsed.settings ?? {},
@@ -496,6 +504,19 @@ export function useDiary() {
     )
   }, [])
 
+  const markMilestoneAsSeen = useCallback((milestone: number) => {
+    setState((prev) =>
+      prev.seenMilestones.includes(milestone) ? prev : { ...prev, seenMilestones: [...prev.seenMilestones, milestone] },
+    )
+  }, [])
+
+  const recordLoggedSlot = useCallback((day: number, slot: string, tag: string) => {
+    setState((prev) => {
+      const daySlots = prev.loggedSlots[day] ?? []
+      return { ...prev, loggedSlots: { ...prev.loggedSlots, [day]: [...daySlots, { slot, tag }] } }
+    })
+  }, [])
+
   const getHabit = useCallback(
     (day: number): DailyHabit => state.habits[day] ?? { sunscreen: false, water: 0 },
     [state.habits],
@@ -566,6 +587,10 @@ export function useDiary() {
     complete,
     loggedDays: state.loggedDays,
     recordLoggedDay,
+    loggedSlots: state.loggedSlots,
+    recordLoggedSlot,
+    seenMilestones: state.seenMilestones,
+    markMilestoneAsSeen,
     getHabit,
     toggleSunscreen,
     setWater,
