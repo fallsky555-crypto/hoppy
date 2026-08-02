@@ -5,6 +5,8 @@ import { useState } from "react"
 import { Check, Smile, Meh, Frown } from "lucide-react"
 import { t } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
+import { useDiary } from "@/lib/use-diary"
+import { saveUsageLog } from "@/lib/supabase/sync"
 
 type SlotType = "prep" | "hydration" | "active" | "barrier" | "sun_care"
 
@@ -31,6 +33,7 @@ interface DailySlotsProps {
 
 export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const locale = useLocale()
+  const diary = useDiary()
   const [checkedSlots, setCheckedSlots] = useState<Set<SlotType>>(new Set())
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
 
@@ -42,6 +45,14 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
       newChecked.add(slotId)
     }
     setCheckedSlots(newChecked)
+
+    // Fire-and-forget: saveUsageLog 호출 (탭 즉시 저장)
+    if (diary.userId) {
+      const recommendedCategory = TODAY_RECOMMENDED as SlotType
+      saveUsageLog(diary.userId, day, Array.from(newChecked), recommendedCategory).catch(() => {
+        // 에러는 무시하고 진행 (fire-and-forget)
+      })
+    }
   }
 
   return (
