@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { Check, Smile, Meh, Frown } from "lucide-react"
-import { t } from "@/lib/i18n"
+import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/use-diary"
 import { saveUsageLog } from "@/lib/supabase/sync"
@@ -13,15 +13,23 @@ type SlotType = "prep" | "hydration" | "active" | "barrier" | "sun_care"
 interface Slot {
   id: SlotType
   emoji: string
-  label: string
+  labelKey: string
+}
+
+const SLOT_TAGS: Record<SlotType, string> = {
+  prep: "Prep",
+  hydration: "Hydration",
+  active: "Active/Stimulate",
+  barrier: "Defense/Barrier",
+  sun_care: "Sun",
 }
 
 const SLOTS: Slot[] = [
-  { id: "prep", emoji: "🧴", label: "클렌징" },
-  { id: "hydration", emoji: "💧", label: "수분케어" },
-  { id: "active", emoji: "⚡", label: "고민케어" },
-  { id: "barrier", emoji: "🛡️", label: "진정케어" },
-  { id: "sun_care", emoji: "☀️", label: "자외선차단" },
+  { id: "prep", emoji: "🧴", labelKey: "dailySlots.slots.prep" },
+  { id: "hydration", emoji: "💧", labelKey: "dailySlots.slots.hydration" },
+  { id: "active", emoji: "⚡", labelKey: "dailySlots.slots.active" },
+  { id: "barrier", emoji: "🛡️", labelKey: "dailySlots.slots.barrier" },
+  { id: "sun_care", emoji: "☀️", labelKey: "dailySlots.slots.sun_care" },
 ]
 
 const TODAY_RECOMMENDED = "active"
@@ -49,7 +57,11 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
     // Fire-and-forget: saveUsageLog 호출 (탭 즉시 저장)
     if (diary.userId) {
       const recommendedCategory = TODAY_RECOMMENDED as SlotType
-      saveUsageLog(diary.userId, day, Array.from(newChecked), recommendedCategory).catch(() => {
+      const slotsPayload = Array.from(newChecked).map((id) => ({
+        slot: id,
+        tag: SLOT_TAGS[id],
+      }))
+      saveUsageLog(diary.userId, day, slotsPayload, recommendedCategory).catch(() => {
         // 에러는 무시하고 진행 (fire-and-forget)
       })
     }
@@ -58,7 +70,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   return (
     <section
       className="rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border"
-      aria-label="오늘의 슬롯 선택"
+      aria-label={t("dailySlots.ariaLabel", locale)}
     >
       <div className="flex flex-col gap-4">
         <div>
@@ -66,7 +78,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
             Day {day} · 오늘
           </span>
           <h3 className="mt-2 font-display text-xl font-semibold text-foreground">
-            피부를 위해 오늘 무엇을 하셨나요?
+            {t("dailySlots.headline", locale)}
           </h3>
         </div>
 
@@ -99,12 +111,12 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                 {/* 라벨 + 배지 */}
                 <div className="flex flex-1 items-center justify-between min-w-0">
                   <span className="font-semibold text-foreground">
-                    {slot.label}
+                    {t(slot.labelKey, locale)}
                   </span>
 
                   {isRecommended && (
                     <span className="text-xs font-semibold px-2 py-1 rounded-full ml-2 whitespace-nowrap bg-primary text-white">
-                      + 오늘의 추천
+                      {t("dailySlots.todayBadge", locale)}
                     </span>
                   )}
                 </div>
@@ -128,13 +140,13 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
         <div className="mt-4 pt-4 border-t border-border space-y-3">
           <p className="text-sm font-semibold text-center text-foreground">
             {checkedSlots.size === 0
-              ? "오늘 하신 일을 선택해주세요"
-              : `${checkedSlots.size}개 선택했어요`}
+              ? t("dailySlots.selectPrompt", locale)
+              : interpolate(t("dailySlots.selectedCount", locale), { count: String(checkedSlots.size) })}
           </p>
 
           {showConditionPrompt ? (
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">오늘 하신 케어, 피부 어땠어요?</p>
+              <p className="text-sm font-semibold text-foreground">{t("dailySlots.conditionQuestion", locale)}</p>
               <div className="flex gap-2">
                 <button
                   type="button"

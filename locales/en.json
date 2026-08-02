@@ -410,6 +410,21 @@
     "installButton": "Install",
     "dismiss": "Dismiss"
   },
+  "dailySlots": {
+    "headline": "What did you do for your skin today?",
+    "ariaLabel": "Select today's slots",
+    "todayBadge": "+ Recommended today",
+    "selectPrompt": "Select what you did today",
+    "selectedCount": "{{count}} selected",
+    "conditionQuestion": "How did your skin feel after today's care?",
+    "slots": {
+      "prep": "Cleansing",
+      "hydration": "Hydration",
+      "active": "Concern Care",
+      "barrier": "Soothing Care",
+      "sun_care": "Sun Care"
+    }
+  },
   "metadata": {
     "title": "Hoppy Skin Diary · 30-Day Barrier Reset for Glass Skin",
     "description": "Gentle, science-backed skincare routine to rebuild your barrier and get that K-beauty glass skin glow. Log your routine daily, watch your skin settle.",

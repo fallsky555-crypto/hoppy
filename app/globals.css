@@ -27,6 +27,7 @@
   --color-sos-rest-soft: var(--sos-rest-soft);
   --color-today-accent: var(--today-accent);
   --color-today-accent-foreground: var(--today-accent-foreground);
+  --color-primary-text: var(--primary-text);
   --color-emphasis: var(--emphasis);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -140,6 +141,9 @@
   --retinol-soft: #e9e3e6;
   --sos-rest: #b5573f; /* SOS 진정 — 유일한 고채도 경고색 */
   --sos-rest-soft: #f4e6e2;
+  --primary-text: #2A6E93;
+  --today-accent: #4C9E7A;
+  --today-accent-foreground: #ffffff;
 }
 
 .dark {
