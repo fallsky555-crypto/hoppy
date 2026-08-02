@@ -2,7 +2,9 @@
 
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import { Check } from "lucide-react"
+import { Check, Smile, Meh, Frown } from "lucide-react"
+import { t } from "@/lib/i18n"
+import { useLocale } from "@/lib/locale-context"
 
 type SlotType = "prep" | "hydration" | "active" | "barrier" | "sun_care"
 
@@ -24,10 +26,13 @@ const TODAY_RECOMMENDED = "active"
 
 interface DailySlotsProps {
   day?: number
+  onConditionRecord?: (condition: "good" | "neutral" | "bad", linkedCategory: SlotType) => void
 }
 
-export function DailySlots({ day = 1 }: DailySlotsProps) {
+export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
+  const locale = useLocale()
   const [checkedSlots, setCheckedSlots] = useState<Set<SlotType>>(new Set())
+  const [showConditionPrompt, setShowConditionPrompt] = useState(false)
 
   const toggleSlot = (slotId: SlotType) => {
     const newChecked = new Set(checkedSlots)
@@ -116,12 +121,82 @@ export function DailySlots({ day = 1 }: DailySlotsProps) {
               : `${checkedSlots.size}개 선택했어요`}
           </p>
 
-          <button
-            type="button"
-            className="w-full rounded-full bg-primary hover:bg-primary/85 text-white font-semibold py-3 transition-colors"
-          >
-            기록 완료
-          </button>
+          {showConditionPrompt ? (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-foreground">오늘 하신 케어, 피부 어땠어요?</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const linkedCategory = checkedSlots.has(TODAY_RECOMMENDED as SlotType)
+                      ? (TODAY_RECOMMENDED as SlotType)
+                      : (Array.from(checkedSlots)[0] || (TODAY_RECOMMENDED as SlotType))
+                    onConditionRecord?.("good", linkedCategory)
+                    setShowConditionPrompt(false)
+                  }}
+                  className={cn(
+                    "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
+                    "border-border bg-card text-foreground",
+                  )}
+                  aria-label={t("onboarding.mappingResult.condition_good", locale)}
+                >
+                  <Smile className="size-4" aria-hidden />
+                  {t("onboarding.mappingResult.condition_good", locale)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const linkedCategory = checkedSlots.has(TODAY_RECOMMENDED as SlotType)
+                      ? (TODAY_RECOMMENDED as SlotType)
+                      : (Array.from(checkedSlots)[0] || (TODAY_RECOMMENDED as SlotType))
+                    onConditionRecord?.("neutral", linkedCategory)
+                    setShowConditionPrompt(false)
+                  }}
+                  className={cn(
+                    "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
+                    "border-border bg-card text-foreground",
+                  )}
+                  aria-label={t("onboarding.mappingResult.condition_neutral", locale)}
+                >
+                  <Meh className="size-4" aria-hidden />
+                  {t("onboarding.mappingResult.condition_neutral", locale)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const linkedCategory = checkedSlots.has(TODAY_RECOMMENDED as SlotType)
+                      ? (TODAY_RECOMMENDED as SlotType)
+                      : (Array.from(checkedSlots)[0] || (TODAY_RECOMMENDED as SlotType))
+                    onConditionRecord?.("bad", linkedCategory)
+                    setShowConditionPrompt(false)
+                  }}
+                  className={cn(
+                    "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
+                    "border-border bg-card text-foreground",
+                  )}
+                  aria-label={t("onboarding.mappingResult.condition_bad", locale)}
+                >
+                  <Frown className="size-4" aria-hidden />
+                  {t("onboarding.mappingResult.condition_bad", locale)}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowConditionPrompt(false)}
+                className="w-full text-xs font-medium text-muted-foreground py-2"
+              >
+                {t("common.later", locale)}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowConditionPrompt(true)}
+              className="w-full rounded-full bg-primary hover:bg-primary/85 text-white font-semibold py-3 transition-colors"
+            >
+              기록 완료
+            </button>
+          )}
         </div>
       </div>
     </section>
