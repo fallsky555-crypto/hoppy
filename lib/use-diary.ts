@@ -58,6 +58,8 @@ interface DiaryState {
   /** 가입일(Day 1) — ISO 문자열 */
   joinDate: string
   completedDays: number[]
+  /** usage_log에 슬롯이 탭된 날짜 목록 */
+  loggedDays: number[]
   habits: Record<number, DailyHabit>
   conditions: Record<number, "good" | "neutral" | "bad">
   /** BHA/레티놀 도입 간격 슬라이더. 아무것도 안 건드리면 워크북 기본값(7/7)을 그대로 쓴다 */
@@ -96,6 +98,7 @@ function freshState(): DiaryState {
   return {
     joinDate: todayISO(),
     completedDays: [],
+    loggedDays: [],
     habits: {},
     conditions: {},
     settings: {},
@@ -121,6 +124,7 @@ function loadLocalState(): DiaryState | null {
     return {
       joinDate: parsed.joinDate ?? fresh.joinDate,
       completedDays: parsed.completedDays ?? [],
+      loggedDays: parsed.loggedDays ?? [],
       habits: parsed.habits ?? {},
       conditions: parsed.conditions ?? {},
       settings: parsed.settings ?? {},
@@ -486,6 +490,12 @@ export function useDiary() {
     )
   }, [])
 
+  const recordLoggedDay = useCallback((day: number) => {
+    setState((prev) =>
+      prev.loggedDays.includes(day) ? prev : { ...prev, loggedDays: [...prev.loggedDays, day] },
+    )
+  }, [])
+
   const getHabit = useCallback(
     (day: number): DailyHabit => state.habits[day] ?? { sunscreen: false, water: 0 },
     [state.habits],
@@ -554,6 +564,8 @@ export function useDiary() {
     calendar,
     completedDays: state.completedDays,
     complete,
+    loggedDays: state.loggedDays,
+    recordLoggedDay,
     getHabit,
     toggleSunscreen,
     setWater,

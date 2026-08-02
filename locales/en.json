@@ -299,6 +299,7 @@
     "lockedPreviewElasticity": "Elasticity Renewal Program",
     "lockedPreviewElasticityDesc": "Once your barrier is strong, you can slowly start renewal care for elasticity.",
     "onboardingExample": "e.g. 7",
+    "today": "Today",
     "later": "Later"
   },
   "onboarding": {
@@ -346,10 +347,13 @@
   },
   "progressHeader": {
     "tagline": "SKIN DIET DIARY",
-    "title": "30-Day Glass Skin: Pore Refining Program",
-    "progress": "Days in",
-    "completed": "Logged",
-    "remaining": "Left"
+    "title": "30-Day Glass Skin: Pore Refining Program"
+  },
+  "homeStats": {
+    "loggedDays": "Days Logged",
+    "thisWeek": "This Week",
+    "untilReport": "Until Report",
+    "reportReady": "Report Ready"
   },
   "routineBanner": {
     "wallpaper_title": "Completion wallpaper",
@@ -409,6 +413,11 @@
     "iosInstruction": "Tap share, then select 'Add to Home Screen'",
     "installButton": "Install",
     "dismiss": "Dismiss"
+  },
+  "progressBar": {
+    "loggedDays": "Logged {{count}} / 30 days",
+    "daysUntilReport": "{{count}} days until report",
+    "reportReady": "Report ready"
   },
   "dailySlots": {
     "headline": "What did you do for your skin today?",

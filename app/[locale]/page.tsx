@@ -1,9 +1,11 @@
 "use client"
 
 import { use, useState } from "react"
+import { ProgressBar30 } from "@/components/progress-bar-30"
 import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
 import { RecipeCard } from "@/components/recipe-card"
+import { DailySlots } from "@/components/daily-slots"
 import { DailyHabits } from "@/components/daily-habits"
 import { BarrierScoreChart } from "@/components/barrier-score-chart"
 import { IncidentPanel } from "@/components/incident-panel"
@@ -62,11 +64,18 @@ export default function Page({ params }: PageProps) {
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
       <InstallBanner />
 
+      {/* <ProgressBar30 loggedDays={diary.loggedDays} /> */}
+
       <ProgressHeader
         currentDay={currentDay}
         totalDays={totalDays}
-        completedCount={completedDays.length}
+        loggedDays={diary.loggedDays}
         heroImageSrc={diary.heroImageSrc}
+      />
+
+      <DailySlots
+        day={activeDay}
+        onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
       />
 
       <RecipeCard

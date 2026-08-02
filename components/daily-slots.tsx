@@ -54,6 +54,9 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
     }
     setCheckedSlots(newChecked)
 
+    // 로컬 진행도 기록 (로그인 여부 관계없이)
+    diary.recordLoggedDay(day)
+
     // Fire-and-forget: saveUsageLog 호출 (탭 즉시 저장)
     if (diary.userId) {
       const recommendedCategory = TODAY_RECOMMENDED as SlotType
@@ -75,7 +78,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
       <div className="flex flex-col gap-4">
         <div>
           <span className="font-display text-[13px] font-semibold text-muted-foreground">
-            Day {day} · 오늘
+            Day {day} · {t("common.today", locale)}
           </span>
           <h3 className="mt-2 font-display text-xl font-semibold text-foreground">
             {t("dailySlots.headline", locale)}
