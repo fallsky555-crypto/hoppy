@@ -265,6 +265,28 @@ export async function saveConditionLog(
   if (error) console.warn("[supabase] saveConditionLog failed:", error.message)
 }
 
+export async function saveUsageLog(
+  userId: string,
+  day: number,
+  slots: unknown,
+  recommendedCategory?: string,
+): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const payload: Record<string, unknown> = {
+    user_id: userId,
+    day,
+    slots,
+  }
+  if (recommendedCategory !== undefined) {
+    payload.recommended_category = recommendedCategory
+  }
+
+  const { error } = await supabase.from("usage_log").upsert(payload, { onConflict: "user_id,day" })
+  if (error) console.warn("[supabase] saveUsageLog failed:", error.message)
+}
+
 /** 완주 30일 기념 소감을 completion_feedback에 저장한다 */
 export async function saveCompletionFeedback(userId: string, feedbackText: string): Promise<void> {
   const supabase = getSupabaseClient()
