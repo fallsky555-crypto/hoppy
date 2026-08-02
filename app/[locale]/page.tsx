@@ -60,12 +60,6 @@ export default function Page({ params }: PageProps) {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
-      {/* TEMP: 하늘색 CTA 색상 확인용 - 최상단에 강제 렌더링 */}
-      <div className="border border-red-500 p-4 bg-yellow-100">
-        <p className="text-xs font-bold text-red-600 mb-2">✅ 임시: 하늘색 색상 테스트용</p>
-        <InstallBanner />
-      </div>
-
       <InstallBanner />
 
       <ProgressHeader
