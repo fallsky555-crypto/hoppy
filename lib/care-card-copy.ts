@@ -129,10 +129,11 @@ interface CareCardCopy {
 export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy {
   const { weather, recommendedSlot, hasSafetyIncident, locale } = params
   const condition = analyzeWeather(weather)
+  const title = locale === "ko" ? "오늘의 케어" : "Today's Care"
 
   if (hasSafetyIncident) {
     return {
-      title: locale === "ko" ? "오늘은 지키는 날이에요" : "Today is a day to protect",
+      title,
       description: locale === "ko"
         ? "무언가를 더하기보다, 가진 걸 지키는 날이에요. 진정케어로 장벽을 든든하게 감싸주세요."
         : "Instead of adding more, focus on protecting what you have. Wrap your skin barrier with soothing care.",
@@ -143,7 +144,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
 
   if ((condition.isRain || condition.isSnow) && recommendedSlot === "prep") {
     return {
-      title: locale === "ko" ? "화장수 & 에센스" : "Toner & Essence",
+      title,
       description: locale === "ko"
         ? `오늘은 기초 단계부터 신경 써야 해요. ${weatherSnippet}`
         : `Today, focus on foundation from the start. ${weatherSnippet}`,
@@ -152,7 +153,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
 
   if (recommendedSlot === "prep") {
     return {
-      title: locale === "ko" ? "화장수 & 에센스" : "Toner & Essence",
+      title,
       description: locale === "ko"
         ? `기초 단계가 중요한 날이에요. ${weatherSnippet}`
         : `Foundation is key today. ${weatherSnippet}`,
@@ -169,7 +170,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
         : `${baseDescription} If you're doing targeted care, make sure to hydrate as well.`
       : baseDescription
     return {
-      title: locale === "ko" ? "세럼 & 트리트먼트" : "Serum & Treatment",
+      title,
       description,
     }
   }
@@ -177,12 +178,12 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
   if (recommendedSlot === "hydration") {
     if (condition.isDry) {
       return {
-        title: locale === "ko" ? "보습 케어" : "Hydration Care",
+        title,
         description: weatherSnippet,
       }
     }
     return {
-      title: locale === "ko" ? "토너 & 에센스" : "Toner & Essence",
+      title,
       description: locale === "ko"
         ? `수분 케어가 중요한 날이에요. ${weatherSnippet}`
         : `Hydration is key today. ${weatherSnippet}`,
@@ -191,7 +192,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
 
   if (recommendedSlot === "barrier") {
     return {
-      title: locale === "ko" ? "크림 & 에센스" : "Cream & Essence",
+      title,
       description: locale === "ko"
         ? `피부 장벽 보호가 우선이에요. ${weatherSnippet}`
         : `Barrier protection comes first. ${weatherSnippet}`,
@@ -200,7 +201,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
 
   if (recommendedSlot === "sun_care") {
     return {
-      title: locale === "ko" ? "선케어" : "Sun Care",
+      title,
       description: locale === "ko"
         ? `자외선 차단이 중요한 날이에요. ${weatherSnippet}`
         : `Sun protection is essential today. ${weatherSnippet}`,
@@ -208,7 +209,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
   }
 
   return {
-    title: locale === "ko" ? "오늘의 피부 관리" : "Today's Skincare",
+    title,
     description: weatherSnippet,
   }
 }
