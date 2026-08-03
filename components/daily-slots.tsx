@@ -243,17 +243,27 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => {
-                if (!hasRecordedCondition && !diaryRef.current.conditions[day]) {
-                  setShowConditionPrompt(true)
-                }
-              }}
-              className="w-full rounded-full bg-primary hover:bg-primary/85 text-white font-semibold py-3 transition-colors"
-            >
-              기록 완료
-            </button>
+            !hasRecordedCondition && !diaryRef.current.conditions[day] ? (
+              <button
+                type="button"
+                onClick={() => setShowConditionPrompt(true)}
+                className="w-full rounded-full bg-primary hover:bg-primary/85 text-white font-semibold py-3 transition-colors"
+              >
+                기록 완료
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setCheckedSlots(new Set())
+                  setShowConditionPrompt(false)
+                  setHasRecordedCondition(false)
+                }}
+                className="w-full rounded-full bg-primary/60 hover:bg-primary/70 text-white font-semibold py-3 transition-colors"
+              >
+                기록 완료 ✓
+              </button>
+            )
           )}
         </div>
       </div>
