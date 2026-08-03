@@ -24,15 +24,57 @@ const SLOT_TAGS: Record<SlotType, string> = {
   sun_care: "Sun",
 }
 
-const SLOTS: Slot[] = [
+const SUN_CARE_SLOT: Slot = { id: "sun_care", emoji: "☀️", labelKey: "dailySlots.slots.sun_care" }
+
+const OTHER_SLOTS: Slot[] = [
   { id: "prep", emoji: "🧴", labelKey: "dailySlots.slots.prep" },
   { id: "hydration", emoji: "💧", labelKey: "dailySlots.slots.hydration" },
   { id: "active", emoji: "⚡", labelKey: "dailySlots.slots.active" },
   { id: "barrier", emoji: "🛡️", labelKey: "dailySlots.slots.barrier" },
-  { id: "sun_care", emoji: "☀️", labelKey: "dailySlots.slots.sun_care" },
 ]
 
 const TODAY_RECOMMENDED = "active"
+
+const renderSlotButton = (slot: Slot, isChecked: boolean, isRecommended: boolean, toggleSlot: (id: SlotType) => void, t: (key: string, locale: string) => string, locale: string) => (
+  <button
+    key={slot.id}
+    type="button"
+    onClick={() => toggleSlot(slot.id)}
+    className={cn(
+      "relative flex flex-col items-center gap-1.5 rounded-2xl px-2.5 py-3 transition-all border",
+      isChecked
+        ? "bg-accent border-2 border-primary"
+        : isRecommended
+          ? "bg-accent border border-primary"
+          : "bg-card border border-border",
+    )}
+  >
+    <div className="flex size-8 items-center justify-center text-lg">
+      {slot.emoji}
+    </div>
+
+    <div className="flex flex-col items-center min-h-8">
+      <span className="text-xs font-semibold text-foreground text-center leading-tight">
+        {t(slot.labelKey, locale)}
+      </span>
+      {isChecked && (
+        <Check className="size-3 text-primary mt-0.5" strokeWidth={3} aria-hidden />
+      )}
+    </div>
+
+    {isRecommended && (
+      <div className="absolute top-1 left-1 text-sm" aria-label={t("dailySlots.todayBadge", locale)}>
+        ⭐
+      </div>
+    )}
+
+    {isChecked && (
+      <div className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-primary">
+        <Check className="size-2.5 text-white" strokeWidth={3} aria-hidden />
+      </div>
+    )}
+  </button>
+)
 
 interface DailySlotsProps {
   day?: number
@@ -80,76 +122,44 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
       aria-label={t("dailySlots.ariaLabel", locale)}
     >
       <div className="flex flex-col gap-4">
+        {/* 헤더: Day */}
         <div>
           <span className="font-display text-[13px] font-semibold text-muted-foreground">
             Day {day} · {t("common.today", locale)}
           </span>
-          <h3 className="mt-2 font-display text-xl font-semibold text-foreground">
-            {t("dailySlots.headline", locale)}
-          </h3>
         </div>
 
-        {/* Slots List */}
-        <div className="space-y-2.5">
-          {SLOTS.map((slot) => {
-            const isChecked = checkedSlots.has(slot.id)
-            const isRecommended = slot.id === TODAY_RECOMMENDED
+        {/* 슬롯 선택 섹션 */}
+        <div className="flex flex-col gap-3">
+          <div>
+            <h3 className="font-display text-xl font-semibold text-foreground text-left">
+              {t("dailySlots.headline", locale)}
+            </h3>
+            <p className="font-display text-base text-left text-muted-foreground mt-1">
+              {t("dailySlots.selectPrompt", locale)} {t("dailySlots.selectHint", locale)}
+            </p>
+          </div>
 
-            return (
-              <button
-                key={slot.id}
-                type="button"
-                onClick={() => toggleSlot(slot.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 rounded-3xl px-4 py-3.5 transition-all border",
-                  // Day 카드 방식: 선택 완료 시 흰 배경 + 왼쪽 세로 바
-                  isChecked
-                    ? "bg-card border-l-4 border-l-primary"
-                    : isRecommended
-                      ? "bg-accent border-primary"
-                      : "bg-card border-border",
-                )}
-              >
-                {/* 아이콘 원형 배경 — 통일색 */}
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full text-lg bg-background">
-                  <span className="text-foreground">{slot.emoji}</span>
-                </div>
+          {/* 자외선차단: 독립된 풀폭 카드 */}
+          {renderSlotButton(SUN_CARE_SLOT, checkedSlots.has(SUN_CARE_SLOT.id), false, toggleSlot, t, locale)}
 
-                {/* 라벨 + 배지 */}
-                <div className="flex flex-1 items-center justify-between min-w-0">
-                  <span className="font-semibold text-foreground">
-                    {t(slot.labelKey, locale)}
-                  </span>
-
-                  {isRecommended && (
-                    <span className="text-xs font-semibold px-2 py-1 rounded-full ml-2 whitespace-nowrap bg-primary text-white">
-                      {t("dailySlots.todayBadge", locale)}
-                    </span>
-                  )}
-                </div>
-
-                {/* 체크마크 */}
-                {isChecked && (
-                  <div className="flex size-5 shrink-0 items-center justify-center">
-                    <Check
-                      className="size-5 text-primary"
-                      strokeWidth={3}
-                      aria-hidden
-                    />
-                  </div>
-                )}
-              </button>
-            )
-          })}
+          {/* 나머지 4개: 2열 grid */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {OTHER_SLOTS.map((slot) => {
+              const isChecked = checkedSlots.has(slot.id)
+              const isRecommended = slot.id === TODAY_RECOMMENDED
+              return renderSlotButton(slot, isChecked, isRecommended, toggleSlot, t, locale)
+            })}
+          </div>
         </div>
 
         {/* 하단: 선택 상태 + 버튼 */}
-        <div className="mt-4 pt-4 border-t border-border space-y-3">
-          <p className="text-sm font-semibold text-center text-foreground">
-            {checkedSlots.size === 0
-              ? t("dailySlots.selectPrompt", locale)
-              : interpolate(t("dailySlots.selectedCount", locale), { count: String(checkedSlots.size) })}
-          </p>
+        <div className="mt-2 pt-4 border-t border-border space-y-3">
+          {checkedSlots.size > 0 && (
+            <p className="text-sm font-semibold text-center text-foreground">
+              {interpolate(t("dailySlots.selectedCount", locale), { count: String(checkedSlots.size) })}
+            </p>
+          )}
 
           {showConditionPrompt ? (
             <div className="space-y-2">

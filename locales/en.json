@@ -206,8 +206,8 @@
     }
   },
   "calendar": {
-    "ariaLabel": "30-day barrier reset calendar",
-    "title": "30-Day Routine Calendar",
+    "ariaLabel": "30-day skin record calendar",
+    "title": "30-Day Record Calendar",
     "dayIndicator": "Through Day {{totalDays}}",
     "labels": {
       "bha": "BHA",
@@ -347,7 +347,7 @@
   },
   "progressHeader": {
     "tagline": "SKIN DIET DIARY",
-    "title": "30-Day Glass Skin: Pore Refining Program"
+    "title": "My Skin Record"
   },
   "homeStats": {
     "loggedDays": "Days Logged",
@@ -428,6 +428,7 @@
     "ariaLabel": "Select today's slots",
     "todayBadge": "+ Recommended today",
     "selectPrompt": "Select what you did today",
+    "selectHint": "(select multiple)",
     "selectedCount": "{{count}} selected",
     "conditionQuestion": "How did your skin feel after today's care?",
     "slots": {
@@ -439,8 +440,8 @@
     }
   },
   "metadata": {
-    "title": "Hoppy Skin Diary · 30-Day Barrier Reset for Glass Skin",
-    "description": "Gentle, science-backed skincare routine to rebuild your barrier and get that K-beauty glass skin glow. Log your routine daily, watch your skin settle.",
+    "title": "Hoppy Skin Diary · Your Daily Skin Record",
+    "description": "Track your daily skincare routine and observe the changes in your skin over time. Log each step, note what works for you, and learn your own skin.",
     "tagline": "myroutinediet · 30 days from your start date, at your own pace"
   }
 }

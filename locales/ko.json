@@ -206,8 +206,8 @@
     }
   },
   "calendar": {
-    "ariaLabel": "30일 도자기 피부 루틴 캘린더",
-    "title": "30일 루틴 캘린더",
+    "ariaLabel": "30일 피부 기록 캘린더",
+    "title": "30일 기록 캘린더",
     "dayIndicator": "Day {{totalDays}}까지",
     "labels": {
       "bha": "BHA",
@@ -347,7 +347,7 @@
   },
   "progressHeader": {
     "tagline": "SKIN DIET DIARY",
-    "title": "30일 도자기 피부 프로젝트"
+    "title": "나만의 피부 기록"
   },
   "homeStats": {
     "loggedDays": "기록한 날",
@@ -428,6 +428,7 @@
     "ariaLabel": "오늘의 슬롯 선택",
     "todayBadge": "+ 오늘의 추천",
     "selectPrompt": "오늘 하신 일을 선택해주세요",
+    "selectHint": "(복수 선택 가능)",
     "selectedCount": "{{count}}개 선택했어요",
     "conditionQuestion": "오늘 하신 케어, 피부 어땠어요?",
     "slots": {
