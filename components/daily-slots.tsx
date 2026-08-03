@@ -35,13 +35,13 @@ const SPECIAL_CARE_TAGS: Record<SpecialCareType, string> = {
 const SUN_CARE_SLOT: Slot = { id: "sun_care", emoji: "☀️", labelKey: "dailySlots.slots.sun_care" }
 
 const OTHER_SLOTS: Slot[] = [
-  { id: "prep", emoji: "🧴", labelKey: "dailySlots.slots.prep" },
+  { id: "prep", emoji: "🫧", labelKey: "dailySlots.slots.prep" },
   { id: "hydration", emoji: "💧", labelKey: "dailySlots.slots.hydration" },
-  { id: "active", emoji: "⚡", labelKey: "dailySlots.slots.active" },
-  { id: "barrier", emoji: "🛡️", labelKey: "dailySlots.slots.barrier" },
+  { id: "active", emoji: "🎯", labelKey: "dailySlots.slots.active" },
+  { id: "barrier", emoji: "🌿", labelKey: "dailySlots.slots.barrier" },
 ]
 
-function SlotCard({ slot, isChecked, toggleSlot, isSunCare }: { slot: Slot; isChecked: boolean; toggleSlot: (id: SlotType) => void; isSunCare?: boolean }) {
+function SlotCard({ slot, isChecked, toggleSlot, isSunCare, isRecommended }: { slot: Slot; isChecked: boolean; toggleSlot: (id: SlotType) => void; isSunCare?: boolean; isRecommended?: boolean }) {
   const locale = useLocale()
   const handleClick = useCallback(() => {
     toggleSlot(slot.id)
@@ -52,7 +52,7 @@ function SlotCard({ slot, isChecked, toggleSlot, isSunCare }: { slot: Slot; isCh
       type="button"
       onClick={handleClick}
       className={cn(
-        "rounded-2xl p-4 transition-all border-2",
+        "relative rounded-2xl p-4 transition-all border-2",
         isSunCare
           ? "flex flex-row items-center gap-3 w-full"
           : "flex flex-col items-center gap-2",
@@ -67,6 +67,11 @@ function SlotCard({ slot, isChecked, toggleSlot, isSunCare }: { slot: Slot; isCh
       <span className={cn("font-semibold text-foreground", isSunCare ? "text-sm text-left" : "text-sm text-center")}>
         {t(slot.labelKey, locale)}
       </span>
+      {isRecommended && (
+        <span className="absolute -top-1.5 -left-1.5 flex size-[22px] items-center justify-center rounded-full bg-white shadow-sm text-[10px]">
+          ⭐
+        </span>
+      )}
     </button>
   )
 }
@@ -89,7 +94,7 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
         className="w-full flex items-center justify-between p-4 bg-card hover:bg-secondary transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="text-2xl">✨</span>
+          <span className="text-2xl">💎</span>
           <div className="text-left">
             <div className="text-sm font-semibold text-foreground">특별관리</div>
             <div className="text-xs text-muted-foreground">마스크팩, 각질관리 등</div>
@@ -115,7 +120,7 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
                 : "border-border bg-card",
             )}
           >
-            <span>🎭</span>
+            <span>🫙</span>
             <span className="text-sm font-semibold text-foreground">마스크팩</span>
           </button>
           <button
@@ -271,6 +276,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
             isChecked={checkedSlots.has(SUN_CARE_SLOT.id)}
             toggleSlot={toggleSlot}
             isSunCare
+            isRecommended={recommendedSlot === SUN_CARE_SLOT.id}
           />
 
           {/* 나머지 슬롯: 2열 그리드 */}
@@ -281,6 +287,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                 slot={slot}
                 isChecked={checkedSlots.has(slot.id)}
                 toggleSlot={toggleSlot}
+                isRecommended={recommendedSlot === slot.id}
               />
             ))}
           </div>
@@ -300,7 +307,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
             <p className="text-xs text-center text-muted-foreground mt-1">
               {hasRecentIncident
                 ? t("dailySlots.incidentWarning", locale)
-                : "추천 케어예요. 컨디션에 따라 조절하세요"}
+                : "⭐ 추천 케어예요. 컨디션에 따라 조절하세요"}
             </p>
           </div>
         )}

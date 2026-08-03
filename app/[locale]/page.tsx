@@ -76,7 +76,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
         completedDays={diary.loggedDays}
         justStampedDay={null}
         onSelect={setSelectedDay}
-        getRecipe={diary.getRecipeForDay}
+        loggedSlots={diary.loggedSlots}
         conditions={diary.conditions}
         joinDate={diary.joinDate}
       />
