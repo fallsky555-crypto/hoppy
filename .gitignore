@@ -21,3 +21,6 @@ package-lock.json
 # Use file pattern (lib/data/*) instead of directory (lib/data/) so negation works
 lib/data/*
 !lib/data/products.json
+
+# Backup image originals (not tracked)
+public/calendar/originals/

@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { t } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 
@@ -27,7 +28,16 @@ export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc
   return (
     <header className="overflow-hidden rounded-4xl bg-card ring-1 ring-border">
       {/* 텍스트와 겹치지 않는 별도 배너 영역 */}
-      <img src={heroImageSrc} alt="" className="h-40 w-full object-cover" />
+      <div className="relative h-40 w-full">
+        <Image
+          src={heroImageSrc}
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+      </div>
 
       <div className="px-6 py-7">
         <p className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("progressHeader.tagline", locale)}</p>
