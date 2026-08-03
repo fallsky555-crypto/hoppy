@@ -92,10 +92,13 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const diaryRef = useRef(diary)
   const [checkedSlots, setCheckedSlots] = useState<Set<SlotType>>(new Set())
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
+  const [hasRecordedCondition, setHasRecordedCondition] = useState(false)
 
   useEffect(() => {
     diaryRef.current = diary
-  }, [diary])
+    // 초기화: 이 day에 이미 condition이 있으면 hasRecordedCondition을 true로 설정
+    setHasRecordedCondition(!!diary.conditions[day])
+  }, [diary, day])
 
   const toggleSlot = useCallback((slotId: SlotType) => {
     setCheckedSlots((prev) => {
@@ -181,6 +184,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                       : (Array.from(checkedSlots)[0] || (TODAY_RECOMMENDED as SlotType))
                     onConditionRecord?.("good", linkedCategory)
                     setShowConditionPrompt(false)
+                    setHasRecordedCondition(true)
                   }}
                   className={cn(
                     "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
@@ -199,6 +203,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                       : (Array.from(checkedSlots)[0] || (TODAY_RECOMMENDED as SlotType))
                     onConditionRecord?.("neutral", linkedCategory)
                     setShowConditionPrompt(false)
+                    setHasRecordedCondition(true)
                   }}
                   className={cn(
                     "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
@@ -217,6 +222,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                       : (Array.from(checkedSlots)[0] || (TODAY_RECOMMENDED as SlotType))
                     onConditionRecord?.("bad", linkedCategory)
                     setShowConditionPrompt(false)
+                    setHasRecordedCondition(true)
                   }}
                   className={cn(
                     "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
@@ -239,7 +245,11 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
           ) : (
             <button
               type="button"
-              onClick={() => setShowConditionPrompt(true)}
+              onClick={() => {
+                if (!hasRecordedCondition && !diaryRef.current.conditions[day]) {
+                  setShowConditionPrompt(true)
+                }
+              }}
               className="w-full rounded-full bg-primary hover:bg-primary/85 text-white font-semibold py-3 transition-colors"
             >
               기록 완료
