@@ -62,13 +62,6 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
       <WeeklyMiniInsight />
 
-      {isCourseComplete && (
-        <>
-          <ThirtyDayReport isReady={isCourseComplete && diary.loggedDays.length > 0} />
-        </>
-      )}
-
-
       {(diary.pregnant || diary.prescriptionMeds) && (
         <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
           {diary.pregnant && <p>🤰 임신·수유 중으로 확인됐어요. 레티놀 성분은 이 코스에서 제외돼요.</p>}
@@ -87,6 +80,12 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
         conditions={diary.conditions}
         joinDate={diary.joinDate}
       />
+
+      {isCourseComplete && (
+        <>
+          <ThirtyDayReport isReady={isCourseComplete && diary.loggedDays.length > 0} />
+        </>
+      )}
 
       <LoginBanner />
 
