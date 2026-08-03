@@ -5,10 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Check, Smile, Meh, Frown } from "lucide-react"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
-import { useDiary } from "@/lib/use-diary"
+import { useDiary } from "@/lib/diary-context"
 import { saveUsageLog } from "@/lib/supabase/sync"
+import { getRecommendedSlot } from "@/lib/slot-mapping"
+import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 
-type SlotType = "prep" | "hydration" | "active" | "barrier" | "sun_care"
+export type SlotType = "prep" | "hydration" | "active" | "barrier" | "sun_care"
 
 interface Slot {
   id: SlotType
@@ -33,12 +35,10 @@ const OTHER_SLOTS: Slot[] = [
   { id: "barrier", emoji: "🛡️", labelKey: "dailySlots.slots.barrier" },
 ]
 
-const TODAY_RECOMMENDED = "active"
-
 function SlotButton({ slot, isChecked, isRecommended, toggleSlot, locale }: { slot: Slot; isChecked: boolean; isRecommended: boolean; toggleSlot: (id: SlotType) => void; locale: string }) {
   const handleClick = useCallback(() => {
     toggleSlot(slot.id)
-  }, [slot.id, toggleSlot])
+  }, [slot.id, toggleSlot, isChecked])
 
   return (
     <button
@@ -92,13 +92,33 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const diaryRef = useRef(diary)
   const [checkedSlots, setCheckedSlots] = useState<Set<SlotType>>(new Set())
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
-  const [hasRecordedCondition, setHasRecordedCondition] = useState(false)
 
+  // 추천 슬롯 계산: 오늘의 레시피 + 안전 인시던트 여부
+  const todayRecipe = diary.getRecipeForDay(day)
+  const hasRecentIncident = diary.hasRecentSafetyIncident(day)
+  const recommendedSlot: SlotType | null = hasRecentIncident
+    ? "barrier"
+    : (getRecommendedSlot(todayRecipe.type) as SlotType | null)
+
+  // 규칙 1: 슬롯이 있으면 condition 확인 → 없으면 피커 표시
+  // 규칙 4: 슬롯이 없으면 (토글 해제) → 피커 닫기
   useEffect(() => {
     diaryRef.current = diary
-    // 초기화: 이 day에 이미 condition이 있으면 hasRecordedCondition을 true로 설정
-    setHasRecordedCondition(!!diary.conditions[day])
-  }, [diary, day])
+
+    if (checkedSlots.size > 0) {
+      // 슬롯이 선택됨: condition 확인
+      if (!diary.conditions[day]) {
+        // condition 없음 → 피커 표시 (규칙 1)
+        setShowConditionPrompt(true)
+      } else {
+        // condition 있음 → 피커 스킵 (규칙 3)
+        setShowConditionPrompt(false)
+      }
+    } else {
+      // 슬롯이 없음 (토글 해제) → 피커 닫기 (규칙 4)
+      setShowConditionPrompt(false)
+    }
+  }, [checkedSlots, day])
 
   const toggleSlot = useCallback((slotId: SlotType) => {
     setCheckedSlots((prev) => {
@@ -113,7 +133,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
       }
 
       if (diaryRef.current.userId) {
-        const recommendedCategory = TODAY_RECOMMENDED as SlotType
+        const recommendedCategory = recommendedSlot || ("active" as SlotType)
         const slotsPayload = Array.from(newChecked).map((id) => ({
           slot: id,
           tag: SLOT_TAGS[id],
@@ -125,6 +145,10 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
 
       return newChecked
     })
+  }, [day, recommendedSlot])
+
+  const handleReportReaction = useCallback(() => {
+    diaryRef.current.reportReaction(day, "retinol")
   }, [day])
 
   return (
@@ -158,33 +182,41 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
           <div className="grid grid-cols-2 gap-2.5">
             {OTHER_SLOTS.map((slot) => {
               const isChecked = checkedSlots.has(slot.id)
-              const isRecommended = slot.id === TODAY_RECOMMENDED
+              const isRecommended = slot.id === recommendedSlot
               return <SlotButton key={slot.id} slot={slot} isChecked={isChecked} isRecommended={isRecommended} toggleSlot={toggleSlot} locale={locale} />
             })}
           </div>
+
+          {/* 추천 설명 문구 */}
+          {recommendedSlot && (
+            <p className="text-xs text-center text-muted-foreground">
+              {hasRecentIncident
+                ? t("dailySlots.incidentWarning", locale)
+                : t("dailySlots.recommendationLabel", locale)}
+            </p>
+          )}
         </div>
 
         {/* 하단: 선택 상태 + 버튼 */}
         <div className="mt-2 pt-4 border-t border-border space-y-3">
-          {checkedSlots.size > 0 && (
-            <p className="text-sm font-semibold text-center text-foreground">
-              {interpolate(t("dailySlots.selectedCount", locale), { count: String(checkedSlots.size) })}
-            </p>
-          )}
+          <p className="text-sm font-semibold text-center text-foreground">
+            {checkedSlots.size > 0
+              ? interpolate(t("dailySlots.selectedCount", locale), { count: String(checkedSlots.size) })
+              : t("dailySlots.selectPrompt", locale) + " " + t("dailySlots.selectHint", locale)}
+          </p>
 
-          {showConditionPrompt ? (
+          {showConditionPrompt && (
             <div className="space-y-2">
               <p className="text-sm font-semibold text-foreground">{t("dailySlots.conditionQuestion", locale)}</p>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => {
-                    const linkedCategory = checkedSlots.has(TODAY_RECOMMENDED as SlotType)
-                      ? (TODAY_RECOMMENDED as SlotType)
-                      : (Array.from(checkedSlots)[0] || (TODAY_RECOMMENDED as SlotType))
+                    const linkedCategory = recommendedSlot && checkedSlots.has(recommendedSlot)
+                      ? recommendedSlot
+                      : (Array.from(checkedSlots)[0] || ("active" as SlotType))
                     onConditionRecord?.("good", linkedCategory)
                     setShowConditionPrompt(false)
-                    setHasRecordedCondition(true)
                   }}
                   className={cn(
                     "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
@@ -198,12 +230,11 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                 <button
                   type="button"
                   onClick={() => {
-                    const linkedCategory = checkedSlots.has(TODAY_RECOMMENDED as SlotType)
-                      ? (TODAY_RECOMMENDED as SlotType)
-                      : (Array.from(checkedSlots)[0] || (TODAY_RECOMMENDED as SlotType))
+                    const linkedCategory = recommendedSlot && checkedSlots.has(recommendedSlot)
+                      ? recommendedSlot
+                      : (Array.from(checkedSlots)[0] || ("active" as SlotType))
                     onConditionRecord?.("neutral", linkedCategory)
                     setShowConditionPrompt(false)
-                    setHasRecordedCondition(true)
                   }}
                   className={cn(
                     "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
@@ -217,12 +248,11 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                 <button
                   type="button"
                   onClick={() => {
-                    const linkedCategory = checkedSlots.has(TODAY_RECOMMENDED as SlotType)
-                      ? (TODAY_RECOMMENDED as SlotType)
-                      : (Array.from(checkedSlots)[0] || (TODAY_RECOMMENDED as SlotType))
+                    const linkedCategory = recommendedSlot && checkedSlots.has(recommendedSlot)
+                      ? recommendedSlot
+                      : (Array.from(checkedSlots)[0] || ("active" as SlotType))
                     onConditionRecord?.("bad", linkedCategory)
                     setShowConditionPrompt(false)
-                    setHasRecordedCondition(true)
                   }}
                   className={cn(
                     "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
@@ -242,29 +272,25 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                 {t("common.later", locale)}
               </button>
             </div>
-          ) : (
-            !hasRecordedCondition && !diaryRef.current.conditions[day] ? (
-              <button
-                type="button"
-                onClick={() => setShowConditionPrompt(true)}
-                className="w-full rounded-full bg-primary hover:bg-primary/85 text-white font-semibold py-3 transition-colors"
-              >
-                기록 완료
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setCheckedSlots(new Set())
-                  setShowConditionPrompt(false)
-                  setHasRecordedCondition(false)
-                }}
-                className="w-full rounded-full bg-primary/60 hover:bg-primary/70 text-white font-semibold py-3 transition-colors"
-              >
-                기록 완료 ✓
-              </button>
-            )
           )}
+
+          {checkedSlots.has("active") && (
+            <button
+              type="button"
+              onClick={handleReportReaction}
+              className="w-full rounded-full border border-primary bg-transparent hover:bg-primary/10 text-primary font-semibold py-3 transition-colors"
+            >
+              {t("dailySlots.reportReaction", locale)}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setCheckedSlots(new Set())}
+            className="w-full rounded-full bg-primary hover:bg-primary/85 text-white font-semibold py-3 transition-colors"
+          >
+            기록 완료
+          </button>
         </div>
       </div>
     </section>

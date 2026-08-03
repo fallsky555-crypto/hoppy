@@ -5,6 +5,9 @@
  * 기반(Tier×Type) 개인화를 걷어내고 "요철이 사라지는 30일 표준 스케줄러" 워크북의
  * 하루 단위 순차 시뮬레이션만 남긴다. 액티브(BHA/레티놀)는 각자 독립적인 고정
  * 간격으로 도입되고, 액티브가 아닌 날은 6단계 서브 로테이션을 돈다.
+ *
+ * NOTE: startIncidentOverride, delayForReaction은 use-diary.ts의 applyEvents()에서만 호출됨.
+ * 향후 경량 배지 시스템(slot-mapping.ts) 완성 시 이들 함수의 필요성 재평가 필요.
  */
 import {
   DEFAULT_ACTIVE_INTERVAL_DAYS,

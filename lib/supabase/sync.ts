@@ -2,7 +2,7 @@ import { getSupabaseClient } from "@/lib/supabase/client"
 import type { RecipeType, ScheduleSettings } from "@/lib/schedule"
 import type { BarrierScorePoint, CalendarEntry, IncidentLogEntry, IncidentType, ReactionLogEntry } from "@/lib/scheduling-engine"
 import type { Concern, SupportId } from "@/lib/routine-copy"
-import type { DailyHabit, UsedProduct } from "@/lib/use-diary"
+import type { UsedProduct } from "@/lib/use-diary"
 
 /**
  * Supabase 연동. 이 모듈의 모든 함수는 실패해도(오프라인, 마이그레이션 미적용 등)
@@ -225,7 +225,7 @@ export async function saveBarrierScoreLog(userId: string, points: BarrierScorePo
   if (error) console.warn("[supabase] saveBarrierScoreLog failed:", error.message)
 }
 
-export async function saveHabitLog(userId: string, day: number, habit: DailyHabit): Promise<void> {
+export async function saveHabitLog(userId: string, day: number, habit: { sunscreen: boolean }): Promise<void> {
   const supabase = getSupabaseClient()
   if (!supabase) return
 
@@ -234,7 +234,6 @@ export async function saveHabitLog(userId: string, day: number, habit: DailyHabi
       user_id: userId,
       day,
       sunscreen: habit.sunscreen,
-      water: habit.water,
     },
     { onConflict: "user_id,day" },
   )

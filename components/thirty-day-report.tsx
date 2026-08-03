@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
-import { useDiary } from "@/lib/use-diary"
+import { useDiary } from "@/lib/diary-context"
 import {
   calculateUsagePattern,
   calculateBalanceRatio,

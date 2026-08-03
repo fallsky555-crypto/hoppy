@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { dayFromJoinDate, RECIPES, TOTAL_DAYS, type Recipe, type RecipeType, type ScheduleSettings } from "@/lib/schedule"
 import {
-  buildBarrierScoreLog,
   CURRENT_ENGINE_VERSION,
   delayForReaction,
   generateCalendar,
+  REACTION_DELAY_DAYS,
   startIncidentOverride,
-  type BarrierScorePoint,
   type CalendarEntry,
   type IncidentLogEntry,
   type IncidentType,
@@ -19,7 +18,6 @@ import {
   appendReactionLog,
   ensureAnonSession,
   loadRemoteState,
-  saveBarrierScoreLog,
   saveCalendar,
   saveConcern,
   saveCompletionFeedback,
@@ -33,14 +31,6 @@ import {
 import type { Concern, SupportId } from "@/lib/routine-copy"
 import { heroImageSrcForDay } from "@/lib/hero-image"
 import PRODUCTS_DATA from "@/lib/data/products.json"
-
-/** 장벽 점수 그래프는 2주차(Day 8)부터 노출된다 */
-export const BARRIER_SCORE_START_DAY = 8
-
-export interface DailyHabit {
-  sunscreen: boolean
-  water: number // 0 ~ 8
-}
 
 export interface UsedProduct {
   id: string
@@ -57,14 +47,12 @@ type ScheduleEvent =
 interface DiaryState {
   /** 가입일(Day 1) — ISO 문자열 */
   joinDate: string
-  completedDays: number[]
   /** usage_log에 슬롯이 탭된 날짜 목록 */
   loggedDays: number[]
   /** 이미 본 Weekly Mini Insight 마일스톤 (7, 14, 21, 28) */
   seenMilestones: number[]
   /** 날별 슬롯 기록: { day: [{ slot, tag }, ...] } */
   loggedSlots: Record<number, Array<{ slot: string; tag: string }>>
-  habits: Record<number, DailyHabit>
   conditions: Record<number, "good" | "neutral" | "bad">
   /** BHA/레티놀 도입 간격 슬라이더. 아무것도 안 건드리면 워크북 기본값(7/7)을 그대로 쓴다 */
   settings: ScheduleSettings
@@ -92,7 +80,6 @@ interface DiaryState {
 
 /** 로그아웃 시 로컬 캐시를 지우는 용도로도 쓰인다(login-banner.tsx) */
 export const STORAGE_KEY = "hoppy-skin-diary-v1"
-const MAX_WATER = 8
 
 function todayISO() {
   return new Date().toISOString()
@@ -101,11 +88,9 @@ function todayISO() {
 function freshState(): DiaryState {
   return {
     joinDate: todayISO(),
-    completedDays: [],
     loggedDays: [],
     seenMilestones: [],
     loggedSlots: {},
-    habits: {},
     conditions: {},
     settings: {},
     events: [],
@@ -129,11 +114,9 @@ function loadLocalState(): DiaryState | null {
     const fresh = freshState()
     return {
       joinDate: parsed.joinDate ?? fresh.joinDate,
-      completedDays: parsed.completedDays ?? [],
       loggedDays: parsed.loggedDays ?? [],
       seenMilestones: parsed.seenMilestones ?? [],
       loggedSlots: parsed.loggedSlots ?? {},
-      habits: parsed.habits ?? {},
       conditions: parsed.conditions ?? {},
       settings: parsed.settings ?? {},
       events: parsed.events ?? [],
@@ -314,7 +297,6 @@ export function useDiary() {
             concern: remote.profile.concern,
             supportOwned: remote.profile.supportOwned,
             engineVersion: remote.profile.engineVersion,
-            completedDays: remote.completedDays,
             loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
             loggedSlots: remote.loggedSlots,
             conditions: remote.conditions,
@@ -390,21 +372,15 @@ export function useDiary() {
   // 상단 여정 카드 히어로 이미지 — BHA가 새로 들어가는 날마다 다음 사이클 이미지로 바뀐다
   const heroImageSrc = useMemo(() => heroImageSrcForDay(calendar, currentDay), [calendar, currentDay])
 
-  // 장벽 점수 시계열 — 2주차(Day 8)부터 오늘까지
-  const barrierScoreLog: BarrierScorePoint[] = useMemo(() => {
-    if (currentDay < BARRIER_SCORE_START_DAY) return []
-    return buildBarrierScoreLog(calendar, incidentLog, state.completedDays, BARRIER_SCORE_START_DAY, currentDay)
-  }, [calendar, incidentLog, state.completedDays, currentDay])
-
   // 스케줄 설정 + 캘린더 진행 상황(완료 여부 포함)을 diary_profiles / calendar_entries에 반영한다
   useEffect(() => {
     if (!userId) return
     saveSettings(userId, state.joinDate, state.settings)
     saveCalendar(
       userId,
-      calendar.map((entry) => ({ ...entry, completed: state.completedDays.includes(entry.day) })),
+      calendar.map((entry) => ({ ...entry, completed: state.loggedDays.includes(entry.day) })),
     )
-  }, [userId, state.joinDate, state.settings, state.completedDays, calendar])
+  }, [userId, state.joinDate, state.settings, state.loggedDays, calendar])
 
   // 임신/처방약 플래그
   useEffect(() => {
@@ -436,11 +412,6 @@ export function useDiary() {
     fresh.forEach((entry) => appendReactionLog(userId, entry))
     syncedReactionCount.current = reactionLog.length
   }, [userId, reactionLog])
-
-  useEffect(() => {
-    if (!userId) return
-    saveBarrierScoreLog(userId, barrierScoreLog)
-  }, [userId, barrierScoreLog])
 
   const getRecipeForDay = useCallback(
     (day: number): Recipe => {
@@ -495,12 +466,6 @@ export function useDiary() {
     setState((prev) => ({ ...prev, events: [...prev.events, { kind: "reaction", day, category }] }))
   }, [])
 
-  const complete = useCallback((day: number) => {
-    setState((prev) =>
-      prev.completedDays.includes(day) ? prev : { ...prev, completedDays: [...prev.completedDays, day] },
-    )
-  }, [])
-
   const recordLoggedDay = useCallback((day: number) => {
     setState((prev) =>
       prev.loggedDays.includes(day) ? prev : { ...prev, loggedDays: [...prev.loggedDays, day] },
@@ -524,33 +489,7 @@ export function useDiary() {
     })
   }, [])
 
-  const getHabit = useCallback(
-    (day: number): DailyHabit => state.habits[day] ?? { sunscreen: false, water: 0 },
-    [state.habits],
-  )
 
-  const toggleSunscreen = useCallback((day: number) => {
-    setState((prev) => {
-      const cur = prev.habits[day] ?? { sunscreen: false, water: 0 }
-      const newHabit = { ...cur, sunscreen: !cur.sunscreen }
-      if (userId) {
-        saveHabitLog(userId, day, newHabit)
-      }
-      return { ...prev, habits: { ...prev.habits, [day]: newHabit } }
-    })
-  }, [userId])
-
-  const setWater = useCallback((day: number, delta: number) => {
-    setState((prev) => {
-      const cur = prev.habits[day] ?? { sunscreen: false, water: 0 }
-      const water = Math.min(Math.max(cur.water + delta, 0), MAX_WATER)
-      const newHabit = { ...cur, water }
-      if (userId) {
-        saveHabitLog(userId, day, newHabit)
-      }
-      return { ...prev, habits: { ...prev.habits, [day]: newHabit } }
-    })
-  }, [userId])
 
   const recordCondition = useCallback(
     (day: number, condition: "good" | "neutral" | "bad") => {
@@ -571,7 +510,7 @@ export function useDiary() {
    * 지우되, 슬라이더 설정·관심사·보유 성분 등 개인화 정보는 그대로 유지한다.
    */
   const startFresh = useCallback(() => {
-    setState((prev) => ({ ...prev, joinDate: todayISO(), completedDays: [], habits: {}, conditions: {}, events: [] }))
+    setState((prev) => ({ ...prev, joinDate: todayISO(), conditions: {}, events: [] }))
   }, [])
 
   const submitFeedback = useCallback(
@@ -582,6 +521,12 @@ export function useDiary() {
     [userId],
   )
 
+  /** 최근 N일 내 안전 관련 인시던트(period/sunburn/treatment)가 있는지 판단 */
+  const hasRecentSafetyIncident = useCallback((day: number, windowDays: number = REACTION_DELAY_DAYS): boolean => {
+    const windowStart = day - windowDays
+    return incidentLog.some((incident) => incident.day >= windowStart && incident.day <= day)
+  }, [incidentLog])
+
   return {
     hydrated,
     onboarded,
@@ -590,18 +535,12 @@ export function useDiary() {
     totalDays,
     heroImageSrc,
     calendar,
-    completedDays: state.completedDays,
-    complete,
     loggedDays: state.loggedDays,
     recordLoggedDay,
     loggedSlots: state.loggedSlots,
     recordLoggedSlot,
     seenMilestones: state.seenMilestones,
     markMilestoneAsSeen,
-    getHabit,
-    toggleSunscreen,
-    setWater,
-    maxWater: MAX_WATER,
     conditions: state.conditions,
     recordCondition,
     settings: state.settings,
@@ -611,7 +550,7 @@ export function useDiary() {
     reactionLog,
     reportIncident,
     reportReaction,
-    barrierScoreLog,
+    hasRecentSafetyIncident,
     pregnant: state.pregnant,
     prescriptionMeds: state.prescriptionMeds,
     concern: state.concern,
