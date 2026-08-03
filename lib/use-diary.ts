@@ -315,6 +315,9 @@ export function useDiary() {
             supportOwned: remote.profile.supportOwned,
             engineVersion: remote.profile.engineVersion,
             completedDays: remote.completedDays,
+            loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
+            loggedSlots: remote.loggedSlots,
+            conditions: remote.conditions,
             events: remote.events.map((event) =>
               event.kind === "incident"
                 ? { kind: "incident" as const, day: event.day, incidentType: event.incidentType!, durationDays: event.durationDays }
@@ -513,7 +516,11 @@ export function useDiary() {
   const recordLoggedSlot = useCallback((day: number, slot: string, tag: string) => {
     setState((prev) => {
       const daySlots = prev.loggedSlots[day] ?? []
-      return { ...prev, loggedSlots: { ...prev.loggedSlots, [day]: [...daySlots, { slot, tag }] } }
+      const newSlots = [...daySlots, { slot, tag }]
+
+      const newLoggedDays = prev.loggedDays.includes(day) ? prev.loggedDays : [...prev.loggedDays, day]
+
+      return { ...prev, loggedSlots: { ...prev.loggedSlots, [day]: newSlots }, loggedDays: newLoggedDays }
     })
   }, [])
 
@@ -609,6 +616,8 @@ export function useDiary() {
     prescriptionMeds: state.prescriptionMeds,
     concern: state.concern,
     supportOwned: state.supportOwned,
+    usedProducts: state.usedProducts,
+    userId,
     startFresh,
     submitFeedback,
   }

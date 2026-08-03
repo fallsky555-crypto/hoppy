@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Check, Smile, Meh, Frown } from "lucide-react"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
@@ -35,46 +35,51 @@ const OTHER_SLOTS: Slot[] = [
 
 const TODAY_RECOMMENDED = "active"
 
-const renderSlotButton = (slot: Slot, isChecked: boolean, isRecommended: boolean, toggleSlot: (id: SlotType) => void, t: (key: string, locale: string) => string, locale: string) => (
-  <button
-    key={slot.id}
-    type="button"
-    onClick={() => toggleSlot(slot.id)}
-    className={cn(
-      "relative flex flex-col items-center gap-1.5 rounded-2xl px-2.5 py-3 transition-all border",
-      isChecked
-        ? "bg-accent border-2 border-primary"
-        : isRecommended
-          ? "bg-accent border border-primary"
-          : "bg-card border border-border",
-    )}
-  >
-    <div className="flex size-8 items-center justify-center text-lg">
-      {slot.emoji}
-    </div>
+function SlotButton({ slot, isChecked, isRecommended, toggleSlot, locale }: { slot: Slot; isChecked: boolean; isRecommended: boolean; toggleSlot: (id: SlotType) => void; locale: string }) {
+  const handleClick = useCallback(() => {
+    toggleSlot(slot.id)
+  }, [slot.id, toggleSlot])
 
-    <div className="flex flex-col items-center min-h-8">
-      <span className="text-xs font-semibold text-foreground text-center leading-tight">
-        {t(slot.labelKey, locale)}
-      </span>
-      {isChecked && (
-        <Check className="size-3 text-primary mt-0.5" strokeWidth={3} aria-hidden />
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        "relative flex flex-col items-center gap-1.5 rounded-2xl px-2.5 py-3 transition-all border",
+        isChecked
+          ? "bg-accent border-2 border-primary"
+          : isRecommended
+            ? "bg-accent border border-primary"
+            : "bg-card border border-border",
       )}
-    </div>
-
-    {isRecommended && (
-      <div className="absolute top-1 left-1 text-sm" aria-label={t("dailySlots.todayBadge", locale)}>
-        ⭐
+    >
+      <div className="flex size-8 items-center justify-center text-lg">
+        {slot.emoji}
       </div>
-    )}
 
-    {isChecked && (
-      <div className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-primary">
-        <Check className="size-2.5 text-white" strokeWidth={3} aria-hidden />
+      <div className="flex flex-col items-center min-h-8">
+        <span className="text-xs font-semibold text-foreground text-center leading-tight">
+          {t(slot.labelKey, locale)}
+        </span>
+        {isChecked && (
+          <Check className="size-3 text-primary mt-0.5" strokeWidth={3} aria-hidden />
+        )}
       </div>
-    )}
-  </button>
-)
+
+      {isRecommended && (
+        <div className="absolute top-1 left-1 text-sm" aria-label={t("dailySlots.todayBadge", locale)}>
+          ⭐
+        </div>
+      )}
+
+      {isChecked && (
+        <div className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-primary">
+          <Check className="size-2.5 text-white" strokeWidth={3} aria-hidden />
+        </div>
+      )}
+    </button>
+  )
+}
 
 interface DailySlotsProps {
   day?: number
@@ -84,37 +89,40 @@ interface DailySlotsProps {
 export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const locale = useLocale()
   const diary = useDiary()
+  const diaryRef = useRef(diary)
   const [checkedSlots, setCheckedSlots] = useState<Set<SlotType>>(new Set())
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
 
-  const toggleSlot = (slotId: SlotType) => {
-    const newChecked = new Set(checkedSlots)
-    const wasChecked = newChecked.has(slotId)
+  useEffect(() => {
+    diaryRef.current = diary
+  }, [diary])
 
-    if (wasChecked) {
-      newChecked.delete(slotId)
-    } else {
-      newChecked.add(slotId)
-      // 슬롯이 추가될 때만 로컬 기록
-      diary.recordLoggedSlot(day, slotId, SLOT_TAGS[slotId])
-    }
-    setCheckedSlots(newChecked)
+  const toggleSlot = useCallback((slotId: SlotType) => {
+    setCheckedSlots((prev) => {
+      const newChecked = new Set(prev)
+      const wasChecked = newChecked.has(slotId)
 
-    // 로컬 진행도 기록 (로그인 여부 관계없이)
-    diary.recordLoggedDay(day)
+      if (wasChecked) {
+        newChecked.delete(slotId)
+      } else {
+        newChecked.add(slotId)
+        diaryRef.current.recordLoggedSlot(day, slotId, SLOT_TAGS[slotId])
+      }
 
-    // Fire-and-forget: saveUsageLog 호출 (탭 즉시 저장)
-    if (diary.userId) {
-      const recommendedCategory = TODAY_RECOMMENDED as SlotType
-      const slotsPayload = Array.from(newChecked).map((id) => ({
-        slot: id,
-        tag: SLOT_TAGS[id],
-      }))
-      saveUsageLog(diary.userId, day, slotsPayload, recommendedCategory).catch(() => {
-        // 에러는 무시하고 진행 (fire-and-forget)
-      })
-    }
-  }
+      if (diaryRef.current.userId) {
+        const recommendedCategory = TODAY_RECOMMENDED as SlotType
+        const slotsPayload = Array.from(newChecked).map((id) => ({
+          slot: id,
+          tag: SLOT_TAGS[id],
+        }))
+        saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
+          console.error("[saveUsageLog] error:", err)
+        })
+      }
+
+      return newChecked
+    })
+  }, [day])
 
   return (
     <section
@@ -141,14 +149,14 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
           </div>
 
           {/* 자외선차단: 독립된 풀폭 카드 */}
-          {renderSlotButton(SUN_CARE_SLOT, checkedSlots.has(SUN_CARE_SLOT.id), false, toggleSlot, t, locale)}
+          <SlotButton slot={SUN_CARE_SLOT} isChecked={checkedSlots.has(SUN_CARE_SLOT.id)} isRecommended={false} toggleSlot={toggleSlot} locale={locale} />
 
           {/* 나머지 4개: 2열 grid */}
           <div className="grid grid-cols-2 gap-2.5">
             {OTHER_SLOTS.map((slot) => {
               const isChecked = checkedSlots.has(slot.id)
               const isRecommended = slot.id === TODAY_RECOMMENDED
-              return renderSlotButton(slot, isChecked, isRecommended, toggleSlot, t, locale)
+              return <SlotButton key={slot.id} slot={slot} isChecked={isChecked} isRecommended={isRecommended} toggleSlot={toggleSlot} locale={locale} />
             })}
           </div>
         </div>

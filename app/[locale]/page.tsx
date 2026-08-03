@@ -15,6 +15,7 @@ import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
 import { CompletionFeedback } from "@/components/completion-feedback"
+import { ThirtyDayReport } from "@/components/thirty-day-report"
 import { InstallBanner } from "@/components/install-banner"
 import { useDiary } from "@/lib/use-diary"
 import type { IncidentType } from "@/lib/scheduling-engine"
@@ -98,6 +99,7 @@ export default function Page({ params }: PageProps) {
       {isCourseComplete && (
         <>
           <RoutineBanner copy={getCompletionCopy(totalDays, locale)} tone="celebrate" />
+          <ThirtyDayReport isReady={isCourseComplete && diary.loggedDays.length > 0} />
           <CompletionFeedback onSubmit={diary.submitFeedback} />
         </>
       )}

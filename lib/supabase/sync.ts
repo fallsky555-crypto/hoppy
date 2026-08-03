@@ -312,6 +312,10 @@ export interface RemoteState {
   completedDays: number[]
   /** incident_log · reaction_log로부터 재구성한, 로컬 엔진이 그대로 재생(replay)할 수 있는 이벤트 목록 */
   events: RemoteScheduleEvent[]
+  /** usage_log로부터 로드한 슬롯 기록 */
+  loggedSlots: Record<number, Array<{ slot: string; tag: string }>>
+  /** condition_log로부터 로드한 컨디션 기록 */
+  conditions: Record<number, "good" | "neutral" | "bad">
 }
 
 /**
@@ -337,13 +341,29 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     }
     if (!profile) return null
 
-    const [{ data: calendarRows }, { data: incidentRows }, { data: reactionRows }] = await Promise.all([
+    const [{ data: calendarRows }, { data: incidentRows }, { data: reactionRows }, { data: usageLogRows }, { data: conditionLogRows }] = await Promise.all([
       supabase.from("calendar_entries").select("day, completed").eq("user_id", userId),
       supabase.from("incident_log").select("day, incident_type, resumes_normal_at_day").eq("user_id", userId),
       supabase.from("reaction_log").select("day, category, delayed_to_day").eq("user_id", userId),
+      supabase.from("usage_log").select("day, slots").eq("user_id", userId),
+      supabase.from("condition_log").select("day, condition").eq("user_id", userId),
     ])
 
     const completedDays = (calendarRows ?? []).filter((row) => row.completed).map((row) => row.day)
+
+    const loggedSlots: Record<number, Array<{ slot: string; tag: string }>> = {}
+    for (const row of usageLogRows ?? []) {
+      if (Array.isArray(row.slots)) {
+        loggedSlots[row.day] = row.slots
+      }
+    }
+
+    const conditions: Record<number, "good" | "neutral" | "bad"> = {}
+    for (const row of conditionLogRows ?? []) {
+      if (["good", "neutral", "bad"].includes(row.condition)) {
+        conditions[row.day] = row.condition
+      }
+    }
 
     const events: RemoteScheduleEvent[] = [
       ...(incidentRows ?? []).map((row) => ({
@@ -374,6 +394,8 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
       },
       completedDays,
       events,
+      loggedSlots,
+      conditions,
     }
   } catch (err) {
     console.warn("[supabase] loadRemoteState threw:", err)
