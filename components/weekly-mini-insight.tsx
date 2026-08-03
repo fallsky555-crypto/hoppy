@@ -33,8 +33,6 @@ export function WeeklyMiniInsight() {
     const milestones = [7, 14, 21, 28]
     const seenSet = new Set(diary.seenMilestones)
 
-    console.log(`Checking milestones: logged=${loggedCount}, seen=${diary.seenMilestones}`)
-
     for (const m of milestones) {
       if (loggedCount >= m && !seenSet.has(m)) {
         // Dummy: 랜덤 tag 선택 (실제로는 usage_log 데이터 필요)
@@ -45,7 +43,6 @@ export function WeeklyMiniInsight() {
         setMilestone(m)
         setShowInsight(true)
         diary.markMilestoneAsSeen(m)
-        console.log(`Weekly Insight shown for milestone ${m}`)
         return
       }
     }
