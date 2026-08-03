@@ -248,15 +248,24 @@ function clearContextURLParams() {
   window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""))
 }
 
+/** 안전 관련 값만 자동 적용 (pregnant, prescriptionMeds, usedProducts) */
 function applyURLContext(base: DiaryState, context: URLContextPayload | null): DiaryState {
   if (!context) return base
   return {
     ...base,
     pregnant: context.pregnant,
     prescriptionMeds: context.prescriptionMeds,
+    usedProducts: context.usedProducts,
+  }
+}
+
+/** 체커에서 돌아온 concern/supportOwned를 임시 상태로 보류하는 payload */
+function extractCheckerContext(context: URLContextPayload | null): { concern: Concern; supportOwned: SupportId[] } | null {
+  if (!context) return null
+  if (context.concern === "none" && context.supportOwned.length === 0) return null
+  return {
     concern: context.concern,
     supportOwned: context.supportOwned,
-    usedProducts: context.usedProducts,
   }
 }
 
@@ -264,6 +273,8 @@ export function useDiary() {
   // 하이드레이션 불일치를 피하기 위해 초기엔 기본값, 마운트 후 localStorage 로드
   const [state, setState] = useState<DiaryState>(freshState)
   const [hydrated, setHydrated] = useState(false)
+  // 체커에서 돌아온 concern/supportOwned를 임시 보류 (새로고침하면 사라짐, localStorage 저장 X)
+  const [pendingCheckerContext, setPendingCheckerContext] = useState<{ concern: Concern; supportOwned: SupportId[] } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -273,7 +284,10 @@ export function useDiary() {
     if (localState) {
       // 이 기기에 이미 진행 중인 로컬 기록이 있다 — joinDate/진행 기록은 그대로 두고,
       // 체커에서 돌아온 경우라면 concern/support/preg/rx 같은 부가 정보만 갱신한다
+      // URL 파라미터에서 checkerContext를 먼저 추출 (clearContextURLParams 전에)
+      const checkerCtx = extractCheckerContext(urlContext)
       setState(applyURLContext(localState, urlContext))
+      setPendingCheckerContext(checkerCtx)
       if (urlContext) clearContextURLParams()
       setHydrated(true)
       return
@@ -308,7 +322,10 @@ export function useDiary() {
           }
         : freshState()
 
+      // URL 파라미터에서 checkerContext를 먼저 추출 (clearContextURLParams 전에)
+      const checkerCtx = extractCheckerContext(urlContext)
       setState(applyURLContext(base, urlContext))
+      setPendingCheckerContext(checkerCtx)
       if (urlContext) clearContextURLParams()
       setHydrated(true)
     })()
@@ -504,6 +521,22 @@ export function useDiary() {
     [userId, getRecipeForDay],
   )
 
+  /** 임시 보류 중인 checker context를 상태에 반영하고 초기화한다 */
+  const applyCheckerContext = useCallback(() => {
+    if (!pendingCheckerContext) return
+    setState((prev) => ({
+      ...prev,
+      concern: pendingCheckerContext.concern,
+      supportOwned: pendingCheckerContext.supportOwned,
+    }))
+    setPendingCheckerContext(null)
+  }, [pendingCheckerContext])
+
+  /** 임시 보류 중인 checker context를 그냥 버린다 (상태는 변경하지 않음) */
+  const dismissCheckerContext = useCallback(() => {
+    setPendingCheckerContext(null)
+  }, [])
+
   /**
    * 설정 화면의 "루틴 처음부터 다시 시작하기" 버튼 전용. 체커 재방문 흐름과는 완전히
    * 분리된, 유저가 직접 요청한 명시적 초기화다 — 가입일을 오늘로 재설정해 진행 기록을
@@ -560,5 +593,8 @@ export function useDiary() {
     joinDate: state.joinDate,
     startFresh,
     submitFeedback,
+    pendingCheckerContext,
+    applyCheckerContext,
+    dismissCheckerContext,
   }
 }
