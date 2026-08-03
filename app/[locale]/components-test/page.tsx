@@ -63,6 +63,7 @@ export default function ComponentsTestPage() {
           onSelect={() => {}}
           getRecipe={getTestRecipe}
           conditions={conditions}
+          joinDate={new Date().toISOString()}
         />
       </section>
 

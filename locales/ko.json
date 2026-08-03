@@ -209,6 +209,7 @@
     "ariaLabel": "30일 피부 기록 캘린더",
     "title": "30일 기록 캘린더",
     "dayIndicator": "Day {{totalDays}}까지",
+    "weekdays": ["일", "월", "화", "수", "목", "금", "토"],
     "labels": {
       "bha": "BHA",
       "retinol": "레티놀",

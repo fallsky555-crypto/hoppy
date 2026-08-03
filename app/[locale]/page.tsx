@@ -85,6 +85,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
         onSelect={setSelectedDay}
         getRecipe={diary.getRecipeForDay}
         conditions={diary.conditions}
+        joinDate={diary.joinDate}
       />
 
       <LoginBanner />

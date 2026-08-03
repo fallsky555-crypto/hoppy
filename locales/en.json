@@ -209,6 +209,7 @@
     "ariaLabel": "30-day skin record calendar",
     "title": "30-Day Record Calendar",
     "dayIndicator": "Through Day {{totalDays}}",
+    "weekdays": ["S", "M", "T", "W", "T", "F", "S"],
     "labels": {
       "bha": "BHA",
       "retinol": "Retinol",

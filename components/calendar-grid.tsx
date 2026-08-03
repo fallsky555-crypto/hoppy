@@ -16,6 +16,7 @@ interface CalendarGridProps {
   onSelect: (day: number) => void
   getRecipe: (day: number) => Recipe
   conditions?: Record<number, "good" | "neutral" | "bad">
+  joinDate: string
 }
 
 export function CalendarGrid({
@@ -27,9 +28,19 @@ export function CalendarGrid({
   onSelect,
   getRecipe,
   conditions = {},
+  joinDate,
 }: CalendarGridProps) {
   const locale = useLocale()
   const days = Array.from({ length: totalDays }, (_, i) => i + 1)
+
+  function dateForDay(joinISO: string, day: number): Date {
+    const start = new Date(joinISO)
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+    d.setDate(d.getDate() + (day - 1))
+    return d
+  }
+
+  const day1Weekday = dateForDay(joinDate, 1).getDay()
 
   // SHORT_LABEL을 컴포넌트 내부로 이동 (locale 사용 가능)
   const SHORT_LABEL: Record<RecipeType, string> = {
@@ -51,71 +62,95 @@ export function CalendarGrid({
         <span className="text-[11px] text-muted-foreground">{interpolate(t("calendar.dayIndicator", locale), { totalDays: String(totalDays) })}</span>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5">
-        {days.map((day) => {
-          const recipe = getRecipe(day)
-          const localizedRecipe = getRecipes(locale)[recipe.type]
-          const isToday = day === currentDay
-          const isSelected = day === selectedDay
-          const isCompleted = completedDays.includes(day)
-          const isFuture = day > currentDay
-          const justStamped = day === justStampedDay
-          const highlighted = isSelected || isToday
+      <div className="space-y-2">
+        {/* Weekday header */}
+        <div className="grid grid-cols-7 gap-1.5">
+          {(t("calendar.weekdays", locale) as string[]).map((label: string, i: number) => (
+            <div key={i} className="flex h-6 items-center justify-center text-[11px] font-semibold text-muted-foreground">
+              {label}
+            </div>
+          ))}
+        </div>
 
-          return (
-            <button
-              key={day}
-              type="button"
-              onClick={() => onSelect(day)}
-              aria-label={`Day ${day} ${localizedRecipe.title}${isCompleted ? ` ${t("calendar.completed", locale)}` : ""}${conditions[day] ? ` ${t(`calendar.condition_${conditions[day]}`, locale)}` : ""}${isToday ? t("calendar.today", locale) : ""}`}
-              aria-pressed={isSelected}
-              className={cn(
-                "relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-2xl border bg-card p-0.5 shadow-[0_1px_2px_rgba(30,29,26,0.04)] transition-all",
-                highlighted ? "border-2 border-primary" : "border-[#D8D3C4]",
-                isFuture && "opacity-60",
-              )}
-            >
-              <span className={cn("text-xs font-extrabold leading-none", isToday ? "text-primary-text" : "text-foreground")}>
-                {day}
-              </span>
-              <span className="text-[9.5px] font-bold leading-none text-[#5C5648]">{SHORT_LABEL[recipe.type]}</span>
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-1.5">
+          {/* Placeholder divs for weekday alignment */}
+          {Array.from({ length: day1Weekday }).map((_, i) => (
+            <div key={`placeholder-${i}`} className="aspect-square" />
+          ))}
 
-              {isToday && (
-                <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-primary-text-foreground">
-                  {t("calendar.todayBadge", locale)}
+          {days.map((day) => {
+            const recipe = getRecipe(day)
+            const localizedRecipe = getRecipes(locale)[recipe.type]
+            const isToday = day === currentDay
+            const isSelected = day === selectedDay
+            const isCompleted = completedDays.includes(day)
+            const isFuture = day > currentDay
+            const justStamped = day === justStampedDay
+            const highlighted = isSelected || isToday
+            const actualDate = dateForDay(joinDate, day)
+            const dateOfMonth = actualDate.getDate()
+
+            return (
+              <button
+                key={day}
+                type="button"
+                onClick={() => onSelect(day)}
+                aria-label={`Day ${day} ${dateOfMonth} ${localizedRecipe.title}${isCompleted ? ` ${t("calendar.completed", locale)}` : ""}${conditions[day] ? ` ${t(`calendar.condition_${conditions[day]}`, locale)}` : ""}${isToday ? t("calendar.today", locale) : ""}`}
+                aria-pressed={isSelected}
+                className={cn(
+                  "relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-2xl border bg-card p-0.5 shadow-[0_1px_2px_rgba(30,29,26,0.04)] transition-all",
+                  highlighted ? "border-2 border-primary" : "border-[#D8D3C4]",
+                  isFuture && "opacity-60",
+                )}
+              >
+                <span className={cn("text-xs font-extrabold leading-none", isToday ? "text-primary-text" : "text-foreground")}>
+                  {dateOfMonth}
                 </span>
-              )}
+                <span className="text-[9.5px] font-bold leading-none text-[#5C5648]">{SHORT_LABEL[recipe.type]}</span>
 
-              {isCompleted && (
-                (() => {
-                  const condition = conditions[day]
-                  const bgColor =
-                    condition === "good"
-                      ? "bg-today-accent"
-                      : condition === "neutral"
-                        ? "bg-defense-hydration"
-                        : condition === "bad"
-                          ? "bg-toning-solo"
-                          : "bg-foreground"
-                  const Icon =
-                    condition === "good" ? Smile : condition === "neutral" ? Meh : condition === "bad" ? Frown : Check
+                {/* Program day badge */}
+                <span className="absolute top-1 left-1 text-[7px] font-semibold text-muted-foreground opacity-60">
+                  D{day}
+                </span>
 
-                  return (
-                    <span
-                      className={cn(
-                        "absolute -bottom-1 -right-1 flex size-[20px] items-center justify-center rounded-full",
-                        bgColor,
-                        justStamped ? "animate-stamp" : "",
-                      )}
-                    >
-                      <Icon className="size-4 text-white" aria-hidden strokeWidth={3} />
-                    </span>
-                  )
-                })()
-              )}
-            </button>
-          )
-        })}
+                {isToday && (
+                  <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-bold text-primary-text-foreground">
+                    {t("calendar.todayBadge", locale)}
+                  </span>
+                )}
+
+                {isCompleted && (
+                  (() => {
+                    const condition = conditions[day]
+                    const bgColor =
+                      condition === "good"
+                        ? "bg-today-accent"
+                        : condition === "neutral"
+                          ? "bg-defense-hydration"
+                          : condition === "bad"
+                            ? "bg-toning-solo"
+                            : "bg-foreground"
+                    const Icon =
+                      condition === "good" ? Smile : condition === "neutral" ? Meh : condition === "bad" ? Frown : Check
+
+                    return (
+                      <span
+                        className={cn(
+                          "absolute -bottom-1 -right-1 flex size-[20px] items-center justify-center rounded-full",
+                          bgColor,
+                          justStamped ? "animate-stamp" : "",
+                        )}
+                      >
+                        <Icon className="size-4 text-white" aria-hidden strokeWidth={3} />
+                      </span>
+                    )
+                  })()
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
     </section>
   )

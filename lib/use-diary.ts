@@ -557,6 +557,7 @@ export function useDiary() {
     supportOwned: state.supportOwned,
     usedProducts: state.usedProducts,
     userId,
+    joinDate: state.joinDate,
     startFresh,
     submitFeedback,
   }
