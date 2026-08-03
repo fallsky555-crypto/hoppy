@@ -14,6 +14,7 @@ export function middleware(request: NextRequest) {
     /manifest/,
     /public/,
     /\.json$/, // 정적 파일
+    /^\/api\//,
   ]
 
   // 현재 경로가 제외 대상인지 확인
@@ -38,6 +39,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // 정적 파일 및 이미지 확장자 제외 (이미지 추가 시 matcher 수정 불필요)
-    '/((?!_next|favicon\\.ico|manifest|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2?)).*)',
+    '/((?!api|_next|favicon\\.ico|manifest|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2?)).*)',
   ],
 }
