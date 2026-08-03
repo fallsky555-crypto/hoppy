@@ -427,10 +427,13 @@
     "headline": "피부를 위해 오늘 무엇을 하셨나요?",
     "ariaLabel": "오늘의 슬롯 선택",
     "todayBadge": "+ 오늘의 추천",
+    "recommendationLabel": "추천 케어예요. 컨디션에 따라 조절하세요",
+    "incidentWarning": "지금은 진정에 집중하세요",
     "selectPrompt": "오늘 하신 일을 선택해주세요",
     "selectHint": "(복수 선택 가능)",
     "selectedCount": "{{count}}개 선택했어요",
     "conditionQuestion": "오늘 하신 케어, 피부 어땠어요?",
+    "reportReaction": "자극 신고하기",
     "slots": {
       "prep": "클렌징",
       "hydration": "수분케어",

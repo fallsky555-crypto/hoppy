@@ -4,22 +4,16 @@ import { use, useState } from "react"
 import { ProgressBar30 } from "@/components/progress-bar-30"
 import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
-import { RecipeCard } from "@/components/recipe-card"
 import { DailySlots } from "@/components/daily-slots"
-import { DailyHabits } from "@/components/daily-habits"
-import { BarrierScoreChart } from "@/components/barrier-score-chart"
-import { IncidentPanel } from "@/components/incident-panel"
-import { LockedPreview } from "@/components/locked-preview"
-import { RoutineBanner } from "@/components/routine-banner"
+import { WeeklyMiniInsight } from "@/components/weekly-mini-insight"
+import { TodayCareCard } from "@/components/today-care-card"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
-import { CompletionFeedback } from "@/components/completion-feedback"
 import { ThirtyDayReport } from "@/components/thirty-day-report"
 import { InstallBanner } from "@/components/install-banner"
-import { useDiary } from "@/lib/use-diary"
+import { DiaryProvider, useDiary } from "@/lib/diary-context"
 import type { IncidentType } from "@/lib/scheduling-engine"
-import { getCompletionCopy } from "@/lib/routine-copy"
 import { t } from "@/lib/i18n"
 
 interface PageProps {
@@ -28,13 +22,11 @@ interface PageProps {
   }
 }
 
-export default function Page({ params }: PageProps) {
-  const locale = use(params).locale as 'ko' | 'en'
+function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   const diary = useDiary()
-  const { currentDay, totalDays, completedDays } = diary
+  const { currentDay, totalDays } = diary
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [justStampedDay, setJustStampedDay] = useState<number | null>(null)
 
   if (!diary.hydrated) return null
 
@@ -44,22 +36,9 @@ export default function Page({ params }: PageProps) {
 
   const isCourseComplete = currentDay >= totalDays
 
-  function handleRecord() {
-    if (completedDays.includes(currentDay)) return
-    diary.complete(currentDay)
-    setJustStampedDay(currentDay)
-    setSelectedDay(currentDay)
-  }
-
   function handleReportIncident(incidentType: IncidentType) {
     diary.reportIncident(currentDay, incidentType)
   }
-
-  function handleReportReaction() {
-    diary.reportReaction(currentDay, diary.getRecipeForDay(currentDay).type)
-  }
-
-  const hasReportedReactionToday = diary.reactionLog.some((entry) => entry.day === currentDay)
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
@@ -79,32 +58,16 @@ export default function Page({ params }: PageProps) {
         onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
       />
 
-      <RecipeCard
-        day={activeDay}
-        currentDay={currentDay}
-        isCompleted={completedDays.includes(activeDay)}
-        onRecord={handleRecord}
-        getRecipe={diary.getRecipeForDay}
-        calendar={diary.calendar}
-        hasReportedReaction={hasReportedReactionToday}
-        onReportReaction={handleReportReaction}
-        concern={diary.concern}
-        supportOwned={diary.supportOwned}
-        condition={diary.conditions[activeDay]}
-        onConditionRecord={(condition) => diary.recordCondition(activeDay, condition)}
-        loggedDays={diary.loggedDays}
-        loggedSlots={diary.loggedSlots}
-      />
+      <TodayCareCard />
+
+      <WeeklyMiniInsight />
 
       {isCourseComplete && (
         <>
-          <RoutineBanner copy={getCompletionCopy(totalDays, locale)} tone="celebrate" />
           <ThirtyDayReport isReady={isCourseComplete && diary.loggedDays.length > 0} />
-          <CompletionFeedback onSubmit={diary.submitFeedback} />
         </>
       )}
 
-      <IncidentPanel currentDay={currentDay} incidentLog={diary.incidentLog} onReportIncident={handleReportIncident} />
 
       {(diary.pregnant || diary.prescriptionMeds) && (
         <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
@@ -117,26 +80,14 @@ export default function Page({ params }: PageProps) {
         totalDays={totalDays}
         currentDay={currentDay}
         selectedDay={activeDay}
-        completedDays={completedDays}
-        justStampedDay={justStampedDay}
+        completedDays={diary.loggedDays}
+        justStampedDay={null}
         onSelect={setSelectedDay}
         getRecipe={diary.getRecipeForDay}
         conditions={diary.conditions}
       />
 
-      <DailyHabits
-        day={activeDay}
-        habit={diary.getHabit(activeDay)}
-        maxWater={diary.maxWater}
-        onToggleSunscreen={() => diary.toggleSunscreen(activeDay)}
-        onWater={(delta) => diary.setWater(activeDay, delta)}
-      />
-
-      <BarrierScoreChart currentDay={currentDay} totalDays={totalDays} locale={locale} />
-
       <LoginBanner />
-
-      <LockedPreview />
 
       <SettingsPanel onStartFresh={diary.startFresh} />
 
@@ -144,5 +95,15 @@ export default function Page({ params }: PageProps) {
         {t("metadata.tagline", locale)}
       </p>
     </main>
+  )
+}
+
+export default function Page({ params }: PageProps) {
+  const locale = use(params).locale as 'ko' | 'en'
+
+  return (
+    <DiaryProvider>
+      <PageContent locale={locale} />
+    </DiaryProvider>
   )
 }

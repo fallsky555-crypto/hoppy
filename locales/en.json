@@ -427,10 +427,13 @@
     "headline": "What did you do for your skin today?",
     "ariaLabel": "Select today's slots",
     "todayBadge": "+ Recommended today",
+    "recommendationLabel": "A recommended care routine. Adjust based on your skin's condition",
+    "incidentWarning": "Focus on soothing care for now",
     "selectPrompt": "Select what you did today",
     "selectHint": "(select multiple)",
     "selectedCount": "{{count}} selected",
     "conditionQuestion": "How did your skin feel after today's care?",
+    "reportReaction": "Report sensitivity",
     "slots": {
       "prep": "Cleansing",
       "hydration": "Hydration",

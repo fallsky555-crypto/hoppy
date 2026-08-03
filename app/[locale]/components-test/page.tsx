@@ -2,7 +2,6 @@
 
 import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
-import { DailyHabits } from "@/components/daily-habits"
 import { RoutineBanner } from "@/components/routine-banner"
 import { Button } from "@/components/ui/button"
 import { useLocale } from "@/lib/locale-context"
@@ -64,19 +63,6 @@ export default function ComponentsTestPage() {
           onSelect={() => {}}
           getRecipe={getTestRecipe}
           conditions={conditions}
-        />
-      </section>
-
-      {/* DailyHabits 테스트 */}
-      <section className="mb-8 space-y-2">
-        <h2 className="text-lg font-semibold text-foreground">DailyHabits</h2>
-        <p className="text-xs text-muted-foreground">line 64: text-primary-text (물 드롭렛)</p>
-        <DailyHabits
-          day={currentDay}
-          habit={{ water: 3, sunscreen: true }}
-          maxWater={8}
-          onWater={() => {}}
-          onToggleSunscreen={() => {}}
         />
       </section>
 
