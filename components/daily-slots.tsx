@@ -57,14 +57,14 @@ function SlotCard({ slot, isChecked, toggleSlot, isSunCare }: { slot: Slot; isCh
           ? "flex flex-row items-center gap-3 w-full"
           : "flex flex-col items-center gap-2",
         isChecked
-          ? "border-blue-500 bg-blue-50"
-          : "border-gray-300 bg-white",
+          ? "border-primary bg-primary/10"
+          : "border-border bg-card",
       )}
     >
       <div className={cn("flex-shrink-0", isSunCare ? "text-2xl" : "text-3xl")}>
         {slot.emoji}
       </div>
-      <span className={cn("font-semibold text-gray-800", isSunCare ? "text-sm text-left" : "text-sm text-center")}>
+      <span className={cn("font-semibold text-foreground", isSunCare ? "text-sm text-left" : "text-sm text-center")}>
         {t(slot.labelKey, locale)}
       </span>
     </button>
@@ -82,41 +82,41 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
   const locale = useLocale()
 
   return (
-    <div className="border-2 border-gray-300 rounded-2xl overflow-hidden">
+    <div className="border-2 border-border rounded-2xl overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between p-4 bg-card hover:bg-secondary transition-colors"
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">✨</span>
           <div className="text-left">
-            <div className="text-sm font-semibold text-gray-800">특별관리</div>
-            <div className="text-xs text-gray-500">마스크팩, 각질관리 등</div>
+            <div className="text-sm font-semibold text-foreground">특별관리</div>
+            <div className="text-xs text-muted-foreground">마스크팩, 각질관리 등</div>
           </div>
         </div>
         <ChevronDown
           className={cn(
-            "size-5 text-gray-600 transition-transform",
+            "size-5 text-muted-foreground transition-transform",
             isExpanded ? "rotate-180" : "",
           )}
         />
       </button>
 
       {isExpanded && (
-        <div className="border-t border-gray-300 bg-gray-50 p-4 space-y-2 animate-in slide-in-from-top-2 duration-200">
+        <div className="border-t border-border bg-secondary p-4 space-y-2 animate-in slide-in-from-top-2 duration-200">
           <button
             type="button"
             onClick={() => onToggleSpecialCare("mask")}
             className={cn(
               "w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all",
               selectedSpecialCare.has("mask")
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 bg-white",
+                ? "border-primary bg-primary/10"
+                : "border-border bg-card",
             )}
           >
             <span>🎭</span>
-            <span className="text-sm font-semibold text-gray-800">마스크팩</span>
+            <span className="text-sm font-semibold text-foreground">마스크팩</span>
           </button>
           <button
             type="button"
@@ -124,12 +124,12 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
             className={cn(
               "w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all",
               selectedSpecialCare.has("trouble")
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 bg-white",
+                ? "border-primary bg-primary/10"
+                : "border-border bg-card",
             )}
           >
             <span>🩹</span>
-            <span className="text-sm font-semibold text-gray-800">트러블관리</span>
+            <span className="text-sm font-semibold text-foreground">트러블관리</span>
           </button>
         </div>
       )}
@@ -207,20 +207,20 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
 
   return (
     <section
-      className="rounded-3xl px-6 py-8 bg-white shadow-sm border border-gray-200"
+      className="rounded-3xl px-6 py-8 bg-card ring-1 ring-border"
       aria-label={t("dailySlots.ariaLabel", locale)}
     >
       <div className="flex flex-col gap-4">
         {/* 헤더 */}
         <div className="space-y-3">
-          <div className="text-xs font-semibold text-gray-500 tracking-tight">
+          <div className="text-xs font-semibold text-muted-foreground tracking-tight">
             Day {day} · {t("common.today", locale)}
           </div>
           <div className="space-y-2">
-            <h2 className="font-display text-2xl font-bold text-foreground">
+            <h2 className="font-display text-xl font-bold text-foreground">
               피부를 위해 오늘 무엇을 하셨나요?
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {locale === "ko"
                 ? "오늘 하신 일을 선택해주세요 (복수 선택 가능)"
                 : "Select what you did today (multiple selections available)"}
@@ -261,8 +261,8 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
 
         {/* 안내문구 */}
         {recommendedSlot && (
-          <div className="border-t border-gray-300 pt-2">
-            <p className="text-xs text-center text-gray-600 mt-1">
+          <div className="border-t border-border pt-2">
+            <p className="text-xs text-center text-muted-foreground mt-1">
               {hasRecentIncident
                 ? t("dailySlots.incidentWarning", locale)
                 : "추천 케어예요. 컨디션에 따라 조절하세요"}
@@ -272,15 +272,15 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
 
         {/* 하단 섹션 */}
         <div className="space-y-2">
-          <p className="text-sm font-bold text-center text-gray-900">
+          <p className="text-sm font-bold text-center text-foreground">
             {totalSelected > 0
               ? `${totalSelected}개 선택됨`
               : "해당하는것을 눌러주세요"}
           </p>
 
           {showConditionPrompt && (
-            <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm font-semibold text-gray-800">{t("dailySlots.conditionQuestion", locale)}</p>
+            <div className="space-y-3 bg-secondary p-4 rounded-lg">
+              <p className="text-sm font-semibold text-foreground">{t("dailySlots.conditionQuestion", locale)}</p>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -293,7 +293,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                     setCheckedSlots(new Set())
                     setSelectedSpecialCare(new Set())
                   }}
-                  className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-gray-100"
+                  className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
                 >
                   <Smile className="size-4" aria-hidden />
                   {t("onboarding.mappingResult.condition_good", locale)}
@@ -309,7 +309,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                     setCheckedSlots(new Set())
                     setSelectedSpecialCare(new Set())
                   }}
-                  className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-gray-100"
+                  className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
                 >
                   <Meh className="size-4" aria-hidden />
                   {t("onboarding.mappingResult.condition_neutral", locale)}
@@ -325,7 +325,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                     setCheckedSlots(new Set())
                     setSelectedSpecialCare(new Set())
                   }}
-                  className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-gray-100"
+                  className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
                 >
                   <Frown className="size-4" aria-hidden />
                   {t("onboarding.mappingResult.condition_bad", locale)}
@@ -334,7 +334,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
               <button
                 type="button"
                 onClick={() => setShowConditionPrompt(false)}
-                className="w-full text-xs font-medium text-gray-600 py-2 hover:text-gray-900"
+                className="w-full text-xs font-medium text-muted-foreground py-2 hover:text-foreground"
               >
                 {t("common.later", locale)}
               </button>
@@ -345,7 +345,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
             <button
               type="button"
               onClick={handleReportReaction}
-              className="w-full rounded-full border-2 border-blue-500 bg-transparent hover:bg-blue-50 text-blue-600 font-semibold py-3 transition-colors text-sm"
+              className="w-full rounded-full border-2 border-primary bg-transparent hover:bg-primary/10 text-primary-text font-semibold py-3 transition-colors text-sm"
             >
               {t("dailySlots.reportReaction", locale)}
             </button>
@@ -353,14 +353,20 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
 
           <button
             type="button"
+            disabled={diary.conditions[day] !== undefined}
             onClick={() => {
               if (totalSelected > 0) {
                 setShowConditionPrompt(true)
               }
             }}
-            className="w-full rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 transition-colors text-sm"
+            className={cn(
+              "w-full rounded-full font-bold py-3 transition-colors text-sm",
+              diary.conditions[day] !== undefined
+                ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                : "bg-primary hover:bg-primary/80 text-primary-foreground"
+            )}
           >
-            기록 완료
+            {diary.conditions[day] !== undefined ? "오늘 기록 완료!" : "기록 완료"}
           </button>
         </div>
       </div>
