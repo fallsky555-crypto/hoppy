@@ -151,6 +151,9 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const [specialCareExpanded, setSpecialCareExpanded] = useState(false)
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
 
+  const checkedSlotsRef = useRef<Set<SlotType>>(new Set())
+  const selectedSpecialCareRef = useRef<Set<SpecialCareType>>(new Set())
+
   const todayRecipe = diary.getRecipeForDay(day)
   const hasRecentIncident = diary.hasRecentSafetyIncident(day)
   const recommendedSlot: SlotType | null = hasRecentIncident
@@ -160,6 +163,14 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   useEffect(() => {
     diaryRef.current = diary
   }, [diary])
+
+  useEffect(() => {
+    checkedSlotsRef.current = checkedSlots
+  }, [checkedSlots])
+
+  useEffect(() => {
+    selectedSpecialCareRef.current = selectedSpecialCare
+  }, [selectedSpecialCare])
 
   const toggleSlot = useCallback((slotId: SlotType) => {
     setCheckedSlots((prev) => {
@@ -173,10 +184,16 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
 
       if (diaryRef.current.userId) {
         const recommendedCategory = recommendedSlot || ("active" as SlotType)
-        const slotsPayload = Array.from(newChecked).map((id) => ({
-          slot: id,
-          tag: SLOT_TAGS[id],
-        }))
+        const slotsPayload = [
+          ...Array.from(newChecked).map((id) => ({
+            slot: id,
+            tag: SLOT_TAGS[id],
+          })),
+          ...Array.from(selectedSpecialCareRef.current).map((id) => ({
+            slot: `special_care_${id}`,
+            tag: SPECIAL_CARE_TAGS[id],
+          })),
+        ]
         saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
           console.error("[saveUsageLog] error:", err)
         })
@@ -195,9 +212,27 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
         newSet.add(specialCareId)
         diaryRef.current.recordLoggedSlot(day, `special_care_${specialCareId}` as SlotType, SPECIAL_CARE_TAGS[specialCareId])
       }
+
+      if (diaryRef.current.userId) {
+        const recommendedCategory = recommendedSlot || ("active" as SlotType)
+        const slotsPayload = [
+          ...Array.from(checkedSlotsRef.current).map((id) => ({
+            slot: id,
+            tag: SLOT_TAGS[id],
+          })),
+          ...Array.from(newSet).map((id) => ({
+            slot: `special_care_${id}`,
+            tag: SPECIAL_CARE_TAGS[id],
+          })),
+        ]
+        saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
+          console.error("[saveUsageLog] error:", err)
+        })
+      }
+
       return newSet
     })
-  }, [day])
+  }, [day, recommendedSlot])
 
   const handleReportReaction = useCallback(() => {
     diaryRef.current.reportReaction(day, "retinol")
