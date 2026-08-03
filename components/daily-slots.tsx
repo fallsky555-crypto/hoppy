@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Check, Smile, Meh, Frown } from "lucide-react"
+import { Check, Smile, Meh, Frown, ChevronDown } from "lucide-react"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
@@ -11,6 +11,7 @@ import { getRecommendedSlot } from "@/lib/slot-mapping"
 import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 
 export type SlotType = "prep" | "hydration" | "active" | "barrier" | "sun_care"
+type SpecialCareType = "mask" | "trouble"
 
 interface Slot {
   id: SlotType
@@ -26,6 +27,11 @@ const SLOT_TAGS: Record<SlotType, string> = {
   sun_care: "Sun",
 }
 
+const SPECIAL_CARE_TAGS: Record<SpecialCareType, string> = {
+  mask: "Mask",
+  trouble: "Trouble",
+}
+
 const SUN_CARE_SLOT: Slot = { id: "sun_care", emoji: "☀️", labelKey: "dailySlots.slots.sun_care" }
 
 const OTHER_SLOTS: Slot[] = [
@@ -35,49 +41,99 @@ const OTHER_SLOTS: Slot[] = [
   { id: "barrier", emoji: "🛡️", labelKey: "dailySlots.slots.barrier" },
 ]
 
-function SlotButton({ slot, isChecked, isRecommended, toggleSlot, locale }: { slot: Slot; isChecked: boolean; isRecommended: boolean; toggleSlot: (id: SlotType) => void; locale: string }) {
+function SlotCard({ slot, isChecked, toggleSlot, isSunCare }: { slot: Slot; isChecked: boolean; toggleSlot: (id: SlotType) => void; isSunCare?: boolean }) {
+  const locale = useLocale()
   const handleClick = useCallback(() => {
     toggleSlot(slot.id)
-  }, [slot.id, toggleSlot, isChecked])
+  }, [slot.id, toggleSlot])
 
   return (
     <button
       type="button"
       onClick={handleClick}
       className={cn(
-        "relative flex flex-col items-center gap-1.5 rounded-2xl px-2.5 py-3 transition-all border",
+        "rounded-2xl p-4 transition-all border-2",
+        isSunCare
+          ? "flex flex-row items-center gap-3 w-full"
+          : "flex flex-col items-center gap-2",
         isChecked
-          ? "bg-accent border-2 border-primary"
-          : isRecommended
-            ? "bg-accent border border-primary"
-            : "bg-card border border-border",
+          ? "border-blue-500 bg-blue-50"
+          : "border-gray-300 bg-white",
       )}
     >
-      <div className="flex size-8 items-center justify-center text-lg">
+      <div className={cn("flex-shrink-0", isSunCare ? "text-2xl" : "text-3xl")}>
         {slot.emoji}
       </div>
-
-      <div className="flex flex-col items-center min-h-8">
-        <span className="text-xs font-semibold text-foreground text-center leading-tight">
-          {t(slot.labelKey, locale)}
-        </span>
-        {isChecked && (
-          <Check className="size-3 text-primary mt-0.5" strokeWidth={3} aria-hidden />
-        )}
-      </div>
-
-      {isRecommended && (
-        <div className="absolute top-1 left-1 text-sm" aria-label={t("dailySlots.todayBadge", locale)}>
-          ⭐
-        </div>
-      )}
-
-      {isChecked && (
-        <div className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-primary">
-          <Check className="size-2.5 text-white" strokeWidth={3} aria-hidden />
-        </div>
-      )}
+      <span className={cn("font-semibold text-gray-800", isSunCare ? "text-sm text-left" : "text-sm text-center")}>
+        {t(slot.labelKey, locale)}
+      </span>
     </button>
+  )
+}
+
+interface SpecialCareCardProps {
+  isExpanded: boolean
+  onToggle: () => void
+  selectedSpecialCare: Set<SpecialCareType>
+  onToggleSpecialCare: (id: SpecialCareType) => void
+}
+
+function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSpecialCare }: SpecialCareCardProps) {
+  const locale = useLocale()
+
+  return (
+    <div className="border-2 border-gray-300 rounded-2xl overflow-hidden">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-4 bg-white hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">✨</span>
+          <div className="text-left">
+            <div className="text-sm font-semibold text-gray-800">특별관리</div>
+            <div className="text-xs text-gray-500">마스크팩, 각질관리 등</div>
+          </div>
+        </div>
+        <ChevronDown
+          className={cn(
+            "size-5 text-gray-600 transition-transform",
+            isExpanded ? "rotate-180" : "",
+          )}
+        />
+      </button>
+
+      {isExpanded && (
+        <div className="border-t border-gray-300 bg-gray-50 p-4 space-y-2 animate-in slide-in-from-top-2 duration-200">
+          <button
+            type="button"
+            onClick={() => onToggleSpecialCare("mask")}
+            className={cn(
+              "w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all",
+              selectedSpecialCare.has("mask")
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-300 bg-white",
+            )}
+          >
+            <span>🎭</span>
+            <span className="text-sm font-semibold text-gray-800">마스크팩</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onToggleSpecialCare("trouble")}
+            className={cn(
+              "w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all",
+              selectedSpecialCare.has("trouble")
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-300 bg-white",
+            )}
+          >
+            <span>🩹</span>
+            <span className="text-sm font-semibold text-gray-800">트러블관리</span>
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -91,41 +147,24 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const diary = useDiary()
   const diaryRef = useRef(diary)
   const [checkedSlots, setCheckedSlots] = useState<Set<SlotType>>(new Set())
+  const [selectedSpecialCare, setSelectedSpecialCare] = useState<Set<SpecialCareType>>(new Set())
+  const [specialCareExpanded, setSpecialCareExpanded] = useState(false)
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
 
-  // 추천 슬롯 계산: 오늘의 레시피 + 안전 인시던트 여부
   const todayRecipe = diary.getRecipeForDay(day)
   const hasRecentIncident = diary.hasRecentSafetyIncident(day)
   const recommendedSlot: SlotType | null = hasRecentIncident
     ? "barrier"
     : (getRecommendedSlot(todayRecipe.type) as SlotType | null)
 
-  // 규칙 1: 슬롯이 있으면 condition 확인 → 없으면 피커 표시
-  // 규칙 4: 슬롯이 없으면 (토글 해제) → 피커 닫기
   useEffect(() => {
     diaryRef.current = diary
-
-    if (checkedSlots.size > 0) {
-      // 슬롯이 선택됨: condition 확인
-      if (!diary.conditions[day]) {
-        // condition 없음 → 피커 표시 (규칙 1)
-        setShowConditionPrompt(true)
-      } else {
-        // condition 있음 → 피커 스킵 (규칙 3)
-        setShowConditionPrompt(false)
-      }
-    } else {
-      // 슬롯이 없음 (토글 해제) → 피커 닫기 (규칙 4)
-      setShowConditionPrompt(false)
-    }
-  }, [checkedSlots, day])
+  }, [diary])
 
   const toggleSlot = useCallback((slotId: SlotType) => {
     setCheckedSlots((prev) => {
       const newChecked = new Set(prev)
-      const wasChecked = newChecked.has(slotId)
-
-      if (wasChecked) {
+      if (newChecked.has(slotId)) {
         newChecked.delete(slotId)
       } else {
         newChecked.add(slotId)
@@ -147,67 +186,101 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
     })
   }, [day, recommendedSlot])
 
+  const toggleSpecialCare = useCallback((specialCareId: SpecialCareType) => {
+    setSelectedSpecialCare((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(specialCareId)) {
+        newSet.delete(specialCareId)
+      } else {
+        newSet.add(specialCareId)
+        diaryRef.current.recordLoggedSlot(day, `special_care_${specialCareId}` as SlotType, SPECIAL_CARE_TAGS[specialCareId])
+      }
+      return newSet
+    })
+  }, [day])
+
   const handleReportReaction = useCallback(() => {
     diaryRef.current.reportReaction(day, "retinol")
   }, [day])
 
+  const totalSelected = checkedSlots.size + selectedSpecialCare.size
+
   return (
     <section
-      className="rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border"
+      className="rounded-3xl px-6 py-8 bg-white shadow-sm border border-gray-200"
       aria-label={t("dailySlots.ariaLabel", locale)}
     >
       <div className="flex flex-col gap-4">
-        {/* 헤더: Day */}
-        <div>
-          <span className="font-display text-[13px] font-semibold text-muted-foreground">
+        {/* 헤더 */}
+        <div className="space-y-3">
+          <div className="text-xs font-semibold text-gray-500 tracking-tight">
             Day {day} · {t("common.today", locale)}
-          </span>
-        </div>
-
-        {/* 슬롯 선택 섹션 */}
-        <div className="flex flex-col gap-3">
-          <div>
-            <h3 className="font-display text-xl font-semibold text-foreground text-left">
-              {t("dailySlots.headline", locale)}
-            </h3>
-            <p className="font-display text-base text-left text-muted-foreground mt-1">
-              {t("dailySlots.selectPrompt", locale)} {t("dailySlots.selectHint", locale)}
+          </div>
+          <div className="space-y-2">
+            <h2 className="font-display text-2xl font-bold text-foreground">
+              피부를 위해 오늘 무엇을 하셨나요?
+            </h2>
+            <p className="text-sm text-gray-600">
+              {locale === "ko"
+                ? "오늘 하신 일을 선택해주세요 (복수 선택 가능)"
+                : "Select what you did today (multiple selections available)"}
             </p>
           </div>
+        </div>
 
-          {/* 자외선차단: 독립된 풀폭 카드 */}
-          <SlotButton slot={SUN_CARE_SLOT} isChecked={checkedSlots.has(SUN_CARE_SLOT.id)} isRecommended={false} toggleSlot={toggleSlot} locale={locale} />
+        {/* 슬롯 선택 */}
+        <div className="space-y-3">
+          {/* 자외선차단: 풀와이드 */}
+          <SlotCard
+            slot={SUN_CARE_SLOT}
+            isChecked={checkedSlots.has(SUN_CARE_SLOT.id)}
+            toggleSlot={toggleSlot}
+            isSunCare
+          />
 
-          {/* 나머지 4개: 2열 grid */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {OTHER_SLOTS.map((slot) => {
-              const isChecked = checkedSlots.has(slot.id)
-              const isRecommended = slot.id === recommendedSlot
-              return <SlotButton key={slot.id} slot={slot} isChecked={isChecked} isRecommended={isRecommended} toggleSlot={toggleSlot} locale={locale} />
-            })}
+          {/* 나머지 슬롯: 2열 그리드 */}
+          <div className="grid grid-cols-2 gap-3">
+            {OTHER_SLOTS.map((slot) => (
+              <SlotCard
+                key={slot.id}
+                slot={slot}
+                isChecked={checkedSlots.has(slot.id)}
+                toggleSlot={toggleSlot}
+              />
+            ))}
           </div>
 
-          {/* 추천 설명 문구 */}
-          {recommendedSlot && (
-            <p className="text-xs text-center text-muted-foreground">
+          {/* 특별관리 아코디언 */}
+          <SpecialCareCard
+            isExpanded={specialCareExpanded}
+            onToggle={() => setSpecialCareExpanded(!specialCareExpanded)}
+            selectedSpecialCare={selectedSpecialCare}
+            onToggleSpecialCare={toggleSpecialCare}
+          />
+        </div>
+
+        {/* 안내문구 */}
+        {recommendedSlot && (
+          <div className="border-t border-gray-300 pt-2">
+            <p className="text-xs text-center text-gray-600 mt-1">
               {hasRecentIncident
                 ? t("dailySlots.incidentWarning", locale)
-                : t("dailySlots.recommendationLabel", locale)}
+                : "추천 케어예요. 컨디션에 따라 조절하세요"}
             </p>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* 하단: 선택 상태 + 버튼 */}
-        <div className="mt-2 pt-4 border-t border-border space-y-3">
-          <p className="text-sm font-semibold text-center text-foreground">
-            {checkedSlots.size > 0
-              ? interpolate(t("dailySlots.selectedCount", locale), { count: String(checkedSlots.size) })
-              : t("dailySlots.selectPrompt", locale) + " " + t("dailySlots.selectHint", locale)}
+        {/* 하단 섹션 */}
+        <div className="space-y-2">
+          <p className="text-sm font-bold text-center text-gray-900">
+            {totalSelected > 0
+              ? `${totalSelected}개 선택됨`
+              : "해당하는것을 눌러주세요"}
           </p>
 
           {showConditionPrompt && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">{t("dailySlots.conditionQuestion", locale)}</p>
+            <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm font-semibold text-gray-800">{t("dailySlots.conditionQuestion", locale)}</p>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -217,12 +290,10 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                       : (Array.from(checkedSlots)[0] || ("active" as SlotType))
                     onConditionRecord?.("good", linkedCategory)
                     setShowConditionPrompt(false)
+                    setCheckedSlots(new Set())
+                    setSelectedSpecialCare(new Set())
                   }}
-                  className={cn(
-                    "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
-                    "border-border bg-card text-foreground",
-                  )}
-                  aria-label={t("onboarding.mappingResult.condition_good", locale)}
+                  className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-gray-100"
                 >
                   <Smile className="size-4" aria-hidden />
                   {t("onboarding.mappingResult.condition_good", locale)}
@@ -235,12 +306,10 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                       : (Array.from(checkedSlots)[0] || ("active" as SlotType))
                     onConditionRecord?.("neutral", linkedCategory)
                     setShowConditionPrompt(false)
+                    setCheckedSlots(new Set())
+                    setSelectedSpecialCare(new Set())
                   }}
-                  className={cn(
-                    "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
-                    "border-border bg-card text-foreground",
-                  )}
-                  aria-label={t("onboarding.mappingResult.condition_neutral", locale)}
+                  className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-gray-100"
                 >
                   <Meh className="size-4" aria-hidden />
                   {t("onboarding.mappingResult.condition_neutral", locale)}
@@ -253,12 +322,10 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                       : (Array.from(checkedSlots)[0] || ("active" as SlotType))
                     onConditionRecord?.("bad", linkedCategory)
                     setShowConditionPrompt(false)
+                    setCheckedSlots(new Set())
+                    setSelectedSpecialCare(new Set())
                   }}
-                  className={cn(
-                    "flex-1 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-colors flex flex-col items-center gap-1",
-                    "border-border bg-card text-foreground",
-                  )}
-                  aria-label={t("onboarding.mappingResult.condition_bad", locale)}
+                  className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-gray-100"
                 >
                   <Frown className="size-4" aria-hidden />
                   {t("onboarding.mappingResult.condition_bad", locale)}
@@ -267,7 +334,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
               <button
                 type="button"
                 onClick={() => setShowConditionPrompt(false)}
-                className="w-full text-xs font-medium text-muted-foreground py-2"
+                className="w-full text-xs font-medium text-gray-600 py-2 hover:text-gray-900"
               >
                 {t("common.later", locale)}
               </button>
@@ -278,7 +345,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
             <button
               type="button"
               onClick={handleReportReaction}
-              className="w-full rounded-full border border-primary bg-transparent hover:bg-primary/10 text-primary font-semibold py-3 transition-colors"
+              className="w-full rounded-full border-2 border-blue-500 bg-transparent hover:bg-blue-50 text-blue-600 font-semibold py-3 transition-colors text-sm"
             >
               {t("dailySlots.reportReaction", locale)}
             </button>
@@ -286,8 +353,12 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
 
           <button
             type="button"
-            onClick={() => setCheckedSlots(new Set())}
-            className="w-full rounded-full bg-primary hover:bg-primary/85 text-white font-semibold py-3 transition-colors"
+            onClick={() => {
+              if (totalSelected > 0) {
+                setShowConditionPrompt(true)
+              }
+            }}
+            className="w-full rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 transition-colors text-sm"
           >
             기록 완료
           </button>
