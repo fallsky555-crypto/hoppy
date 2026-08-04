@@ -39,7 +39,7 @@ jobs:
         run: |
           set -e
           BACKUP_FILE="backup-$(date +%Y-%m-%d).dump"
-          pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges -F c -f "$BACKUP_FILE"
+          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges -F c -f "$BACKUP_FILE"
           echo "BACKUP_FILE=$BACKUP_FILE" >> $GITHUB_ENV
           ls -lh "$BACKUP_FILE"
 
