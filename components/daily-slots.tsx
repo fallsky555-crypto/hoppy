@@ -97,7 +97,7 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
           <span className="text-2xl">💎</span>
           <div className="text-left">
             <div className="text-sm font-semibold text-foreground">특별관리</div>
-            <div className="text-xs text-muted-foreground">마스크팩, 각질관리 등</div>
+            <div className="text-xs text-muted-foreground">마스크팩, 트러블관리 등</div>
           </div>
         </div>
         <ChevronDown
