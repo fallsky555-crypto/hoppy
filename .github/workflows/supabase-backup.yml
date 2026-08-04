@@ -1,0 +1,36 @@
+name: Supabase Database Backup
+
+on:
+  schedule:
+    # 매일 새벽 4시 KST (UTC 19:00 이전 날짜)
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Create database backup
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -e
+          BACKUP_FILE="backup-$(date +%Y-%m-%d).dump"
+          pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges -F c -f "$BACKUP_FILE"
+          echo "BACKUP_FILE=$BACKUP_FILE" >> $GITHUB_ENV
+          ls -lh "$BACKUP_FILE"
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ github.run_number }}
+          path: backup-*.dump
+          retention-days: 90
