@@ -22,6 +22,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
 
+      - name: Verify PostgreSQL 17 installation
+        run: |
+          echo "=== Checking PostgreSQL 17 paths ==="
+          ls -la /usr/lib/postgresql/17/bin/ || echo "Standard path not found"
+          echo ""
+          echo "=== Finding pg_dump ==="
+          find /usr/lib/postgresql -name "pg_dump" -type f 2>/dev/null || echo "Not found in /usr/lib/postgresql"
+          echo ""
+          echo "=== pg_dump version ==="
+          /usr/lib/postgresql/17/bin/pg_dump --version 2>/dev/null || echo "PostgreSQL 17 pg_dump not found"
+
       - name: Create database backup
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
