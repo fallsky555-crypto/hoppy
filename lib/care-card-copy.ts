@@ -142,24 +142,6 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
 
   const weatherSnippet = buildWeatherSnippet(condition, locale)
 
-  if ((condition.isRain || condition.isSnow) && recommendedSlot === "prep") {
-    return {
-      title,
-      description: locale === "ko"
-        ? `오늘은 기초 단계부터 신경 써야 해요. ${weatherSnippet}`
-        : `Today, focus on foundation from the start. ${weatherSnippet}`,
-    }
-  }
-
-  if (recommendedSlot === "prep") {
-    return {
-      title,
-      description: locale === "ko"
-        ? `기초 단계가 중요한 날이에요. ${weatherSnippet}`
-        : `Foundation is key today. ${weatherSnippet}`,
-    }
-  }
-
   if (recommendedSlot === "active") {
     const baseDescription = locale === "ko"
       ? `집중 케어가 필요한 날이에요. ${weatherSnippet}`

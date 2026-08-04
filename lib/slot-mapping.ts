@@ -1,6 +1,6 @@
 import type { RecipeType } from "@/lib/schedule"
 
-type SlotType = "prep" | "hydration" | "active" | "barrier" | "sun_care"
+type SlotType = "exfoliation" | "hydration" | "active" | "barrier" | "sun_care"
 
 /**
  * RecipeType → SlotType 매핑
@@ -13,11 +13,11 @@ const RECIPE_TO_SLOT: Record<RecipeType, SlotType | null> = {
 
   // 방어 케어 (6단계 서브 로테이션)
   defense_barrier: "barrier",
-  defense_toning: "prep",
+  defense_toning: null,
   defense_hydration: "hydration",
   barrier_lock: "barrier",
   hydration_lock: "hydration",
-  toning_solo: "prep",
+  toning_solo: null,
 
   // 인시던트 전용
   sos_rest: "barrier",

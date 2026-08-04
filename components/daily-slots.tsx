@@ -10,7 +10,7 @@ import { saveUsageLog } from "@/lib/supabase/sync"
 import { getRecommendedSlot } from "@/lib/slot-mapping"
 import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 
-export type SlotType = "prep" | "hydration" | "active" | "barrier" | "sun_care"
+export type SlotType = "exfoliation" | "hydration" | "active" | "barrier" | "sun_care"
 type SpecialCareType = "mask" | "trouble"
 
 interface Slot {
@@ -20,7 +20,7 @@ interface Slot {
 }
 
 const SLOT_TAGS: Record<SlotType, string> = {
-  prep: "Prep",
+  exfoliation: "Exfoliation",
   hydration: "Hydration",
   active: "Active/Stimulate",
   barrier: "Defense/Barrier",
@@ -35,7 +35,7 @@ const SPECIAL_CARE_TAGS: Record<SpecialCareType, string> = {
 const SUN_CARE_SLOT: Slot = { id: "sun_care", emoji: "☀️", labelKey: "dailySlots.slots.sun_care" }
 
 const OTHER_SLOTS: Slot[] = [
-  { id: "prep", emoji: "🫧", labelKey: "dailySlots.slots.prep" },
+  { id: "exfoliation", emoji: "✨", labelKey: "dailySlots.slots.exfoliation" },
   { id: "hydration", emoji: "💧", labelKey: "dailySlots.slots.hydration" },
   { id: "active", emoji: "🎯", labelKey: "dailySlots.slots.active" },
   { id: "barrier", emoji: "🌿", labelKey: "dailySlots.slots.barrier" },
