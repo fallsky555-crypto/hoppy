@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { MAX_INTERVAL_DAYS, MIN_INTERVAL_DAYS } from "@/lib/schedule"
-import { normalizeInterval } from "@/lib/scheduling-engine"
 import { t, interpolate } from "@/lib/i18n"
 import type { Locale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
@@ -12,14 +10,11 @@ import type { Concern, SupportId } from "@/lib/routine-copy"
 
 interface OnboardingFlowProps {
   locale: Locale
-  /** 4단계 "시작하기" — 최종 clamp된 간격(일), 데이터 수집 동의, 피부 컨디션을 넘긴다. useDiary().completeOnboarding에 그대로 연결한다 */
-  onComplete: (intervalDays: number, dataConsent: boolean, condition: "good" | "neutral" | "bad") => void
+  /** 4단계 "시작하기" — 선택한 액티브 성분 배열, 데이터 수집 동의, 피부 컨디션을 넘긴다. useDiary().completeOnboarding에 그대로 연결한다 */
+  onComplete: (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => void
 }
 
 type Step = 1 | 2 | 3
-
-/** "잘 안 써요"는 사실상 무한대 간격으로 보고, MAX_INTERVAL_DAYS 초과 구간에 태운다 */
-const NEVER_USES_RAW_DAYS = 999
 
 /**
  * 온보딩 1~4단계. 3(매핑+코멘트)과 4(시작하기)는 별도로 보여줄 새 정보가 없어서
@@ -60,9 +55,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
   const diary = useDiary()
 
   const [step, setStep] = useState<Step>(1)
-  const [inputValue, setInputValue] = useState("")
-  const [neverUses, setNeverUses] = useState(false)
-  const [rawDays, setRawDays] = useState<number | null>(null)
+  const [activeIngredients, setActiveIngredients] = useState<string[]>([])
   const [dataConsent, setDataConsent] = useState(false)
   const [condition, setCondition] = useState<"good" | "neutral" | "bad" | null>(null)
 
@@ -84,15 +77,18 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
     }
   }, [diary.pendingCheckerContext])
 
-  const parsedValue = Number(inputValue)
-  const canSubmitHabit = neverUses || (inputValue.trim() !== "" && Number.isFinite(parsedValue) && parsedValue > 0)
+  const ingredientOptions = [
+    { id: "vitc", label: t("onboarding.ingredientCheck.option_vitc", locale) },
+    { id: "ret", label: t("onboarding.ingredientCheck.option_ret", locale) },
+    { id: "nia", label: t("onboarding.ingredientCheck.option_nia", locale) },
+    { id: "unknown", label: t("onboarding.ingredientCheck.option_unknown", locale) },
+  ]
 
-  function handleHabitNext() {
-    setRawDays(neverUses ? NEVER_USES_RAW_DAYS : Math.round(parsedValue))
-    setStep(3)
+  function toggleIngredient(id: string) {
+    setActiveIngredients((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
   }
-
-  const clampedDays = rawDays === null ? MIN_INTERVAL_DAYS : normalizeInterval(rawDays, MIN_INTERVAL_DAYS)
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-5 py-10">
@@ -202,51 +198,36 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
           )}
 
           <h1 className="font-display text-sm font-bold leading-snug text-foreground text-center">
-            {t("onboarding.habitCheck.question", locale)}
+            {t("onboarding.ingredientCheck.question", locale)}
           </h1>
-          <p className="text-xs text-muted-foreground text-center">
-            {t("onboarding.habitCheck.subQuestion", locale)}
-          </p>
 
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-2 rounded-3xl border border-border bg-card px-4 py-3">
-              <input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                placeholder={t("onboarding.habitCheck.placeholder", locale)}
-                value={inputValue}
-                disabled={neverUses}
-                onChange={(event) => setInputValue(event.target.value)}
-                className="w-full bg-transparent text-base font-semibold text-foreground outline-none disabled:opacity-40"
-              />
-              <span className="shrink-0 text-sm font-medium text-muted-foreground">{t("onboarding.habitCheck.interval_suffix", locale)}</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setNeverUses((prev) => !prev)
-                setInputValue("")
-              }}
-              className={cn(
-                "w-full rounded-3xl border px-4 py-3 text-left text-sm font-semibold transition-colors",
-                neverUses ? "border-primary bg-primary/10 text-primary-text" : "border-border bg-card text-foreground",
-              )}
-              aria-pressed={neverUses}
-            >
-              {t("onboarding.habitCheck.never_uses", locale)}
-            </button>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {ingredientOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => toggleIngredient(option.id)}
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm font-semibold border transition-colors",
+                  activeIngredients.includes(option.id)
+                    ? "border-primary bg-primary/10 text-primary-text"
+                    : "border-border bg-card text-foreground"
+                )}
+                aria-pressed={activeIngredients.includes(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
 
           <Button
             type="button"
             size="lg"
-            disabled={!canSubmitHabit}
-            onClick={handleHabitNext}
+            disabled={activeIngredients.length === 0}
+            onClick={() => setStep(3)}
             className="h-auto w-full rounded-full py-3 text-[15px]"
           >
-            {t("onboarding.habitCheck.next", locale)}
+            {t("onboarding.ingredientCheck.next", locale)}
           </Button>
         </section>
       )}
@@ -254,13 +235,6 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
       {step === 3 && (
         <section key="step-3" className="space-y-5 text-center transition-opacity duration-200" aria-label={t("common.mappingResult", locale)}>
           <img src="/onboarding/intro-03.jpeg" alt="" className="mx-auto h-28 w-28 rounded-full object-cover" />
-          <p className="text-sm font-medium text-muted-foreground">
-            {neverUses ? t("onboarding.mappingResult.mapping_never_uses", locale) : interpolate(t("onboarding.mappingResult.mapping_with_interval", locale), { days: String(rawDays) })}
-          </p>
-          <h1 className="font-display text-xl font-bold text-foreground">{interpolate(t("onboarding.mappingResult.interval_display", locale), { days: String(clampedDays) })}</h1>
-          <p className="text-xs text-muted-foreground">
-            {t("onboarding.mappingResult.checker_recommend_note", locale)}
-          </p>
 
           <div className="rounded-3xl border border-border bg-card/50 p-4 space-y-3">
             <p className="text-sm font-medium text-foreground">{t("onboarding.mappingResult.conditionQuestion", locale)}</p>
@@ -305,7 +279,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
             type="button"
             size="lg"
             disabled={condition === null}
-            onClick={() => onComplete(clampedDays, dataConsent, condition!)}
+            onClick={() => onComplete(activeIngredients, dataConsent, condition!)}
             className="h-auto w-full rounded-full py-3 text-[15px]"
           >
             {t("onboarding.mappingResult.start", locale)}

@@ -54,6 +54,7 @@ interface RemoteProfile {
   prescriptionMeds: boolean
   concern: Concern
   supportOwned: SupportId[]
+  activeIngredients: string[]
   /** 이 프로필이 마지막으로 확인된 엔진 버전 — null이면 이 필드가 생기기 전의 레거시 유저 */
   engineVersion: string | null
 }
@@ -85,6 +86,7 @@ export async function saveContextFlags(
     concern?: string
     supportOwned?: string[]
     dataConsent?: boolean
+    activeIngredients?: string[]
   },
 ): Promise<void> {
   const supabase = getSupabaseClient()
@@ -99,6 +101,7 @@ export async function saveContextFlags(
   if (flags.prescriptionMeds !== undefined) updatePayload.prescription_meds = flags.prescriptionMeds
   if (flags.concern !== undefined) updatePayload.concern = flags.concern
   if (flags.supportOwned !== undefined) updatePayload.support_owned = flags.supportOwned
+  if (flags.activeIngredients !== undefined) updatePayload.active_ingredients = flags.activeIngredients
 
   if (flags.dataConsent !== undefined) {
     updatePayload.data_consent = flags.dataConsent
@@ -329,7 +332,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
       .select(
-        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, engine_version",
+        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, active_ingredients, engine_version",
       )
       .eq("user_id", userId)
       .maybeSingle()
@@ -389,6 +392,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
         prescriptionMeds: profile.prescription_meds ?? false,
         concern: (profile.concern as Concern) ?? "none",
         supportOwned: (profile.support_owned as SupportId[] | null) ?? [],
+        activeIngredients: (profile.active_ingredients as string[] | null) ?? [],
         engineVersion: profile.engine_version ?? null,
       },
       completedDays,

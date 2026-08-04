@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { dayFromJoinDate, RECIPES, TOTAL_DAYS, type Recipe, type RecipeType, type ScheduleSettings } from "@/lib/schedule"
+import { dayFromJoinDate, DEFAULT_ACTIVE_INTERVAL_DAYS, DEFAULT_BHA_INTERVAL_DAYS, RECIPES, TOTAL_DAYS, type Recipe, type RecipeType, type ScheduleSettings } from "@/lib/schedule"
 import {
   CURRENT_ENGINE_VERSION,
   delayForReaction,
@@ -65,6 +65,8 @@ interface DiaryState {
   concern: Concern
   /** 유저가 이미 갖고 있다고 답한 성분 id 목록 */
   supportOwned: SupportId[]
+  /** 온보딩에서 선택한 고민케어 사용 성분 — 레티놀/비타민C/나이아신아마이드/모름, 리포트 카피 분기용 */
+  activeIngredients: string[]
   /** 체커에서 전달받은 제품 목록 (Day 0 온보딩 시에만 저장, 갱신은 별도 self-report 기능에서 처리 예정) */
   usedProducts: UsedProduct[] | null
   /**
@@ -98,6 +100,7 @@ function freshState(): DiaryState {
     prescriptionMeds: false,
     concern: "none",
     supportOwned: [],
+    activeIngredients: [],
     usedProducts: null,
     engineVersion: null,
     dataConsent: false,
@@ -124,6 +127,7 @@ function loadLocalState(): DiaryState | null {
       prescriptionMeds: parsed.prescriptionMeds ?? false,
       concern: parsed.concern ?? "none",
       supportOwned: parsed.supportOwned ?? [],
+      activeIngredients: parsed.activeIngredients ?? [],
       usedProducts: parsed.usedProducts ?? null,
       engineVersion: parsed.engineVersion ?? null,
       dataConsent: parsed.dataConsent ?? false,
@@ -310,6 +314,7 @@ export function useDiary() {
             prescriptionMeds: remote.profile.prescriptionMeds,
             concern: remote.profile.concern,
             supportOwned: remote.profile.supportOwned,
+            activeIngredients: remote.profile.activeIngredients,
             engineVersion: remote.profile.engineVersion,
             loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
             loggedSlots: remote.loggedSlots,
@@ -449,18 +454,19 @@ export function useDiary() {
    * Day 1이 시작되지 않은 것으로 취급한다.
    */
   const completeOnboarding = useCallback(
-    async (intervalDays: number, dataConsent: boolean, condition: "good" | "neutral" | "bad") => {
+    async (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => {
       const now = todayISO()
       setState((prev) => ({
         ...prev,
         joinDate: now,
-        settings: { activeIntervalDays: intervalDays, bhaIntervalDays: intervalDays },
+        settings: { activeIntervalDays: DEFAULT_ACTIVE_INTERVAL_DAYS, bhaIntervalDays: DEFAULT_BHA_INTERVAL_DAYS },
         dataConsent,
         dataConsentAt: dataConsent ? now : null,
+        activeIngredients,
       }))
       if (userId) {
         // diary_profiles 행이 반드시 먼저 생성되도록 await
-        await saveContextFlags(userId, now, { dataConsent })
+        await saveContextFlags(userId, now, { dataConsent, activeIngredients })
         saveConditionLog(userId, 0, condition, "onboarding")
 
         // 이후 used_products 저장 (fire-and-forget, 위의 await로 안전성 보장)
@@ -588,6 +594,7 @@ export function useDiary() {
     prescriptionMeds: state.prescriptionMeds,
     concern: state.concern,
     supportOwned: state.supportOwned,
+    activeIngredients: state.activeIngredients,
     usedProducts: state.usedProducts,
     userId,
     joinDate: state.joinDate,

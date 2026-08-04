@@ -312,10 +312,25 @@
       "next": "Next"
     },
     "habitCheck": {
+      "subQuestion": "(for accurate analysis)",
       "question": "How often do you usually do active care (exfoliating or retinol)?",
       "placeholder": "e.g. 7",
       "interval_suffix": "days",
       "never_uses": "I rarely do active care",
+      "next": "Next"
+    },
+    "checkerImport": {
+      "question": "Load your skincare ingredient compatibility info?",
+      "load": "Load it",
+      "skip": "Skip",
+      "bridge": "Let me just check your routine strength once more."
+    },
+    "ingredientCheck": {
+      "question": "Which ingredients do you usually use for active care?",
+      "option_vitc": "Vitamin C",
+      "option_ret": "Retinol",
+      "option_nia": "Niacinamide",
+      "option_unknown": "I'm not sure",
       "next": "Next"
     },
     "mappingResult": {
@@ -325,6 +340,7 @@
       "comment_too_short": "Going a bit slower might be kinder to your skin",
       "comment_too_frequent": "A little more often will help you see changes in 30 days",
       "comment_similar": "This is close to what you're doing now—great fit",
+      "checker_recommend_note": "⭐ Recommended ingredients are marked to help improve your skin",
       "conditionQuestion": "How's your skin feeling today?",
       "condition_good": "Good",
       "condition_neutral": "Okay",
@@ -436,7 +452,7 @@
     "conditionQuestion": "How did your skin feel after today's care?",
     "reportReaction": "Report sensitivity",
     "slots": {
-      "prep": "Cleansing",
+      "exfoliation": "Exfoliation",
       "hydration": "Hydration",
       "active": "Concern Care",
       "barrier": "Soothing Care",

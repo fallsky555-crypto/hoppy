@@ -320,10 +320,18 @@
       "next": "다음"
     },
     "checkerImport": {
-      "question": "성분충돌 검사지 정보를 불러올까요?",
+      "question": "내 화장품 성분 궁합 정보를 불러올까요?",
       "load": "불러올게요",
       "skip": "괜찮아요",
       "bridge": "루틴 강도만 하나 더 확인할게요."
+    },
+    "ingredientCheck": {
+      "question": "고민케어로 주로 뭘 쓰세요?",
+      "option_vitc": "비타민C",
+      "option_ret": "레티놀",
+      "option_nia": "나이아신아마이드",
+      "option_unknown": "잘 모르겠어요",
+      "next": "다음"
     },
     "mappingResult": {
       "mapping_with_interval": "{{days}}일마다 쓰신다니,",
@@ -441,7 +449,7 @@
     "conditionQuestion": "오늘 하신 케어, 피부 어땠어요?",
     "reportReaction": "자극 신고하기",
     "slots": {
-      "prep": "클렌징",
+      "exfoliation": "각질케어",
       "hydration": "수분케어",
       "active": "고민케어",
       "barrier": "진정케어",
