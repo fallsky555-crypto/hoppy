@@ -1,6 +1,17 @@
 import { getRandomElement } from "@/lib/utils"
 import type { SlotType } from "@/components/daily-slots"
 
+const INGREDIENT_LABELS_KO: Record<string, string> = {
+  ret: "레티놀",
+  vitc: "비타민C",
+  nia: "나이아신아마이드",
+}
+
+function getActiveIngredientLabelKo(activeIngredients: string[]): string {
+  const labels = activeIngredients.map((id) => INGREDIENT_LABELS_KO[id]).filter(Boolean)
+  return labels.length > 0 ? labels.join(", ") : "레티놀 등"
+}
+
 interface WeatherData {
   temp: number | null
   humidity: number | null
@@ -119,6 +130,7 @@ interface BuildCareCardCopyParams {
   recommendedSlot: SlotType | null
   hasSafetyIncident: boolean
   locale: string
+  activeIngredients?: string[]
 }
 
 interface CareCardCopy {
@@ -127,7 +139,7 @@ interface CareCardCopy {
 }
 
 export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy {
-  const { weather, recommendedSlot, hasSafetyIncident, locale } = params
+  const { weather, recommendedSlot, hasSafetyIncident, locale, activeIngredients = [] } = params
   const condition = analyzeWeather(weather)
   const title = locale === "ko" ? "오늘의 케어" : "Today's Care"
 
@@ -135,7 +147,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
     return {
       title,
       description: locale === "ko"
-        ? "무언가를 더하기보다, 가진 걸 지키는 날이에요. 진정케어로 장벽을 든든하게 감싸주세요."
+        ? "지금은 피부가 좀 예민한 시기예요. 진정케어(시카, 세라마이드)로 편안하게 감싸주세요."
         : "Instead of adding more, focus on protecting what you have. Wrap your skin barrier with soothing care.",
     }
   }
@@ -144,7 +156,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
 
   if (recommendedSlot === "active") {
     const baseDescription = locale === "ko"
-      ? `집중 케어가 필요한 날이에요. ${weatherSnippet}`
+      ? `고민케어(${getActiveIngredientLabelKo(activeIngredients)})가 필요한 날이에요. ${weatherSnippet}`
       : `Your skin needs targeted care. ${weatherSnippet}`
     const description = condition.isDry
       ? locale === "ko"
@@ -162,7 +174,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
       return {
         title,
         description: locale === "ko"
-          ? "비 오는 날엔 우산이나 마찰로 피부가 예민해지기 쉬워요. 수분케어로 촉촉하게 채워주세요."
+          ? "비 오는 날엔 우산이나 마찰로 피부가 예민해지기 쉬워요. 수분케어(히알)로 촉촉하게 채워주세요."
           : "Rainy days can leave skin sensitive from friction and umbrellas. Keep it hydrated and calm.",
       }
     }
@@ -175,7 +187,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
     return {
       title,
       description: locale === "ko"
-        ? `수분 케어가 중요한 날이에요. ${weatherSnippet}`
+        ? `수분케어(히알)가 중요한 날이에요. ${weatherSnippet}`
         : `Hydration is key today. ${weatherSnippet}`,
     }
   }
@@ -184,7 +196,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
     return {
       title,
       description: locale === "ko"
-        ? `피부 장벽 보호가 우선이에요. ${weatherSnippet}`
+        ? `진정케어(시카, 세라마이드)가 우선이에요. ${weatherSnippet}`
         : `Barrier protection comes first. ${weatherSnippet}`,
     }
   }

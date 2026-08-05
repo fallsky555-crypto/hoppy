@@ -47,6 +47,9 @@ function SlotCard({ slot, isChecked, toggleSlot, isSunCare, isRecommended }: { s
     toggleSlot(slot.id)
   }, [slot.id, toggleSlot])
 
+  const descriptionKey = slot.id !== "sun_care" ? `dailySlots.slotDescriptions.${slot.id}` : null
+  const description = descriptionKey ? t(descriptionKey, locale) : null
+
   return (
     <button
       type="button"
@@ -64,9 +67,16 @@ function SlotCard({ slot, isChecked, toggleSlot, isSunCare, isRecommended }: { s
       <div className={cn("flex-shrink-0", isSunCare ? "text-2xl" : "text-3xl")}>
         {slot.emoji}
       </div>
-      <span className={cn("font-semibold text-foreground", isSunCare ? "text-sm text-left" : "text-sm text-center")}>
-        {t(slot.labelKey, locale)}
-      </span>
+      <div className={isSunCare ? "text-left" : "text-center"}>
+        <span className={cn("font-semibold text-foreground", isSunCare ? "text-sm" : "text-sm")}>
+          {t(slot.labelKey, locale)}
+        </span>
+        {description && (
+          <div className="text-xs text-muted-foreground">
+            {description}
+          </div>
+        )}
+      </div>
       {isRecommended && (
         <span className="absolute -top-1.5 -left-1.5 flex size-[22px] items-center justify-center rounded-full bg-white shadow-sm text-[10px]">
           ⭐

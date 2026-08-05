@@ -454,6 +454,12 @@
       "active": "고민케어",
       "barrier": "진정케어",
       "sun_care": "자외선차단"
+    },
+    "slotDescriptions": {
+      "exfoliation": "AHA, BHA 등",
+      "hydration": "히알루론산 등",
+      "active": "레티놀, 비타민C 등",
+      "barrier": "시카, 세라마이드 등"
     }
   },
   "metadata": {

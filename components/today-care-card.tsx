@@ -42,11 +42,17 @@ export function TodayCareCard() {
   const hasRecentIncident = diary.hasRecentSafetyIncident(diary.currentDay)
   const recommendedSlot: SlotType | null = hasRecentIncident ? "barrier" : (getRecommendedSlot(todayRecipe.type) as SlotType | null)
 
+  const activeIngredients = diary.activeIngredients ?? []
+  if (!diary.activeIngredients || diary.activeIngredients.length === 0) {
+    console.warn("[TodayCareCard] active_ingredients not found, falling back to default copy")
+  }
+
   const copy = buildCareCardCopy({
     weather,
     recommendedSlot,
     hasSafetyIncident: hasRecentIncident,
     locale,
+    activeIngredients,
   })
 
   return (
