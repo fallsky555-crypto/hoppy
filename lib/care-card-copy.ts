@@ -19,8 +19,8 @@ interface WeatherCondition {
 
 const weatherSnippets = {
   en: {
-    rain: "It looks like rain today, so keep your skin hydrated and moisturized.",
-    snow: "Snow is expected, so keep your skin well moisturized.",
+    rain: "It's raining today, so keep your skin hydrated and moisturized.",
+    snow: "It's snowing today, so keep your skin well moisturized.",
     cold: [
       "It's cold today, so make sure to take care of your skin barrier.",
       "Bundle up and don't forget to moisturize your skin!",
@@ -45,8 +45,8 @@ const weatherSnippets = {
     ],
   },
   ko: {
-    rain: "비 소식이 있어요, 촉촉하게 보습 챙겨주세요.",
-    snow: "눈 소식이 있어요, 촉촉하게 보습 챙겨주세요.",
+    rain: "비가 오고 있어요, 촉촉하게 보습 챙겨주세요.",
+    snow: "눈이 오고 있어요, 촉촉하게 보습 챙겨주세요.",
     cold: [
       "날씨가 차네요, 피부 장벽 관리에 신경 써주세요.",
       "추운 날씨일수록 보습이 중요해요.",
@@ -158,6 +158,14 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
   }
 
   if (recommendedSlot === "hydration") {
+    if (condition.isRain) {
+      return {
+        title,
+        description: locale === "ko"
+          ? "비 오는 날엔 우산이나 마찰로 피부가 예민해지기 쉬워요. 수분케어로 촉촉하게 채워주세요."
+          : "Rainy days can leave skin sensitive from friction and umbrellas. Keep it hydrated and calm.",
+      }
+    }
     if (condition.isDry) {
       return {
         title,

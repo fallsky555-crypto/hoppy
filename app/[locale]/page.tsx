@@ -53,12 +53,12 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
         heroImageSrc={diary.heroImageSrc}
       />
 
+      <TodayCareCard />
+
       <DailySlots
         day={activeDay}
         onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
       />
-
-      <TodayCareCard />
 
       <WeeklyMiniInsight />
 
