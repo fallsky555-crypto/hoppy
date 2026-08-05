@@ -74,9 +74,9 @@
 
 :root {
   color-scheme: light;
-  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+  --font-sans: var(--font-pretendard), -apple-system, BlinkMacSystemFont, system-ui, Roboto,
     'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-  --font-display: var(--font-playfair), 'Pretendard Variable', Pretendard, serif;
+  --font-display: var(--font-playfair), var(--font-pretendard), serif;
   /*
    * 새 팔레트: 청회색(뉴트럴) + 하늘색(포인트)
    * 배경: #EAF4F8, 카드: #F7FBFC, 텍스트: #26424D

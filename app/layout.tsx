@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Playfair_Display } from 'next/font/google'
+import { LocalFont } from 'next/font/local'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -28,16 +29,27 @@ const playfairDisplay = Playfair_Display({
   display: 'swap',
 })
 
+const pretendardVariable = LocalFont({
+  src: [
+    {
+      path: '../public/fonts/PretendardVariable.woff2',
+      weight: '100 900',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-pretendard',
+  display: 'swap',
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html className={`light ${playfairDisplay.variable}`}>
+    <html className={`light ${playfairDisplay.variable} ${pretendardVariable.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable.css" />
       </head>
       <body className="bg-background font-sans antialiased">
         {children}
