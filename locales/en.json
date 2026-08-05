@@ -305,9 +305,9 @@
   },
   "onboarding": {
     "intro": {
-      "title": "This is where your personal skin profile begins",
-      "description": "Everything you log from here on is yours alone. After 30 days, you'll get a personal profile built from it. We'll start with pore care — the foundation for what comes next, like tone and brightening.",
-      "dataConsentLabel": "[Required] I agree to have my skin records collected. This is used only to build your personal profile, and you can delete it anytime.",
+      "title": "This is where your skin journal begins",
+      "description": "Everything you log from here on is yours alone.\nIt becomes your own clue to finding what works for you.",
+      "dataConsentLabel": "[Required] I agree to have my skin records collected. This is used only to keep your own record, and you can delete it anytime.",
       "dataConsentLink": "View full policy",
       "next": "Next"
     },
@@ -363,8 +363,8 @@
     "water_goal": "Aim for {{maxWater}} glasses today"
   },
   "progressHeader": {
-    "tagline": "SKIN DIET DIARY",
-    "title": "My Skin Record"
+    "tagline": "SKIN JOURNAL",
+    "title": "My Skin Journal"
   },
   "homeStats": {
     "loggedDays": "Days Logged",
@@ -457,7 +457,25 @@
       "active": "Concern Care",
       "barrier": "Soothing Care",
       "sun_care": "Sun Care"
-    }
+    },
+    "slotDescriptions": {
+      "exfoliation": "AHA, BHA, etc.",
+      "hydration": "Hyaluronic acid, etc.",
+      "active": "Retinol, Vitamin C, etc.",
+      "barrier": "Cica, ceramide, etc."
+    },
+    "specialCare": {
+      "title": "Special Care",
+      "subtitle": "Sheet mask, troubleshooting, etc.",
+      "option_mask": "Sheet Mask",
+      "option_trouble": "Troubleshooting"
+    },
+    "recordButton": {
+      "done": "Today's record complete!",
+      "default": "Mark complete"
+    },
+    "recommendationNote": "⭐ This is your recommended care. Adjust based on how your skin feels.",
+    "tapPrompt": "Tap what applies"
   },
   "metadata": {
     "title": "Hoppy Skin Diary · Your Daily Skin Record",
@@ -499,6 +517,12 @@
     "products_used": "Current Product Collection",
     "products_none": "No products recorded",
     "next_routine_suggest": "For the next phase, you can follow a similar routine with the option to introduce one additional ingredient as needed.",
-    "paywall_locked": "This section is premium content. Starting from the 2nd cycle, a personalized routine calendar will be provided at this point."
+    "paywall_locked": "This section is premium content. Starting from the 2nd cycle, a personalized routine calendar will be provided at this point.",
+    "lowData": {
+      "title": "Your 30 Days So Far",
+      "subtitle": "You've logged {{days}} days",
+      "note": "As you keep logging, clearer patterns will show up here.",
+      "countSuffix": "times"
+    }
   }
 }

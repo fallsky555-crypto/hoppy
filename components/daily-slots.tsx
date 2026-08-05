@@ -91,10 +91,10 @@ interface SpecialCareCardProps {
   onToggle: () => void
   selectedSpecialCare: Set<SpecialCareType>
   onToggleSpecialCare: (id: SpecialCareType) => void
+  locale: string
 }
 
-function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSpecialCare }: SpecialCareCardProps) {
-  const locale = useLocale()
+function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSpecialCare, locale }: SpecialCareCardProps) {
 
   return (
     <div className="border-2 border-border rounded-2xl overflow-hidden">
@@ -106,8 +106,8 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
         <div className="flex items-center gap-3">
           <span className="text-2xl">💎</span>
           <div className="text-left">
-            <div className="text-sm font-semibold text-foreground">특별관리</div>
-            <div className="text-xs text-muted-foreground">마스크팩, 트러블관리 등</div>
+            <div className="text-sm font-semibold text-foreground">{t("dailySlots.specialCare.title", locale)}</div>
+            <div className="text-xs text-muted-foreground">{t("dailySlots.specialCare.subtitle", locale)}</div>
           </div>
         </div>
         <ChevronDown
@@ -131,7 +131,7 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
             )}
           >
             <span>🫙</span>
-            <span className="text-sm font-semibold text-foreground">마스크팩</span>
+            <span className="text-sm font-semibold text-foreground">{t("dailySlots.specialCare.option_mask", locale)}</span>
           </button>
           <button
             type="button"
@@ -144,7 +144,7 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
             )}
           >
             <span>🩹</span>
-            <span className="text-sm font-semibold text-foreground">트러블관리</span>
+            <span className="text-sm font-semibold text-foreground">{t("dailySlots.specialCare.option_trouble", locale)}</span>
           </button>
         </div>
       )}
@@ -268,7 +268,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
           </div>
           <div className="space-y-2">
             <h2 className="font-display text-xl font-bold text-foreground">
-              피부를 위해 오늘 무엇을 하셨나요?
+              {t("dailySlots.headline", locale)}
             </h2>
             <p className="text-sm text-muted-foreground">
               {locale === "ko"
@@ -308,6 +308,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
             onToggle={() => setSpecialCareExpanded(!specialCareExpanded)}
             selectedSpecialCare={selectedSpecialCare}
             onToggleSpecialCare={toggleSpecialCare}
+            locale={locale}
           />
         </div>
 
@@ -317,7 +318,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
             <p className="text-xs text-center text-muted-foreground mt-1">
               {hasRecentIncident
                 ? t("dailySlots.incidentWarning", locale)
-                : "⭐ 추천 케어예요. 컨디션에 따라 조절하세요"}
+                : t("dailySlots.recommendationNote", locale)}
             </p>
           </div>
         )}
@@ -326,8 +327,8 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
         <div className="space-y-2">
           <p className="text-sm font-bold text-center text-foreground">
             {totalSelected > 0
-              ? `${totalSelected}개 선택됨`
-              : "해당하는것을 눌러주세요"}
+              ? locale === "ko" ? `${totalSelected}개 선택됨` : `${totalSelected} selected`
+              : t("dailySlots.tapPrompt", locale)}
           </p>
 
           {showConditionPrompt && (
@@ -418,7 +419,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                 : "bg-primary hover:bg-primary/80 text-primary-foreground"
             )}
           >
-            {diary.conditions[day] !== undefined ? "오늘 기록 완료!" : "기록 완료"}
+            {diary.conditions[day] !== undefined ? t("dailySlots.recordButton.done", locale) : t("dailySlots.recordButton.default", locale)}
           </button>
         </div>
       </div>
