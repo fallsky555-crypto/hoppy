@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Playfair_Display } from 'next/font/google'
+import { Playfair_Display, Noto_Serif_KR } from 'next/font/google'
 import { LocalFont } from 'next/font/local'
 import './globals.css'
 
@@ -29,6 +29,13 @@ const playfairDisplay = Playfair_Display({
   display: 'swap',
 })
 
+const notoSerifKR = Noto_Serif_KR({
+  weight: ['500', '700'],
+  variable: '--font-noto-serif-kr',
+  display: 'swap',
+  preload: true,
+})
+
 const pretendardVariable = LocalFont({
   src: [
     {
@@ -47,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html className={`light ${playfairDisplay.variable} ${pretendardVariable.variable}`}>
+    <html className={`light ${playfairDisplay.variable} ${notoSerifKR.variable} ${pretendardVariable.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
       </head>
