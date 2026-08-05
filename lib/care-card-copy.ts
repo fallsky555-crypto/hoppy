@@ -125,19 +125,35 @@ function buildWeatherSnippet(condition: WeatherCondition, locale: string): strin
   return getRandomElement(snippets.nice)
 }
 
-const nightIntros: Record<"hot" | "dry" | "rain", string> = {
-  hot: "저녁엔 열에 지친 피부를 위해",
-  dry: "건조한 하루를 보낸 밤엔",
-  rain: "비를 맞은 저녁엔",
+const nightIntros: Record<"ko" | "en", Record<"hot" | "dry" | "rain", string>> = {
+  ko: {
+    hot: "저녁엔 열에 지친 피부를 위해",
+    dry: "건조한 하루를 보낸 밤엔",
+    rain: "비를 맞은 저녁엔",
+  },
+  en: {
+    hot: "After a warm day tonight,",
+    dry: "After such a dry day tonight,",
+    rain: "With today's rain tonight,",
+  },
 }
 
-function getNightTip(recommendedSlot: SlotType | null): string {
+function getNightTip(recommendedSlot: SlotType | null, locale: string): string {
+  if (locale === "ko") {
+    switch (recommendedSlot) {
+      case "active": return "진정케어로 마무리해주세요"
+      case "hydration": return "수분을 한 번 더 채워주시면 좋아요"
+      case "barrier": return "오늘 밤은 가볍게 쉬어가 주세요"
+      case "sun_care": return "진정케어로 하루 동안 받은 자극을 달래주세요"
+      default: return "가벼운 진정케어로 하루를 마무리해보세요"
+    }
+  }
   switch (recommendedSlot) {
-    case "active": return "진정케어로 마무리해주세요"
-    case "hydration": return "수분을 한 번 더 채워주시면 좋아요"
-    case "barrier": return "장벽을 든든히 챙겨주세요"
-    case "sun_care": return "진정케어로 하루 동안 받은 자극을 달래주세요"
-    default: return "가벼운 진정케어로 하루를 마무리해보세요"
+    case "active": return "finish up with some soothing care."
+    case "hydration": return "it's worth adding one more layer of hydration."
+    case "barrier": return "your skin could use a little extra rest tonight."
+    case "sun_care": return "let some soothing care calm away the day's stress."
+    default: return "wind down with a bit of gentle, soothing care."
   }
 }
 
@@ -212,13 +228,15 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
     dayDescription = weatherSnippet
   }
 
-  // Append night tip for Korean only, when applicable
   let finalDescription = dayDescription
-  if (locale === "ko" && !hasSafetyIncident) {
+  if (!hasSafetyIncident) {
     const nightTipKey = getNightTipKey(condition)
     if (nightTipKey) {
-      const nightTip = getNightTip(recommendedSlot)
-      finalDescription = `${dayDescription} ${nightIntros[nightTipKey]} ${nightTip}.`
+      const nightTip = getNightTip(recommendedSlot, locale)
+      const intro = nightIntros[locale === "ko" ? "ko" : "en"][nightTipKey]
+      finalDescription = locale === "ko"
+        ? `${dayDescription} ${intro} ${nightTip}.`
+        : `${dayDescription} ${intro} ${nightTip}`
     }
   }
 

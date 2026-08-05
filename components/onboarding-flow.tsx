@@ -24,7 +24,7 @@ type Step = 1 | 2 | 3
 function getPrivacyPolicyUrl(locale: Locale): string {
   return locale === "ko"
     ? "https://myroutinediet.com/privacy-policy.html"
-    : "https://myroutinediet.com/policy-en.html"
+    : "https://myroutinediet.com/privacy-policy-en.html"
 }
 
 function StepIndicator({ step }: { step: Step }) {
@@ -105,7 +105,7 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
               {t("onboarding.intro.description", locale)}
             </p>
 
-            <div className="flex items-start gap-3 rounded-3xl bg-secondary/30 p-3.5">
+            <div className="flex items-start gap-3 rounded-3xl bg-secondary/30 pt-3.5 pb-2">
               <input
                 type="checkbox"
                 id="data-consent"
@@ -113,12 +113,12 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
                 onChange={(e) => setDataConsent(e.target.checked)}
                 className="shrink-0 mt-0.5 w-4 h-4 rounded border border-border cursor-pointer accent-primary"
               />
-              <label htmlFor="data-consent" className="cursor-pointer text-[13px] leading-relaxed text-foreground">
+              <label htmlFor="data-consent" className="cursor-pointer text-left text-[13px] leading-relaxed text-foreground">
                 {t("onboarding.intro.dataConsentLabel", locale)}
               </label>
             </div>
 
-            <div className="text-center">
+            <div className="text-center -mt-4">
               <a
                 href={getPrivacyPolicyUrl(locale)}
                 target="_blank"
