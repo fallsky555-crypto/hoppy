@@ -125,6 +125,30 @@ function buildWeatherSnippet(condition: WeatherCondition, locale: string): strin
   return getRandomElement(snippets.nice)
 }
 
+const nightIntros: Record<"hot" | "dry" | "rain", string> = {
+  hot: "저녁엔 열에 지친 피부를 위해",
+  dry: "건조한 하루를 보낸 밤엔",
+  rain: "비를 맞은 저녁엔",
+}
+
+function getNightTip(recommendedSlot: SlotType | null): string {
+  switch (recommendedSlot) {
+    case "active": return "진정케어로 마무리해주세요"
+    case "hydration": return "수분을 한 번 더 채워주시면 좋아요"
+    case "barrier": return "장벽을 든든히 챙겨주세요"
+    case "sun_care": return "진정케어로 하루 동안 받은 자극을 달래주세요"
+    default: return "가벼운 진정케어로 하루를 마무리해보세요"
+  }
+}
+
+function getNightTipKey(condition: WeatherCondition): "hot" | "dry" | "rain" | null {
+  // 우선순위: rain > hot > dry
+  if (condition.isRain) return "rain"
+  if (condition.isHot) return "hot"
+  if (condition.isDry) return "dry"
+  return null
+}
+
 interface BuildCareCardCopyParams {
   weather: WeatherData
   recommendedSlot: SlotType | null
@@ -153,65 +177,53 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
   }
 
   const weatherSnippet = buildWeatherSnippet(condition, locale)
+  let dayDescription = ""
 
   if (recommendedSlot === "active") {
     const baseDescription = locale === "ko"
-      ? `고민케어(${getActiveIngredientLabelKo(activeIngredients)})가 필요한 날이에요. ${weatherSnippet}`
+      ? `고민케어가 필요한 날이에요. ${weatherSnippet}`
       : `Your skin needs targeted care. ${weatherSnippet}`
-    const description = condition.isDry
+    dayDescription = condition.isDry
       ? locale === "ko"
         ? `${baseDescription} 고민케어 하신다면 보습도 꼭 함께 챙겨주세요.`
         : `${baseDescription} If you're doing targeted care, make sure to hydrate as well.`
       : baseDescription
-    return {
-      title,
-      description,
-    }
-  }
-
-  if (recommendedSlot === "hydration") {
+  } else if (recommendedSlot === "hydration") {
     if (condition.isRain) {
-      return {
-        title,
-        description: locale === "ko"
-          ? "비 오는 날엔 우산이나 마찰로 피부가 예민해지기 쉬워요. 수분케어(히알)로 촉촉하게 채워주세요."
-          : "Rainy days can leave skin sensitive from friction and umbrellas. Keep it hydrated and calm.",
-      }
+      dayDescription = locale === "ko"
+        ? "비 오는 날엔 우산이나 마찰로 피부가 예민해지기 쉬워요. 수분케어로 촉촉하게 채워주세요."
+        : "Rainy days can leave skin sensitive from friction and umbrellas. Keep it hydrated and calm."
+    } else if (condition.isDry) {
+      dayDescription = weatherSnippet
+    } else {
+      dayDescription = locale === "ko"
+        ? `수분케어가 중요한 날이에요. ${weatherSnippet}`
+        : `Hydration is key today. ${weatherSnippet}`
     }
-    if (condition.isDry) {
-      return {
-        title,
-        description: weatherSnippet,
-      }
-    }
-    return {
-      title,
-      description: locale === "ko"
-        ? `수분케어(히알)가 중요한 날이에요. ${weatherSnippet}`
-        : `Hydration is key today. ${weatherSnippet}`,
-    }
+  } else if (recommendedSlot === "barrier") {
+    dayDescription = locale === "ko"
+      ? `피부 장벽 보호가 우선이에요. ${weatherSnippet}`
+      : `Barrier protection comes first. ${weatherSnippet}`
+  } else if (recommendedSlot === "sun_care") {
+    dayDescription = locale === "ko"
+      ? `자외선 차단이 중요한 날이에요. ${weatherSnippet}`
+      : `Sun protection is essential today. ${weatherSnippet}`
+  } else {
+    dayDescription = weatherSnippet
   }
 
-  if (recommendedSlot === "barrier") {
-    return {
-      title,
-      description: locale === "ko"
-        ? `진정케어(시카, 세라마이드)가 우선이에요. ${weatherSnippet}`
-        : `Barrier protection comes first. ${weatherSnippet}`,
-    }
-  }
-
-  if (recommendedSlot === "sun_care") {
-    return {
-      title,
-      description: locale === "ko"
-        ? `자외선 차단이 중요한 날이에요. ${weatherSnippet}`
-        : `Sun protection is essential today. ${weatherSnippet}`,
+  // Append night tip for Korean only, when applicable
+  let finalDescription = dayDescription
+  if (locale === "ko" && !hasSafetyIncident) {
+    const nightTipKey = getNightTipKey(condition)
+    if (nightTipKey) {
+      const nightTip = getNightTip(recommendedSlot)
+      finalDescription = `${dayDescription} ${nightIntros[nightTipKey]} ${nightTip}.`
     }
   }
 
   return {
     title,
-    description: weatherSnippet,
+    description: finalDescription,
   }
 }
