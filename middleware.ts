@@ -6,12 +6,16 @@ const SUPPORTED_LOCALES = ['ko', 'en']
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  // 루트 /manifest.json만 제외 (로케일 하위 /ko/manifest.json, /en/manifest.json은 통과)
+  if (pathname === '/manifest.json' || pathname === '/manifest.webmanifest') {
+    return NextResponse.next()
+  }
+
   // 리라이트 대상에서 제외할 경로들
   const excludePatterns = [
     /_next\/static/,
     /_next\/image/,
     /favicon\.ico/,
-    /manifest/,
     /public/,
     /\.json$/, // 정적 파일
     /^\/api\//,
@@ -39,6 +43,6 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // 정적 파일 및 이미지 확장자 제외 (이미지 추가 시 matcher 수정 불필요)
-    '/((?!api|_next|favicon\\.ico|manifest|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2?)).*)',
+    '/((?!api|_next|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|woff2?)).*)',
   ],
 }
