@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Playfair_Display } from 'next/font/google'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -20,16 +21,22 @@ export const viewport: Viewport = {
   themeColor: '#ffffff',
 }
 
+const playfairDisplay = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-playfair',
+  display: 'swap',
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html className="light">
+    <html className={`light ${playfairDisplay.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable.css" />
       </head>
       <body className="bg-background font-sans antialiased">
