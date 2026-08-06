@@ -281,6 +281,22 @@
       "google": "Continue with Google",
       "google_pending": "Connecting...",
       "close": "Close"
+    },
+    "message": {
+      "existing_account_fallback": "Your {{provider}} account is already linked on another device. Signing in with that account now."
+    },
+    "dialog": {
+      "title": "Confirm data loss",
+      "description": "Your current device's data is saved anonymously. Signing in with {{provider}} will replace it with your linked account data. Continue?",
+      "data_summary": {
+        "profile": "Profile information",
+        "entries": "Care records",
+        "logs": "Condition logs"
+      },
+      "button": {
+        "cancel": "Cancel",
+        "continue": "Continue"
+      }
     }
   },
   "common": {

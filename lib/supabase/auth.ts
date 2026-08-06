@@ -31,7 +31,7 @@ function rememberLinkAttempt(provider: LoginProvider) {
  * 자체는 에러 없이 리다이렉트를 시작하고, 실패는 콜백 이후 돌아온 URL에 담겨서
  * consumeOAuthErrorFromURL()로 감지된다 — signInExistingIdentity() 참고.
  */
-export async function linkIdentity(provider: LoginProvider): Promise<{ error: string | null }> {
+export async function linkIdentity(provider: LoginProvider): Promise<{ error: string | null; code?: string }> {
   const supabase = getSupabaseClient()
   if (!supabase) return { error: "Supabase가 설정되지 않았습니다." }
 
@@ -48,7 +48,7 @@ export async function linkIdentity(provider: LoginProvider): Promise<{ error: st
 
   if (error) {
     console.warn(`[supabase] linkIdentity(${provider}) failed:`, error.message)
-    return { error: error.message }
+    return { error: error.message, code: (error as any).code }
   }
   // 성공하면 브라우저가 곧바로 OAuth 제공자로 리다이렉트되므로 이 반환값이 쓰일 일은 거의 없다
   return { error: null }
@@ -175,4 +175,62 @@ export async function signOut(): Promise<{ error: string | null }> {
     return { error: error.message }
   }
   return { error: null }
+}
+
+/** 익명 세션에서 쌓인 데이터 확인. linkIdentity 실패 시 signInExistingIdentity로 폴백할 때,
+ * 데이터 유실 여부를 판단하는 데 사용한다. 데이터가 있으면 사용자 확인을 요청하는 다이얼로그를 띄울 수 있다. */
+export async function checkAnonymousDataLoss(
+  provider: LoginProvider
+): Promise<{
+  hasData: boolean
+  details: {
+    hasProfile: boolean
+    entryCount: number
+    logCount: number
+  }
+}> {
+  const supabase = getSupabaseClient()
+
+  if (!supabase) {
+    return { hasData: false, details: { hasProfile: false, entryCount: 0, logCount: 0 } }
+  }
+
+  try {
+    const { data } = await supabase.auth.getSession()
+    const userId = data.session?.user?.id
+
+    if (!userId) {
+      return { hasData: false, details: { hasProfile: false, entryCount: 0, logCount: 0 } }
+    }
+
+    // 현재 익명 세션의 주요 데이터 존재 여부 확인
+    const [profileResult, entriesResult, logsResult] = await Promise.all([
+      supabase.from("diary_profiles").select("created_at").eq("user_id", userId).single(),
+      supabase.from("calendar_entries").select("count()").eq("user_id", userId).single(),
+      supabase.from("condition_log").select("count()").eq("user_id", userId).single(),
+    ])
+
+    const hasProfile = profileResult.data !== null
+    const entryCount = (profileResult.data as any)?.count || entriesResult.data?.count || 0
+    const logCount = (logsResult.data as any)?.count || 0
+    const hasData = hasProfile || entryCount > 0 || logCount > 0
+
+    // 데이터가 있으면 경고 로그 남기기
+    if (hasData) {
+      console.warn(
+        `[Login Fallback] Potential data loss: Anonymous session will be lost when switching to existing account. ` +
+          `Provider=${provider}, UserId=${userId}, ` +
+          `diary_profile=${hasProfile}, calendar_entries=${entryCount}, condition_logs=${logCount}`
+      )
+    }
+
+    return {
+      hasData,
+      details: { hasProfile, entryCount, logCount },
+    }
+  } catch (err) {
+    console.warn(`[Login Fallback] Failed to check anonymous data:`, err)
+    // 에러가 나면 데이터가 있을 수도 있으니 안전하게 true 반환
+    return { hasData: true, details: { hasProfile: false, entryCount: 0, logCount: 0 } }
+  }
 }

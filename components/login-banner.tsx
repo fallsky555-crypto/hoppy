@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
+  checkAnonymousDataLoss,
   consumeOAuthErrorFromURL,
   getLinkedProvider,
   isAnonymousSession,
@@ -40,6 +41,14 @@ export function LoginBanner() {
   /** 이미 카카오/구글 계정이 연결된 세션이면 채워진다 — "연결 안내" 대신 연결 상태 + 로그아웃을 보여준다 */
   const [linkedIdentity, setLinkedIdentity] = useState<LinkedIdentity | null>(null)
   const [signingOut, setSigningOut] = useState(false)
+  /** 익명 세션 데이터 유실 확인 다이얼로그 */
+  const [isDataLossDialogOpen, setIsDataLossDialogOpen] = useState(false)
+  const [pendingFallbackProvider, setPendingFallbackProvider] = useState<LoginProvider | null>(null)
+  const [anonymousDataDetails, setAnonymousDataDetails] = useState<{
+    hasProfile: boolean
+    entryCount: number
+    logCount: number
+  } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -98,9 +107,69 @@ export function LoginBanner() {
   async function handleLogin(provider: LoginProvider) {
     setError(null)
     setPending(provider)
+
     const result = await linkIdentity(provider)
-    setPending(null)
-    if (result.error) setError(t("login.error.link_conflict", locale))
+
+    // identity_already_exists → 자동 폴백 분기
+    if (result.code === "identity_already_exists") {
+      // 1. 익명 세션에서 쌓인 데이터 확인
+      const { hasData, details } = await checkAnonymousDataLoss(provider)
+
+      // 2-1. 데이터가 없으면 → 자동 폴백
+      if (!hasData) {
+        setError(t("login.message.existing_account_fallback", locale))
+        setPending(null)
+
+        // 1.5초 후 자동 폴백
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+
+        const fallbackResult = await signInExistingIdentity(provider)
+        if (fallbackResult.error) {
+          setError(t("login.error.signin", locale))
+        }
+        // 폴백 성공 시 OAuth 리다이렉트됨
+        return
+      }
+
+      // 2-2. 데이터가 있으면 → 확인 다이얼로그 표시
+      setAnonymousDataDetails(details)
+      setPendingFallbackProvider(provider)
+      setIsDataLossDialogOpen(true)
+      setPending(null)
+      return
+    }
+
+    // 다른 에러 처리
+    if (result.error) {
+      setPending(null)
+      setError(t("login.error.link_conflict", locale))
+    }
+  }
+
+  // 사용자가 다이얼로그에서 "계속"을 클릭했을 때
+  async function handleConfirmFallback() {
+    if (!pendingFallbackProvider) return
+
+    setIsDataLossDialogOpen(false)
+    setPending(pendingFallbackProvider)
+
+    // 자동 폴백 진행
+    const fallbackResult = await signInExistingIdentity(pendingFallbackProvider)
+
+    if (fallbackResult.error) {
+      setPending(null)
+      setError(t("login.error.signin", locale))
+    }
+    // 폴백 성공 시 OAuth 리다이렉트됨
+  }
+
+  // 사용자가 다이얼로그에서 "취소"를 클릭했을 때
+  function handleCancelFallback() {
+    setIsDataLossDialogOpen(false)
+    setPendingFallbackProvider(null)
+    setAnonymousDataDetails(null)
+    setError(null)
+    // 원래 화면으로 돌아감 (데이터는 익명 세션에 그대로 남음)
   }
 
   async function handleUseExisting() {
@@ -200,7 +269,8 @@ export function LoginBanner() {
   }
 
   return (
-    <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label={t("login.connect.ariaLabel", locale)}>
+    <>
+      <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label={t("login.connect.ariaLabel", locale)}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="text-[13px] font-semibold text-foreground">{t("login.connect.title", locale)}</h2>
@@ -239,6 +309,78 @@ export function LoginBanner() {
       </div>
 
       {error && <p className="mt-2 text-center text-xs font-medium text-destructive">{error}</p>}
-    </section>
+      </section>
+
+      {isDataLossDialogOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="w-full max-w-sm rounded-2xl bg-card shadow-lg ring-1 ring-border">
+          <div className="border-b border-border px-6 py-4">
+            <h3 className="text-base font-semibold text-foreground">
+              {t("login.dialog.title", locale)}
+            </h3>
+          </div>
+
+          <div className="px-6 py-4">
+            <p className="mb-4 text-sm text-muted-foreground">
+              {t("login.dialog.description", locale)}
+            </p>
+
+            {anonymousDataDetails && (
+              <div className="mb-4 space-y-2 rounded-lg bg-muted/50 p-3">
+                {anonymousDataDetails.hasProfile && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t("login.dialog.data_summary.profile", locale)}
+                    </span>
+                    <span className="font-medium text-foreground">●</span>
+                  </div>
+                )}
+                {anonymousDataDetails.entryCount > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t("login.dialog.data_summary.entries", locale)}
+                    </span>
+                    <span className="font-medium text-foreground">
+                      {anonymousDataDetails.entryCount}
+                    </span>
+                  </div>
+                )}
+                {anonymousDataDetails.logCount > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t("login.dialog.data_summary.logs", locale)}
+                    </span>
+                    <span className="font-medium text-foreground">
+                      {anonymousDataDetails.logCount}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-border px-6 py-4">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleCancelFallback}
+                className="flex-1 rounded-full border border-border bg-transparent px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+              >
+                {t("login.dialog.button.cancel", locale)}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmFallback}
+                disabled={pending !== null}
+                className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {t("login.dialog.button.continue", locale)}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
+    </>
   )
 }
