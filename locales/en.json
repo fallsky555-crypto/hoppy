@@ -320,6 +320,30 @@
     "later": "Later"
   },
   "onboarding": {
+    "introStep": {
+      "title": "Create your skincare story",
+      "subtitle": "Products you've tried that left you wondering —\nnow we'll show you both the ingredients and how your skin responds",
+      "description": "Let's confirm a few things to create an accurate report",
+      "ctaButton": "Load my checkup results",
+      "dataConsentLabel": "[Required] I agree to personal data collection and use",
+      "dataConsentLink": "View full policy",
+      "next": "Next"
+    },
+    "hoppiIntro": {
+      "title": "my digital esthetic report",
+      "description": "Meet Hoppi, who'll remember your routine for you. Stay together for 30 days and you'll receive the original Hoppi illustration",
+      "ingredientQuestion": "Which ingredients do you usually use for active care?",
+      "conditionQuestion": "How's your skin feeling today?",
+      "condition_good": "Good",
+      "condition_neutral": "Okay",
+      "condition_bad": "Not great",
+      "next": "Let's go"
+    },
+    "startToday": {
+      "title": "Starting today",
+      "subtitle": "Create your skincare story",
+      "next": "Let's go"
+    },
     "intro": {
       "title": "This is where your skin journal begins",
       "description": "Everything you log from here on is yours alone.\nIt becomes your own clue to finding what works for you.",
@@ -446,6 +470,23 @@
     "download": "Download"
   },
   "bridgeInterstitial": {
+    "step1": {
+      "label": "2026 SKIN JOURNAL",
+      "title": "Load your analysis\nresults now",
+      "button": "Load",
+      "consent_label": "[Required] I agree to the collection and use of my personal data",
+      "consent_link": "View details"
+    },
+    "step2": {
+      "title_with_name": "{{name}}'s Ingredient Analysis",
+      "title_without_name": "Your Ingredient Analysis",
+      "concern_description": "Your concern is {{concern}}",
+      "recommended_ingredient": "Recommended ingredient: {{ingredient}}",
+      "record_section_title": "Today's Progress",
+      "record_hint": "Day {{day}} / 30",
+      "next_button_description": "Just one gentle tap, and we'll guide you through the rest. No need to remember alone—just take one light step.",
+      "next_button": "Let's begin"
+    },
     "head": "You've seen the result.\nNow I'll remember it for you.",
     "sub": "In 30 days, we'll check together if this combo actually worked.",
     "button": "Start logging"
