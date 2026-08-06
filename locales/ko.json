@@ -442,6 +442,11 @@
     "completion_wallpaper_title": "완주 기념 배경화면",
     "download": "다운로드"
   },
+  "bridgeInterstitial": {
+    "head": "결과는 봤어요.\n이제 제가 대신 기억해놓을게요.",
+    "sub": "30일 뒤에, 이 조합이 진짜 맞았는지 같이 확인해요.",
+    "button": "기록 시작하기"
+  },
   "installBanner": {
     "title": "홈 화면에 추가하고 더 빠르게 써보세요",
     "iosInstruction": "공유 버튼을 누른 다음 '홈 화면에 추가'를 선택하세요",

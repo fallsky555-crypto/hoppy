@@ -12,6 +12,7 @@ import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
 import { ThirtyDayReport } from "@/components/thirty-day-report"
 import { InstallBanner } from "@/components/install-banner"
+import { BridgeInterstitial } from "@/components/bridge-interstitial"
 import { DiaryProvider, useDiary } from "@/lib/diary-context"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { t } from "@/lib/i18n"
@@ -42,6 +43,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
+      <BridgeInterstitial />
       <InstallBanner />
 
       {/* <ProgressBar30 loggedDays={diary.loggedDays} /> */}
