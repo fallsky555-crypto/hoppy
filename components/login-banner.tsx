@@ -58,11 +58,48 @@ export function LoginBanner() {
     const oauthError = consumeOAuthErrorFromURL()
     if (oauthError) {
       if (oauthError.errorCode === "identity_already_exists" && oauthError.provider) {
-        setIdentityConflict(oauthError.provider)
+        // identity_already_exists → 익명 세션 데이터 유실 확인 후 처리
+        checkAnonymousDataLoss(oauthError.provider).then(({ hasData, details }) => {
+          if (cancelled) return
+
+          // 데이터가 없으면 자동 폴백
+          if (!hasData) {
+            setError(t("login.message.existing_account_fallback", locale))
+            setVisible(true)
+
+            // 1.5초 후 자동 폴백
+            setTimeout(() => {
+              if (!cancelled) {
+                signInExistingIdentity(oauthError.provider).then((fallbackResult) => {
+                  if (fallbackResult.error) {
+                    setError(t("login.error.signin", locale))
+                  }
+                  // 폴백 성공 시 OAuth 리다이렉트됨
+                })
+              }
+            }, 1500)
+            return
+          }
+
+          // 데이터가 있으면 다이얼로그 표시
+          setAnonymousDataDetails(details)
+          setPendingFallbackProvider(oauthError.provider)
+          setIsDataLossDialogOpen(true)
+          setVisible(true)
+        }).catch((err) => {
+          if (!cancelled) {
+            console.warn("[Login Fallback] Error checking data loss:", err)
+            // 데이터 확인 실패 시 안전하게 다이얼로그 표시 (데이터가 있을 수도)
+            setAnonymousDataDetails({ hasProfile: false, entryCount: 0, logCount: 0 })
+            setPendingFallbackProvider(oauthError.provider)
+            setIsDataLossDialogOpen(true)
+            setVisible(true)
+          }
+        })
       } else {
         setError(t("login.error.link", locale))
+        setVisible(true)
       }
-      setVisible(true)
       return
     }
 
@@ -107,39 +144,9 @@ export function LoginBanner() {
   async function handleLogin(provider: LoginProvider) {
     setError(null)
     setPending(provider)
-
     const result = await linkIdentity(provider)
-
-    // identity_already_exists → 자동 폴백 분기
-    if (result.code === "identity_already_exists") {
-      // 1. 익명 세션에서 쌓인 데이터 확인
-      const { hasData, details } = await checkAnonymousDataLoss(provider)
-
-      // 2-1. 데이터가 없으면 → 자동 폴백
-      if (!hasData) {
-        setError(t("login.message.existing_account_fallback", locale))
-        setPending(null)
-
-        // 1.5초 후 자동 폴백
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-
-        const fallbackResult = await signInExistingIdentity(provider)
-        if (fallbackResult.error) {
-          setError(t("login.error.signin", locale))
-        }
-        // 폴백 성공 시 OAuth 리다이렉트됨
-        return
-      }
-
-      // 2-2. 데이터가 있으면 → 확인 다이얼로그 표시
-      setAnonymousDataDetails(details)
-      setPendingFallbackProvider(provider)
-      setIsDataLossDialogOpen(true)
-      setPending(null)
-      return
-    }
-
-    // 다른 에러 처리
+    // linkIdentity 성공 시 OAuth 제공자로 리다이렉트되므로 이후 코드는 실행되지 않음.
+    // 실패 시 콜백 URL의 에러 파라미터로 돌아와 useEffect에서 처리됨.
     if (result.error) {
       setPending(null)
       setError(t("login.error.link_conflict", locale))
