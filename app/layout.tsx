@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Playfair_Display, Noto_Serif_KR } from 'next/font/google'
+import { Playfair_Display, Noto_Serif_KR, Gowun_Batang } from 'next/font/google'
 import { LocalFont } from 'next/font/local'
 import './globals.css'
 
@@ -36,6 +36,13 @@ const notoSerifKR = Noto_Serif_KR({
   preload: true,
 })
 
+const gowunBatang = Gowun_Batang({
+  weight: ['400', '700'],
+  variable: '--font-gowun-batang',
+  display: 'swap',
+  preload: true,
+})
+
 const pretendardVariable = LocalFont({
   src: [
     {
@@ -54,7 +61,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html className={`light ${playfairDisplay.variable} ${notoSerifKR.variable} ${pretendardVariable.variable}`}>
+    <html className={`light ${playfairDisplay.variable} ${notoSerifKR.variable} ${gowunBatang.variable} ${pretendardVariable.variable}`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
       </head>

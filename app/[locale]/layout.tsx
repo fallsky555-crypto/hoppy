@@ -51,13 +51,11 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
   const locale = (await params).locale as 'ko' | 'en'
 
   return (
-    <html lang={locale} className={`light ${playfairDisplay.variable} ${notoSerifKR.variable} ${pretendardVariable.variable}`}>
-      <body className="bg-background font-sans antialiased">
-        <LocaleProvider locale={locale}>
-          {children}
-        </LocaleProvider>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
-      </body>
-    </html>
+    <>
+      <LocaleProvider locale={locale}>
+        {children}
+      </LocaleProvider>
+      {process.env.NODE_ENV === 'production' && <Analytics />}
+    </>
   )
 }

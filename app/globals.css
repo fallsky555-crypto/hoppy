@@ -227,6 +227,12 @@
   }
 }
 
+@layer components {
+  .font-gowun {
+    font-family: var(--font-gowun-batang);
+  }
+}
+
 @keyframes stamp {
   0% {
     transform: scale(2.4) rotate(-12deg);

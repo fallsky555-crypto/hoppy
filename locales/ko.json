@@ -320,6 +320,30 @@
     "later": "나중에"
   },
   "onboarding": {
+    "introStep": {
+      "title": "나만의 기록으로 만드는 스킨케어",
+      "subtitle": "발라보고, 뭐가 문제였는지 몰랐던 제품들 —\n이제 성분과 내 피부 컨디션을 함께 보여드려요.",
+      "description": "정확한 리포트를 만들기 위해 몇 가지 확인할게요",
+      "ctaButton": "방금 본 결과 내용 불러오기",
+      "dataConsentLabel": "[필수] 개인정보 수집 및 이용 동의",
+      "dataConsentLink": "전문 보기",
+      "next": "다음"
+    },
+    "hoppiIntro": {
+      "title": "my digital esthetic report",
+      "description": "이 아이는 여러분의 기록을 책임지는 호빵이예요. 앞으로 30일동안 같이 하시면 호빵이 일러스트도 원본으로 받아가실 수 있어요",
+      "ingredientQuestion": "고민케어로 주로 뭘 쓰세요?",
+      "conditionQuestion": "오늘 피부 컨디션은 어때요?",
+      "condition_good": "좋아요",
+      "condition_neutral": "보통이에요",
+      "condition_bad": "안 좋아요",
+      "next": "시작하기"
+    },
+    "startToday": {
+      "title": "오늘부터 시작합니다",
+      "subtitle": "나만의 기록으로 만드는 스킨케어",
+      "next": "시작하기"
+    },
     "intro": {
       "title": "지금부터 당신만의 피부 일기가 시작돼요",
       "description": "오늘부터 남기는 기록은 오직 당신만의 것,\n당신에게 맞는 루틴을 찾는 단서가 돼요.",
@@ -443,6 +467,23 @@
     "download": "다운로드"
   },
   "bridgeInterstitial": {
+    "step1": {
+      "label": "2026 SKIN JOURNAL",
+      "title": "방금 본 결과지\n불러오기",
+      "button": "불러오기",
+      "consent_label": "[필수] 개인정보 수집 및 이용 동의",
+      "consent_link": "전문 보기"
+    },
+    "step2": {
+      "title_with_name": "{{name}}님의 성분검사 결과지",
+      "title_without_name": "당신의 성분검사 결과지",
+      "concern_description": "현재 {{nickname}}님의 고민은 {{concern}}예요",
+      "recommended_ingredient": "도움되는 성분은 {{ingredient}}이에요",
+      "record_section_title": "오늘의 기록",
+      "record_hint": "Day {{day}} / 30",
+      "next_button_description": "가볍게 터치 한번만 하시면 나머지는 우리가 알려드릴게요. 혼자 기억하지 마시고 가볍게 눌러주세요.",
+      "next_button": "시작하기"
+    },
     "head": "결과는 봤어요.\n이제 제가 대신 기억해놓을게요.",
     "sub": "30일 뒤에, 이 조합이 진짜 맞았는지 같이 확인해요.",
     "button": "기록 시작하기"
