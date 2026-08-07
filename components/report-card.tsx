@@ -55,6 +55,37 @@ export function ReportCard({
 
   const ageLabel = getAgeLabel(age)
 
+  // revisit 모드에서 핵심 데이터 부재 시 안내 UI 표시
+  const hasCoreData = age && skinType && concernTags
+  if (mode === "revisit" && !hasCoreData) {
+    return (
+      <main className="mx-auto w-full max-w-md px-5 py-6 flex flex-col items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-6">
+          <img
+            src="/onboarding/intro-02.jpeg"
+            alt="호빵이"
+            className="w-16 h-16 rounded-full object-cover mx-auto"
+          />
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold text-foreground">
+              아직 진단 정보가 부족해요
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              검사지에서 답변을 추가하면<br />
+              더 정확한 정보를 볼 수 있어요
+            </p>
+          </div>
+          <a
+            href="/"
+            className="inline-block bg-primary text-primary-foreground font-semibold px-8 py-3 rounded-full hover:opacity-90 transition-opacity"
+          >
+            검사지 다시 보기
+          </a>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="mx-auto w-full max-w-md px-5 py-6">
       {/* 헤더: 사용자 정보 */}
@@ -73,7 +104,7 @@ export function ReportCard({
       {/* 타이틀 섹션 */}
       <div className="mb-6">
         <div className="text-xs font-bold uppercase tracking-wider text-primary-text mb-2">
-          {mode === "onboarding" ? "My Skin Diagnosis" : "Your Skin Profile"}
+          My Skin Diagnosis
         </div>
         <h1 className="text-2xl font-bold leading-tight text-ink mb-2">
           {ageLabel && primaryConcern ? (

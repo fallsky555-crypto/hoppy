@@ -17,7 +17,7 @@ interface OnboardingFlowProps {
   onComplete: (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => void
 }
 
-type Step = 1 | 1.5 | 2
+type Step = 1 | "Q" | 1.5 | 2
 
 function getPrivacyPolicyUrl(locale: Locale): string {
   return locale === "ko"
@@ -26,11 +26,12 @@ function getPrivacyPolicyUrl(locale: Locale): string {
 }
 
 function StepIndicator({ step }: { step: Step }) {
+  const stepNum = typeof step === "string" ? 1.5 : step
   return (
     <div className="flex justify-center gap-2">
-      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step >= 1 ? "bg-primary" : "bg-border")} />
-      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step >= 1.5 ? "bg-primary" : "bg-border")} />
-      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step >= 2 ? "bg-primary" : "bg-border")} />
+      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", stepNum >= 1 ? "bg-primary" : "bg-border")} />
+      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", stepNum >= 1.5 ? "bg-primary" : "bg-border")} />
+      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", stepNum >= 2 ? "bg-primary" : "bg-border")} />
     </div>
   )
 }
@@ -45,10 +46,9 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
   )
   const [appliedCheckerSummary, setAppliedCheckerSummary] = useState<{ concern: Concern; supportOwned: SupportId[] } | null>(null)
 
-  // ReportCard용 상태
-  const [skinType, setSkinType] = useState<string | null>(null)
-  const [concernTags, setConcernTags] = useState<string | null>(null)
-  const [reportCardVisible, setReportCardVisible] = useState(false)
+  // 최소 질문 (Step Q)용 상태
+  const [tempSkinType, setTempSkinType] = useState<string | null>(null)
+  const [tempConcernTags, setTempConcernTags] = useState<string[]>([])
 
   const ingredientOptions = [
     { id: "vitc", label: t("onboarding.ingredientCheck.option_vitc", locale) },
@@ -86,7 +86,11 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               variant="outline"
               disabled={!dataConsent}
               onClick={() => {
-                if (dataConsent) setStep(1.5)
+                if (dataConsent) {
+                  // age/skin_type/concern_tags 모두 비어있으면 최소 질문 화면
+                  const hasData = diary.age || diary.skinType || diary.concernTags
+                  setStep(hasData ? 1.5 : "Q")
+                }
               }}
               className={cn(
                 "h-auto w-auto px-6 rounded-full py-2.5 text-[15px] mx-auto",
@@ -122,7 +126,10 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               <button
                 type="button"
                 onClick={() => {
-                  if (dataConsent) setStep(1.5)
+                  if (dataConsent) {
+                    const hasData = diary.age || diary.skinType || diary.concernTags
+                    setStep(hasData ? 1.5 : "Q")
+                  }
                 }}
                 disabled={!dataConsent}
                 className={cn(
@@ -140,14 +147,113 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
         </section>
       )}
 
+      {step === "Q" && (
+        <section key="step-Q" className="space-y-5 transition-opacity duration-200" aria-label="Minimum Questions">
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h2 className="text-xl font-bold text-foreground text-center">
+                진단을 위한 최소 정보를 알려주세요
+              </h2>
+              <p className="text-sm text-muted-foreground text-center">
+                피부 타입과 주요 고민만 선택해주면<br />정보를 준비해드릴게요
+              </p>
+            </div>
+
+            {/* 피부 타입 선택 */}
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-foreground">피부 타입</p>
+              <div className="grid grid-cols-4 gap-2">
+                {["sensitive", "dry", "combo", "oily"].map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setTempSkinType(type)}
+                    className={cn(
+                      "rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
+                      tempSkinType === type
+                        ? "border-primary bg-primary/10 text-primary-text"
+                        : "border-border bg-card text-foreground"
+                    )}
+                  >
+                    {{
+                      sensitive: "민감성",
+                      dry: "건성",
+                      combo: "복합성",
+                      oily: "지성",
+                    }[type]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 피부 고민 선택 */}
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-foreground">주요 고민 (복수 선택 가능)</p>
+              <div className="space-y-2">
+                {["dry", "flush", "flaky", "trouble"].map((concern) => (
+                  <button
+                    key={concern}
+                    type="button"
+                    onClick={() => {
+                      setTempConcernTags((prev) =>
+                        prev.includes(concern)
+                          ? prev.filter((c) => c !== concern)
+                          : [...prev, concern]
+                      )
+                    }}
+                    className={cn(
+                      "w-full rounded-xl px-4 py-2.5 text-sm font-semibold border-2 transition-colors text-left",
+                      tempConcernTags.includes(concern)
+                        ? "border-primary bg-primary/10 text-primary-text"
+                        : "border-border bg-card text-foreground"
+                    )}
+                  >
+                    {{
+                      dry: "건성",
+                      flush: "홍조",
+                      flaky: "탈피",
+                      trouble: "트러블",
+                    }[concern]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 완료 버튼 */}
+            <Button
+              type="button"
+              disabled={!tempSkinType || tempConcernTags.length === 0}
+              onClick={async () => {
+                if (!tempSkinType || tempConcernTags.length === 0) return
+
+                // diary_profiles에 저장
+                const userId = diary.userId
+                if (userId) {
+                  await saveContextFlags(userId, diary.joinDate, {
+                    skinType: tempSkinType,
+                    concernTags: tempConcernTags.join(","),
+                  })
+                }
+
+                // ReportCard로 이동 (저장된 데이터와 함께)
+                setStep(1.5)
+              }}
+              className="h-auto w-full mx-auto rounded-full py-3 text-[15px]"
+            >
+              {t("onboarding.introStep.next", locale)}
+            </Button>
+          </div>
+        </section>
+      )}
+
       {step === 1.5 && (
         <section key="step-1.5" className="space-y-5 transition-opacity duration-200" aria-label="Report Card">
           <ReportCard
             mode="onboarding"
-            age={null}
-            skinType={null}
-            concernTags={null}
-            activeIngredients={null}
+            age={diary.age}
+            skinType={diary.skinType || tempSkinType}
+            concernTags={diary.concernTags || tempConcernTags.join(",")}
+            activeIngredients={diary.activeIngredients}
             onCTAClick={() => setStep(2)}
           />
         </section>
