@@ -321,103 +321,12 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             age={diary.age}
             skinType={diary.skinType || tempSkinType}
             concernTags={diary.concernTags || tempConcernTags.join(",")}
-            activeIngredients={diary.activeIngredients}
-            onCTAClick={() => setStep(2)}
+            activeIngredients={diary.activeIngredients || tempActiveIngredients}
+            onCTAClick={() => onComplete(tempActiveIngredients, dataConsent, tempCondition!)}
           />
         </section>
       )}
 
-      {step === 2 && (
-        <section key="step-2" className="space-y-5 transition-opacity duration-200" aria-label="Hoppi Intro">
-          {/* 필기체 타이틀과 설명문구 */}
-          <div className="space-y-2">
-            <h1 className="text-2xl font-gowun text-foreground text-center">
-              {t("onboarding.hoppiIntro.title", locale)}
-            </h1>
-            <p className="text-sm leading-relaxed text-[#4A4438] whitespace-pre-line text-left">
-              {t("onboarding.hoppiIntro.description", locale)}
-            </p>
-          </div>
-
-          {/* 원형 고양이 이미지 */}
-          <div className="mx-auto w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
-            <img src="/onboarding/cover-cat-camera.png" alt="" className="w-full h-full object-cover" />
-          </div>
-
-          {/* 체커 결과 불러오기 카드 */}
-          {(checkerChoice === "pending" || checkerChoice === "loaded" || appliedCheckerSummary) && (
-            <div className="rounded-3xl border border-border bg-card/50 p-4 space-y-3">
-              {checkerChoice === "pending" && (
-                <>
-                  <p className="text-sm font-medium text-foreground text-center">
-                    {t("onboarding.checkerImport.question", locale)}
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (diary.pendingCheckerContext) {
-                          setAppliedCheckerSummary(diary.pendingCheckerContext)
-                          setCheckerChoice("loaded")
-                          diary.applyCheckerContext()
-                        }
-                      }}
-                      className="flex-1 rounded-2xl border border-primary bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary-text transition-colors hover:bg-primary/20"
-                    >
-                      {t("onboarding.checkerImport.load", locale)}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        diary.dismissCheckerContext()
-                        setCheckerChoice("dismissed")
-                      }}
-                      className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
-                    >
-                      {t("onboarding.checkerImport.skip", locale)}
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {checkerChoice === "loaded" && appliedCheckerSummary && (
-                <>
-                  <p className="text-sm font-medium text-foreground">
-                    {appliedCheckerSummary.concern !== "none" && (
-                      <>
-                        {t(CONCERN_LABEL_KEYS[appliedCheckerSummary.concern], locale)} 고민,{" "}
-                      </>
-                    )}
-                    {appliedCheckerSummary.supportOwned.length > 0 && (
-                      <>
-                        {appliedCheckerSummary.supportOwned
-                          .map((id) => t(SUPPORT_LABEL_KEYS[id], locale))
-                          .join("·")}{" "}
-                        성분 보유 중이시네요.
-                      </>
-                    )}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("onboarding.checkerImport.bridge", locale)}
-                  </p>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Step Q에서 모든 질문 처리되므로 질문 부분 제거됨 */}
-
-          {/* 다음 단계로 진행 버튼 */}
-          <Button
-            type="button"
-            size="lg"
-            onClick={() => onComplete([], dataConsent, "neutral")}
-            className="h-auto w-auto px-12 mx-auto rounded-full py-3 text-[15px]"
-          >
-            {t("onboarding.introStep.next", locale)}
-          </Button>
-        </section>
-      )}
 
     </main>
   )

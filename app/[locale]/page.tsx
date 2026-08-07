@@ -29,22 +29,12 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [coverClosed, setCoverClosed] = useState(false)
-  const [showIntroModal, setShowIntroModal] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const alreadyShown = localStorage.getItem("onboarding-intro-modal-shown")
-      return !alreadyShown
-    }
-    return false
-  })
 
   if (!diary.hydrated) return null
 
   if (!diary.onboarded) {
     const handleOnboardingComplete = (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => {
       diary.completeOnboarding(activeIngredients, dataConsent, condition)
-      if (!localStorage.getItem("onboarding-intro-modal-shown")) {
-        setShowIntroModal(true)
-      }
     }
     return <OnboardingFlow locale={locale} diary={diary} onComplete={handleOnboardingComplete} />
   }
@@ -114,37 +104,6 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
           {t("metadata.tagline", locale)}
         </p>
       </main>
-
-      {/* 온보딩 완료 모달 */}
-      {showIntroModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowIntroModal(false)}>
-          <div className="relative mx-4 rounded-3xl bg-white shadow-2xl p-8 text-center max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="space-y-4">
-              <p className="text-[15px] leading-relaxed text-[#4A4438]">
-                {t("onboarding.startToday.subtitle", locale)}
-              </p>
-              <img src="/onboarding/cover-cat-sleeping.png" alt="" className="mx-auto h-40 w-40 object-contain" />
-              <h1 className="font-display text-xl font-bold leading-snug text-foreground">
-                {t("onboarding.startToday.title", locale)}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {new Date().toLocaleDateString(locale === "ko" ? "ko-KR" : "en-US", { year: "numeric", month: "long", day: "numeric" })}
-              </p>
-
-              <button
-                type="button"
-                onClick={() => {
-                  localStorage.setItem("onboarding-intro-modal-shown", "true")
-                  setShowIntroModal(false)
-                }}
-                className="w-auto px-12 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary/90 transition-all active:scale-95 mx-auto block"
-              >
-                {t("onboarding.startToday.next", locale)}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }
