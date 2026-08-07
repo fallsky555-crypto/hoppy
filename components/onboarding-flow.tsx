@@ -49,6 +49,8 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
   // 최소 질문 (Step Q)용 상태
   const [tempSkinType, setTempSkinType] = useState<string | null>(null)
   const [tempConcernTags, setTempConcernTags] = useState<string[]>([])
+  const [tempActiveIngredients, setTempActiveIngredients] = useState<string[]>([])
+  const [tempCondition, setTempCondition] = useState<"good" | "neutral" | "bad" | null>(null)
 
   const ingredientOptions = [
     { id: "vitc", label: t("onboarding.ingredientCheck.option_vitc", locale) },
@@ -148,20 +150,21 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
       )}
 
       {step === "Q" && (
-        <section key="step-Q" className="space-y-5 transition-opacity duration-200" aria-label="Minimum Questions">
+        <section key="step-Q" className="space-y-4 transition-opacity duration-200 pb-10" aria-label="Minimum Questions">
           <div className="space-y-6">
-            <div className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground text-center">
-                진단을 위한 최소 정보를 알려주세요
+            {/* 헤더 */}
+            <div className="space-y-2">
+              <h2 className="text-lg font-bold text-foreground">
+                진단을 위한 기본 정보
               </h2>
-              <p className="text-sm text-muted-foreground text-center">
-                피부 타입과 주요 고민만 선택해주면<br />정보를 준비해드릴게요
+              <p className="text-sm text-muted-foreground">
+                피부 정보를 알려주세요
               </p>
             </div>
 
-            {/* 피부 타입 선택 */}
+            {/* Q1: 피부 타입 */}
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">피부 타입</p>
+              <p className="text-sm font-semibold text-foreground">Q1. 피부 타입</p>
               <div className="grid grid-cols-4 gap-2">
                 {["sensitive", "dry", "combo", "oily"].map((type) => (
                   <button
@@ -186,34 +189,95 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               </div>
             </div>
 
-            {/* 피부 고민 선택 */}
+            {/* Q2: 주요 고민 */}
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">주요 고민 (복수 선택 가능)</p>
+              <p className="text-sm font-semibold text-foreground">Q2. 주요 고민 (복수 선택 가능)</p>
               <div className="space-y-2">
-                {["dry", "flush", "flaky", "trouble"].map((concern) => (
+                {[
+                  { id: "DRY", label: "속건조·속당김" },
+                  { id: "TONE", label: "칙칙함·잡티" },
+                  { id: "TEXTURE", label: "오돌토돌 결·모공" },
+                  { id: "TROUBLE", label: "민감 자극·트러블" },
+                  { id: "AGING", label: "탄력저하·주름" },
+                  { id: "BARRIER", label: "홍조·약해진 피부장벽" },
+                ].map((concern) => (
                   <button
-                    key={concern}
+                    key={concern.id}
                     type="button"
                     onClick={() => {
                       setTempConcernTags((prev) =>
-                        prev.includes(concern)
-                          ? prev.filter((c) => c !== concern)
-                          : [...prev, concern]
+                        prev.includes(concern.id)
+                          ? prev.filter((c) => c !== concern.id)
+                          : [...prev, concern.id]
                       )
                     }}
                     className={cn(
                       "w-full rounded-xl px-4 py-2.5 text-sm font-semibold border-2 transition-colors text-left",
-                      tempConcernTags.includes(concern)
+                      tempConcernTags.includes(concern.id)
                         ? "border-primary bg-primary/10 text-primary-text"
                         : "border-border bg-card text-foreground"
                     )}
                   >
-                    {{
-                      dry: "건성",
-                      flush: "홍조",
-                      flaky: "탈피",
-                      trouble: "트러블",
-                    }[concern]}
+                    {concern.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Q3: 고민케어 성분 */}
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-foreground">Q3. 고민케어로 주로 뭘 쓰세요?</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "vitc", label: "비타민C" },
+                  { id: "ret", label: "레티놀" },
+                  { id: "nia", label: "나이아신아마이드" },
+                  { id: "unknown", label: "잘 모르겠어요" },
+                ].map((ing) => (
+                  <button
+                    key={ing.id}
+                    type="button"
+                    onClick={() => {
+                      setTempActiveIngredients((prev) =>
+                        prev.includes(ing.id)
+                          ? prev.filter((i) => i !== ing.id)
+                          : [...prev, ing.id]
+                      )
+                    }}
+                    className={cn(
+                      "rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
+                      tempActiveIngredients.includes(ing.id)
+                        ? "border-primary bg-primary/10 text-primary-text"
+                        : "border-border bg-card text-foreground"
+                    )}
+                  >
+                    {ing.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Q4: 오늘 컨디션 */}
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-foreground">Q4. 오늘 피부 컨디션은 어때요?</p>
+              <div className="flex gap-2">
+                {[
+                  { id: "good", label: "좋아요" },
+                  { id: "neutral", label: "보통이에요" },
+                  { id: "bad", label: "안 좋아요" },
+                ].map((cond) => (
+                  <button
+                    key={cond.id}
+                    type="button"
+                    onClick={() => setTempCondition(cond.id as "good" | "neutral" | "bad")}
+                    className={cn(
+                      "flex-1 rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
+                      tempCondition === cond.id
+                        ? "border-primary bg-primary/10 text-primary-text"
+                        : "border-border bg-card text-foreground"
+                    )}
+                  >
+                    {cond.label}
                   </button>
                 ))}
               </div>
@@ -222,9 +286,9 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             {/* 완료 버튼 */}
             <Button
               type="button"
-              disabled={!tempSkinType || tempConcernTags.length === 0}
+              disabled={!tempSkinType || tempConcernTags.length === 0 || !tempCondition}
               onClick={async () => {
-                if (!tempSkinType || tempConcernTags.length === 0) return
+                if (!tempSkinType || tempConcernTags.length === 0 || !tempCondition) return
 
                 // diary_profiles에 저장
                 const userId = diary.userId
@@ -232,7 +296,11 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                   await saveContextFlags(userId, diary.joinDate, {
                     skinType: tempSkinType,
                     concernTags: tempConcernTags.join(","),
+                    activeIngredients: tempActiveIngredients,
                   })
+
+                  // condition 저장
+                  diary.recordCondition(0, tempCondition)
                 }
 
                 // ReportCard로 이동 (저장된 데이터와 함께)
@@ -337,82 +405,13 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             </div>
           )}
 
-          {/* 두 카드를 감싸는 전체 컨테이너 */}
-          <div className="rounded-2xl bg-blue-50 p-4 space-y-4">
-            {/* 성분 질문 카드 */}
-            <div className="space-y-3">
-              <h2 className="font-display text-sm font-bold leading-snug text-foreground text-center">
-                {t("onboarding.hoppiIntro.ingredientQuestion", locale)}
-              </h2>
-              <div className="grid grid-cols-4 gap-2">
-                {ingredientOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => toggleIngredient(option.id)}
-                    className={cn(
-                      "rounded-xl px-1 py-2 text-[10px] font-semibold border transition-colors line-clamp-2",
-                      activeIngredients.includes(option.id)
-                        ? "border-primary bg-primary/10 text-primary-text"
-                        : "border-border bg-card text-foreground"
-                    )}
-                    aria-pressed={activeIngredients.includes(option.id)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Step Q에서 모든 질문 처리되므로 질문 부분 제거됨 */}
 
-            {/* 컨디션 질문 카드 */}
-            <div className="space-y-3 pt-2 border-t border-blue-100">
-              <p className="text-sm font-medium text-foreground text-center">
-                {t("onboarding.hoppiIntro.conditionQuestion", locale)}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCondition("good")}
-                  className={cn(
-                    "flex-1 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors",
-                    condition === "good" ? "border-primary bg-primary/10 text-primary-text" : "border-border bg-card text-foreground",
-                  )}
-                  aria-pressed={condition === "good"}
-                >
-                  {t("onboarding.hoppiIntro.condition_good", locale)}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCondition("neutral")}
-                  className={cn(
-                    "flex-1 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors",
-                    condition === "neutral" ? "border-primary bg-primary/10 text-primary-text" : "border-border bg-card text-foreground",
-                  )}
-                  aria-pressed={condition === "neutral"}
-                >
-                  {t("onboarding.hoppiIntro.condition_neutral", locale)}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCondition("bad")}
-                  className={cn(
-                    "flex-1 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors",
-                    condition === "bad" ? "border-primary bg-primary/10 text-primary-text" : "border-border bg-card text-foreground",
-                  )}
-                  aria-pressed={condition === "bad"}
-                >
-                  {t("onboarding.hoppiIntro.condition_bad", locale)}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* 완료 버튼 */}
+          {/* 다음 단계로 진행 버튼 */}
           <Button
             type="button"
             size="lg"
-            disabled={activeIngredients.length === 0 || condition === null}
-            onClick={() => onComplete(activeIngredients, dataConsent, condition!)}
+            onClick={() => onComplete([], dataConsent, "neutral")}
             className="h-auto w-auto px-12 mx-auto rounded-full py-3 text-[15px]"
           >
             {t("onboarding.introStep.next", locale)}

@@ -238,14 +238,14 @@ export function ReportCard({
       {mode === "onboarding" && (
         <>
           {/* 완주 동기 카드 */}
-          <div className="bg-future-dark rounded-2xl p-6 mb-6 text-white">
-            <p className="text-xs font-bold uppercase tracking-wider text-future-accent mb-4">
+          <div className="rounded-2xl p-6 mb-6 text-white" style={{ backgroundColor: "#042C53" }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#9CC3EE" }}>
               기록을 시작하면
             </p>
 
             <div className="space-y-3.5">
               <div className="flex gap-4 pb-3.5 border-b border-white/8">
-                <div className="text-xs font-bold text-future-accent flex-shrink-0 w-16">
+                <div className="text-xs font-bold flex-shrink-0 w-16" style={{ color: "#9CC3EE" }}>
                   Day 30
                 </div>
                 <div className="text-sm font-bold text-white leading-relaxed">
@@ -254,7 +254,7 @@ export function ReportCard({
               </div>
 
               <div className="flex gap-4 pb-3.5 border-b border-white/8">
-                <div className="text-xs font-bold text-future-accent flex-shrink-0 w-16">
+                <div className="text-xs font-bold flex-shrink-0 w-16" style={{ color: "#9CC3EE" }}>
                   Month 6
                 </div>
                 <div className="text-sm font-bold text-white leading-relaxed">
@@ -263,7 +263,7 @@ export function ReportCard({
               </div>
 
               <div className="flex gap-4">
-                <div className="text-xs font-bold text-future-accent flex-shrink-0 w-16">
+                <div className="text-xs font-bold flex-shrink-0 w-16" style={{ color: "#9CC3EE" }}>
                   Year 1
                 </div>
                 <div className="text-sm font-bold text-white leading-relaxed">
