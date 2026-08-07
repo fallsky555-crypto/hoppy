@@ -386,6 +386,19 @@
       "condition_neutral": "Okay",
       "condition_bad": "Not great",
       "start": "Let's go"
+    },
+    "concernLabel": {
+      "dry": "Dryness",
+      "flush": "Redness",
+      "flaky": "Flaking",
+      "trouble": "Breakouts",
+      "none": "None"
+    },
+    "supportLabel": {
+      "hya": "Hyaluronic Acid",
+      "cica": "Cica",
+      "nia": "Niacinamide",
+      "cer": "Ceramide"
     }
   },
   "completionFeedback": {

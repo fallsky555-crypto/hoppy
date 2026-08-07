@@ -383,6 +383,19 @@
       "condition_neutral": "보통이에요",
       "condition_bad": "안 좋아요",
       "start": "시작하기"
+    },
+    "concernLabel": {
+      "dry": "건성",
+      "flush": "홍조",
+      "flaky": "탈피",
+      "trouble": "트러블",
+      "none": "해당없음"
+    },
+    "supportLabel": {
+      "hya": "히알루론산",
+      "cica": "시카",
+      "nia": "나이아신아마이드",
+      "cer": "세라마이드"
     }
   },
   "completionFeedback": {
