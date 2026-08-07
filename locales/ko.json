@@ -452,7 +452,13 @@
     "restart_confirm": "새로 시작하면 지금까지 기록한 Day와 기록이 모두 사라져요. 정말 처음부터 다시 시작할까요?",
     "cancel": "취소",
     "restart": "새로 시작하기",
-    "restart_button": "루틴 처음부터 다시 시작하기"
+    "restart_button": "루틴 처음부터 다시 시작하기",
+    "skinTypeLabel": {
+      "sensitive": "민감성",
+      "dry": "건성",
+      "combo": "복합성",
+      "oily": "지성"
+    }
   },
   "recipe_card": {
     "today": "오늘",

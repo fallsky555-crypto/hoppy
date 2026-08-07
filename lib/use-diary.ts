@@ -25,6 +25,7 @@ import {
   saveContextFlags,
   saveEngineVersion,
   saveHabitLog,
+  saveSkinType,
   saveSettings,
   saveUsedProducts,
 } from "@/lib/supabase/sync"
@@ -78,6 +79,8 @@ interface DiaryState {
   dataConsent: boolean
   /** 동의한 시점 (ISO 8601 형식, UTC) */
   dataConsentAt: string | null
+  /** 체커에서 선택한 피부 타입 (sensitive/dry/combo/oily) */
+  skinType: string | null
 }
 
 /** 로그아웃 시 로컬 캐시를 지우는 용도로도 쓰인다(login-banner.tsx) */
@@ -105,6 +108,7 @@ function freshState(): DiaryState {
     engineVersion: null,
     dataConsent: false,
     dataConsentAt: null,
+    skinType: null,
   }
 }
 
@@ -132,6 +136,7 @@ function loadLocalState(): DiaryState | null {
       engineVersion: parsed.engineVersion ?? null,
       dataConsent: parsed.dataConsent ?? false,
       dataConsentAt: parsed.dataConsentAt ?? null,
+      skinType: parsed.skinType ?? null,
     }
   } catch {
     return null
@@ -177,13 +182,19 @@ interface URLContextPayload {
   concern: Concern
   supportOwned: SupportId[]
   usedProducts: UsedProduct[] | null
+  skinType: string | null
 }
 
 const VALID_CONCERNS: Concern[] = ["dry", "flush", "flaky", "trouble", "none"]
 const VALID_SUPPORT_IDS: SupportId[] = ["hya", "cica", "nia", "cer"]
+const VALID_SKIN_TYPES = ["sensitive", "dry", "combo", "oily"]
 
 function parseConcern(raw: string | null): Concern {
   return VALID_CONCERNS.includes(raw as Concern) ? (raw as Concern) : "none"
+}
+
+function parseSkinType(raw: string | null): string | null {
+  return raw && VALID_SKIN_TYPES.includes(raw) ? raw : null
 }
 
 function parseSupportOwned(raw: string | null): SupportId[] {
@@ -220,20 +231,19 @@ function buildProductDetails(itemIds: string[]): UsedProduct[] {
 
 /**
  * 외부 진단 화면(myroutinediet.com의 checker.html)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
- * ?type={A/B/C}&preg={0/1}&rx={0/1}&concern={dry/flush/flaky/trouble/none}&support={hya,cica,nia,cer 콤마 구분}
- * type(피부 유형)은 스케줄 생성에도, 어떤 UI 카피에도 더 이상 관여하지 않는다 — 저장하지
- * 않고, "체커에서 돌아왔다"는 신호로만 그 존재 여부를 확인한다. 스케줄(캘린더)은 이
- * 파라미터 유무와 무관하게 가입 즉시 기본 워크북 시퀀스로 시작한다.
+ * ?type={A/B/C}&skin_type={sensitive/dry/combo/oily}&preg={0/1}&rx={0/1}&concern={dry/flush/flaky/trouble/none}&support={hya,cica,nia,cer 콤마 구분}&items={...}
+ * type(A/B/C)은 더 이상 사용하지 않고, skin_type이 새로 추가됨 — 체커에서 돌아왔다는
+ * 신호를 skin_type, concern, support, items 중 하나라도 있는지로 판단한다.
  */
 function contextFromURL(): URLContextPayload | null {
   if (typeof window === "undefined") return null
   const params = new URLSearchParams(window.location.search)
 
-  const hasType = params.get("type") !== null
+  const hasSkinType = params.get("skin_type") !== null
   const hasConcern = params.get("concern") !== null
   const hasSupport = params.get("support") !== null
   const hasItems = params.get("items") !== null
-  if (!hasType && !hasConcern && !hasSupport && !hasItems) return null
+  if (!hasSkinType && !hasConcern && !hasSupport && !hasItems) return null
 
   const itemIds = parseItems(params.get("items"))
 
@@ -243,6 +253,7 @@ function contextFromURL(): URLContextPayload | null {
     concern: parseConcern(params.get("concern")),
     supportOwned: parseSupportOwned(params.get("support")),
     usedProducts: itemIds.length > 0 ? buildProductDetails(itemIds) : null,
+    skinType: parseSkinType(params.get("skin_type")),
   }
 }
 
@@ -250,14 +261,14 @@ function contextFromURL(): URLContextPayload | null {
 function clearContextURLParams() {
   if (typeof window === "undefined") return
   const params = new URLSearchParams(window.location.search)
-  for (const key of ["type", "preg", "rx", "concern", "support"]) {
+  for (const key of ["type", "preg", "rx", "concern", "support", "skin_type", "items"]) {
     params.delete(key)
   }
   const query = params.toString()
   window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""))
 }
 
-/** 안전 관련 값만 자동 적용 (pregnant, prescriptionMeds, usedProducts) */
+/** 안전 관련 값만 자동 적용 (pregnant, prescriptionMeds, usedProducts, skinType) */
 function applyURLContext(base: DiaryState, context: URLContextPayload | null): DiaryState {
   if (!context) return base
   return {
@@ -265,16 +276,18 @@ function applyURLContext(base: DiaryState, context: URLContextPayload | null): D
     pregnant: context.pregnant,
     prescriptionMeds: context.prescriptionMeds,
     usedProducts: context.usedProducts,
+    skinType: context.skinType,
   }
 }
 
-/** 체커에서 돌아온 concern/supportOwned를 임시 상태로 보류하는 payload */
-function extractCheckerContext(context: URLContextPayload | null): { concern: Concern; supportOwned: SupportId[] } | null {
+/** 체커에서 돌아온 concern/supportOwned/skinType를 임시 상태로 보류하는 payload */
+function extractCheckerContext(context: URLContextPayload | null): { concern: Concern; supportOwned: SupportId[]; skinType: string | null } | null {
   if (!context) return null
-  if (context.concern === "none" && context.supportOwned.length === 0) return null
+  if (context.concern === "none" && context.supportOwned.length === 0 && !context.skinType) return null
   return {
     concern: context.concern,
     supportOwned: context.supportOwned,
+    skinType: context.skinType,
   }
 }
 
@@ -321,6 +334,7 @@ export function useDiary() {
             supportOwned: remote.profile.supportOwned,
             activeIngredients: remote.profile.activeIngredients,
             engineVersion: remote.profile.engineVersion,
+            skinType: remote.profile.skinType,
             loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
             loggedSlots: remote.loggedSlots,
             conditions: remote.conditions,
@@ -420,6 +434,12 @@ export function useDiary() {
     if (!userId) return
     saveConcern(userId, state.joinDate, state.concern, state.supportOwned)
   }, [userId, state.joinDate, state.concern, state.supportOwned])
+
+  // 체커에서 선택한 피부 타입
+  useEffect(() => {
+    if (!userId) return
+    saveSkinType(userId, state.joinDate, state.skinType)
+  }, [userId, state.joinDate, state.skinType])
 
   // incident_log / reaction_log는 append-only라, 새로 생긴 항목만 골라 반영한다
   const syncedIncidentCount = useRef(0)
@@ -539,6 +559,7 @@ export function useDiary() {
       ...prev,
       concern: pendingCheckerContext.concern,
       supportOwned: pendingCheckerContext.supportOwned,
+      skinType: pendingCheckerContext.skinType,
     }))
     setPendingCheckerContext(null)
   }, [pendingCheckerContext])
@@ -601,6 +622,7 @@ export function useDiary() {
     supportOwned: state.supportOwned,
     activeIngredients: state.activeIngredients,
     usedProducts: state.usedProducts,
+    skinType: state.skinType,
     userId,
     joinDate: state.joinDate,
     startFresh,

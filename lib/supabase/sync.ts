@@ -57,6 +57,7 @@ interface RemoteProfile {
   activeIngredients: string[]
   /** 이 프로필이 마지막으로 확인된 엔진 버전 — null이면 이 필드가 생기기 전의 레거시 유저 */
   engineVersion: string | null
+  skinType: string | null
 }
 
 /** BHA/레티놀 도입 간격 슬라이더 + 가입일을 diary_profiles에 upsert한다 */
@@ -76,7 +77,7 @@ export async function saveSettings(userId: string, signupDate: string, settings:
   if (error) console.warn("[supabase] saveSettings failed:", error.message)
 }
 
-/** 임신/처방약 플래그 + 데이터 수집 동의를 diary_profiles에 반영한다 */
+/** 임신/처방약 플래그 + 데이터 수집 동의 + 피부 타입을 diary_profiles에 반영한다 */
 export async function saveContextFlags(
   userId: string,
   signupDate: string,
@@ -87,6 +88,7 @@ export async function saveContextFlags(
     supportOwned?: string[]
     dataConsent?: boolean
     activeIngredients?: string[]
+    skinType?: string | null
   },
 ): Promise<void> {
   const supabase = getSupabaseClient()
@@ -102,6 +104,7 @@ export async function saveContextFlags(
   if (flags.concern !== undefined) updatePayload.concern = flags.concern
   if (flags.supportOwned !== undefined) updatePayload.support_owned = flags.supportOwned
   if (flags.activeIngredients !== undefined) updatePayload.active_ingredients = flags.activeIngredients
+  if (flags.skinType !== undefined) updatePayload.skin_type = flags.skinType
 
   if (flags.dataConsent !== undefined) {
     updatePayload.data_consent = flags.dataConsent
@@ -126,6 +129,18 @@ export async function saveConcern(userId: string, signupDate: string, concern: C
     { onConflict: "user_id" },
   )
   if (error) console.warn("[supabase] saveConcern failed:", error.message)
+}
+
+/** 체커에서 선택한 피부 타입을 diary_profiles에 반영한다 */
+export async function saveSkinType(userId: string, signupDate: string, skinType: string | null): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), skin_type: skinType },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveSkinType failed:", error.message)
 }
 
 /** 13-3(v1.7). 이 유저의 프로필이 확인된 엔진 버전을 diary_profiles에 반영한다 */
@@ -332,7 +347,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
       .select(
-        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, active_ingredients, engine_version",
+        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, active_ingredients, engine_version, skin_type",
       )
       .eq("user_id", userId)
       .maybeSingle()
@@ -394,6 +409,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
         supportOwned: (profile.support_owned as SupportId[] | null) ?? [],
         activeIngredients: (profile.active_ingredients as string[] | null) ?? [],
         engineVersion: profile.engine_version ?? null,
+        skinType: (profile.skin_type as string | null) ?? null,
       },
       completedDays,
       events,

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
-import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS } from "@/lib/label-mappings"
+import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS } from "@/lib/label-mappings"
 
 interface SettingsPanelProps {
   onStartFresh: () => void
@@ -60,6 +60,12 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
                 ? diary.usedProducts
                     .map((p) => `${p.brand} ${p.name}`)
                     .join("; ")
+                : "미설정"}
+            </p>
+            <p>
+              <span className="font-medium">피부 타입:</span>{" "}
+              {diary.skinType && SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS]
+                ? t(SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS], locale)
                 : "미설정"}
             </p>
           </div>
