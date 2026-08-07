@@ -41,12 +41,12 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
   if (!diary.onboarded) {
     const handleOnboardingComplete = (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => {
-      diary.completeOnboarding()
+      diary.completeOnboarding(activeIngredients, dataConsent, condition)
       if (!localStorage.getItem("onboarding-intro-modal-shown")) {
         setShowIntroModal(true)
       }
     }
-    return <OnboardingFlow locale={locale} onComplete={handleOnboardingComplete} />
+    return <OnboardingFlow locale={locale} diary={diary} onComplete={handleOnboardingComplete} />
   }
 
   const activeDay = selectedDay ?? currentDay

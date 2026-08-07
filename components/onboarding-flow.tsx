@@ -4,11 +4,14 @@ import { useState } from "react"
 import { ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { t } from "@/lib/i18n"
-import type { Locale } from "@/lib/locale-context"
+import { t, type Locale } from "@/lib/i18n"
+import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS } from "@/lib/label-mappings"
+import type { Concern, SupportId } from "@/lib/routine-copy"
+import { useDiary } from "@/lib/diary-context"
 
 interface OnboardingFlowProps {
   locale: Locale
+  diary: ReturnType<typeof useDiary>
   onComplete: (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => void
 }
 
@@ -29,11 +32,15 @@ function StepIndicator({ step }: { step: Step }) {
   )
 }
 
-export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
+export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>(1)
   const [activeIngredients, setActiveIngredients] = useState<string[]>([])
   const [dataConsent, setDataConsent] = useState(false)
   const [condition, setCondition] = useState<"good" | "neutral" | "bad" | null>(null)
+  const [checkerChoice, setCheckerChoice] = useState<"pending" | "loaded" | "dismissed" | "not_needed">(
+    diary.pendingCheckerContext ? "pending" : "not_needed"
+  )
+  const [appliedCheckerSummary, setAppliedCheckerSummary] = useState<{ concern: Concern; supportOwned: SupportId[] } | null>(null)
 
   const ingredientOptions = [
     { id: "vitc", label: t("onboarding.ingredientCheck.option_vitc", locale) },
@@ -133,6 +140,67 @@ export function OnboardingFlow({ locale, onComplete }: OnboardingFlowProps) {
           <div className="mx-auto w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
             <img src="/onboarding/cover-cat-camera.png" alt="" className="w-full h-full object-cover" />
           </div>
+
+          {/* 체커 결과 불러오기 카드 */}
+          {(checkerChoice === "pending" || checkerChoice === "loaded" || appliedCheckerSummary) && (
+            <div className="rounded-3xl border border-border bg-card/50 p-4 space-y-3">
+              {checkerChoice === "pending" && (
+                <>
+                  <p className="text-sm font-medium text-foreground text-center">
+                    {t("onboarding.checkerImport.question", locale)}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (diary.pendingCheckerContext) {
+                          setAppliedCheckerSummary(diary.pendingCheckerContext)
+                          setCheckerChoice("loaded")
+                          diary.applyCheckerContext()
+                        }
+                      }}
+                      className="flex-1 rounded-2xl border border-primary bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary-text transition-colors hover:bg-primary/20"
+                    >
+                      {t("onboarding.checkerImport.load", locale)}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        diary.dismissCheckerContext()
+                        setCheckerChoice("dismissed")
+                      }}
+                      className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+                    >
+                      {t("onboarding.checkerImport.skip", locale)}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {checkerChoice === "loaded" && appliedCheckerSummary && (
+                <>
+                  <p className="text-sm font-medium text-foreground">
+                    {appliedCheckerSummary.concern !== "none" && (
+                      <>
+                        {t(CONCERN_LABEL_KEYS[appliedCheckerSummary.concern], locale)} 고민,{" "}
+                      </>
+                    )}
+                    {appliedCheckerSummary.supportOwned.length > 0 && (
+                      <>
+                        {appliedCheckerSummary.supportOwned
+                          .map((id) => t(SUPPORT_LABEL_KEYS[id], locale))
+                          .join("·")}{" "}
+                        성분 보유 중이시네요.
+                      </>
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("onboarding.checkerImport.bridge", locale)}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
 
           {/* 두 카드를 감싸는 전체 컨테이너 */}
           <div className="rounded-2xl bg-blue-50 p-4 space-y-4">
