@@ -8,6 +8,8 @@ import { t, type Locale } from "@/lib/i18n"
 import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS } from "@/lib/label-mappings"
 import type { Concern, SupportId } from "@/lib/routine-copy"
 import { useDiary } from "@/lib/diary-context"
+import { ReportCard } from "@/components/report-card"
+import { saveContextFlags } from "@/lib/supabase/sync"
 
 interface OnboardingFlowProps {
   locale: Locale
@@ -15,7 +17,7 @@ interface OnboardingFlowProps {
   onComplete: (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => void
 }
 
-type Step = 1 | 2
+type Step = 1 | 1.5 | 2
 
 function getPrivacyPolicyUrl(locale: Locale): string {
   return locale === "ko"
@@ -27,6 +29,7 @@ function StepIndicator({ step }: { step: Step }) {
   return (
     <div className="flex justify-center gap-2">
       <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step >= 1 ? "bg-primary" : "bg-border")} />
+      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step >= 1.5 ? "bg-primary" : "bg-border")} />
       <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step >= 2 ? "bg-primary" : "bg-border")} />
     </div>
   )
@@ -41,6 +44,11 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
     diary.pendingCheckerContext ? "pending" : "not_needed"
   )
   const [appliedCheckerSummary, setAppliedCheckerSummary] = useState<{ concern: Concern; supportOwned: SupportId[] } | null>(null)
+
+  // ReportCard용 상태
+  const [skinType, setSkinType] = useState<string | null>(null)
+  const [concernTags, setConcernTags] = useState<string | null>(null)
+  const [reportCardVisible, setReportCardVisible] = useState(false)
 
   const ingredientOptions = [
     { id: "vitc", label: t("onboarding.ingredientCheck.option_vitc", locale) },
@@ -78,7 +86,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               variant="outline"
               disabled={!dataConsent}
               onClick={() => {
-                if (dataConsent) setStep(2)
+                if (dataConsent) setStep(1.5)
               }}
               className={cn(
                 "h-auto w-auto px-6 rounded-full py-2.5 text-[15px] mx-auto",
@@ -114,7 +122,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               <button
                 type="button"
                 onClick={() => {
-                  if (dataConsent) setStep(2)
+                  if (dataConsent) setStep(1.5)
                 }}
                 disabled={!dataConsent}
                 className={cn(
@@ -129,6 +137,19 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               </button>
             </div>
           </div>
+        </section>
+      )}
+
+      {step === 1.5 && (
+        <section key="step-1.5" className="space-y-5 transition-opacity duration-200" aria-label="Report Card">
+          <ReportCard
+            mode="onboarding"
+            age={null}
+            skinType={null}
+            concernTags={null}
+            activeIngredients={null}
+            onCTAClick={() => setStep(2)}
+          />
         </section>
       )}
 

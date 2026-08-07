@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
 import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS, AGE_LABEL_KEYS } from "@/lib/label-mappings"
+import { ReportCard } from "@/components/report-card"
 
 interface SettingsPanelProps {
   onStartFresh: () => void
@@ -19,6 +20,7 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
   const locale = useLocale()
   const diary = useDiary()
   const [confirming, setConfirming] = useState(false)
+  const [showReportCard, setShowReportCard] = useState(false)
 
   function handleConfirm() {
     onStartFresh()
@@ -87,6 +89,16 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
               {diary.tier ? diary.tier : "미설정"}
             </p>
           </div>
+
+          {/* 진단표 다시보기 버튼 */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowReportCard(true)}
+            className="w-full rounded-full text-xs font-bold mt-3"
+          >
+            진단표 다시보기
+          </Button>
         </div>
       </div>
 
@@ -117,6 +129,28 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
           </Button>
         )}
       </div>
+
+      {/* ReportCard 모달 */}
+      {showReportCard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm overflow-y-auto" onClick={() => setShowReportCard(false)}>
+          <div className="relative mx-4 my-10 bg-background rounded-3xl shadow-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setShowReportCard(false)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-foreground font-bold"
+            >
+              ✕
+            </button>
+            <ReportCard
+              mode="revisit"
+              age={diary.age}
+              skinType={diary.skinType}
+              concernTags={diary.concernTags}
+              activeIngredients={diary.activeIngredients}
+            />
+          </div>
+        </div>
+      )}
     </section>
   )
 }
