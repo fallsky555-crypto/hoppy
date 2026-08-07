@@ -458,6 +458,14 @@
       "dry": "건성",
       "combo": "복합성",
       "oily": "지성"
+    },
+    "ageLabel": {
+      "teen": "10대",
+      "twenties": "20대",
+      "thirties": "30대",
+      "forties": "40대",
+      "fifties": "50대",
+      "sixtyPlus": "60대 이상"
     }
   },
   "recipe_card": {

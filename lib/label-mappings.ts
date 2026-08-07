@@ -1,6 +1,7 @@
 import type { Concern, SupportId } from "@/lib/routine-copy"
 
 export type SkinType = "sensitive" | "dry" | "combo" | "oily"
+export type Age = "teen" | "20s" | "30s" | "40s" | "50s" | "60s_plus"
 
 /**
  * Concern → i18n locale key 매핑
@@ -34,6 +35,19 @@ export const SKIN_TYPE_LABEL_KEYS: Record<SkinType, string> = {
   dry: "settings.skinTypeLabel.dry",
   combo: "settings.skinTypeLabel.combo",
   oily: "settings.skinTypeLabel.oily",
+}
+
+/**
+ * Age → i18n locale key 매핑
+ * 사용: const label = t(AGE_LABEL_KEYS[age], locale)
+ */
+export const AGE_LABEL_KEYS: Record<Age, string> = {
+  teen: "settings.ageLabel.teen",
+  "20s": "settings.ageLabel.twenties",
+  "30s": "settings.ageLabel.thirties",
+  "40s": "settings.ageLabel.forties",
+  "50s": "settings.ageLabel.fifties",
+  "60s_plus": "settings.ageLabel.sixtyPlus",
 }
 
 /**

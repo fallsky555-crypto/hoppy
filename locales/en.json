@@ -461,6 +461,14 @@
       "dry": "Dry",
       "combo": "Combination",
       "oily": "Oily"
+    },
+    "ageLabel": {
+      "teen": "Teens",
+      "twenties": "20s",
+      "thirties": "30s",
+      "forties": "40s",
+      "fifties": "50s",
+      "sixtyPlus": "60s and up"
     }
   },
   "recipe_card": {

@@ -58,6 +58,10 @@ interface RemoteProfile {
   /** 이 프로필이 마지막으로 확인된 엔진 버전 — null이면 이 필드가 생기기 전의 레거시 유저 */
   engineVersion: string | null
   skinType: string | null
+  age: string | null
+  concernTags: string | null
+  overlap: number | null
+  tier: string | null
 }
 
 /** BHA/레티놀 도입 간격 슬라이더 + 가입일을 diary_profiles에 upsert한다 */
@@ -141,6 +145,54 @@ export async function saveSkinType(userId: string, signupDate: string, skinType:
     { onConflict: "user_id" },
   )
   if (error) console.warn("[supabase] saveSkinType failed:", error.message)
+}
+
+/** 체커에서 선택한 나이대를 diary_profiles에 반영한다 */
+export async function saveAge(userId: string, signupDate: string, age: string | null): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), age },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveAge failed:", error.message)
+}
+
+/** 체커의 beauty_concerns을 diary_profiles.concern_tags에 반영한다 */
+export async function saveConcernTags(userId: string, signupDate: string, concernTags: string | null): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), concern_tags: concernTags },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveConcernTags failed:", error.message)
+}
+
+/** 성분 겹침 개수를 diary_profiles.overlap_count에 반영한다 */
+export async function saveOverlap(userId: string, signupDate: string, overlap: number | null): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), overlap_count: overlap },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveOverlap failed:", error.message)
+}
+
+/** 진단 등급을 diary_profiles.tier에 반영한다 */
+export async function saveTier(userId: string, signupDate: string, tier: string | null): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), tier },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveTier failed:", error.message)
 }
 
 /** 13-3(v1.7). 이 유저의 프로필이 확인된 엔진 버전을 diary_profiles에 반영한다 */
@@ -347,7 +399,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
       .select(
-        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, active_ingredients, engine_version, skin_type",
+        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, active_ingredients, engine_version, skin_type, age, concern_tags, overlap_count, tier",
       )
       .eq("user_id", userId)
       .maybeSingle()
@@ -410,6 +462,10 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
         activeIngredients: (profile.active_ingredients as string[] | null) ?? [],
         engineVersion: profile.engine_version ?? null,
         skinType: (profile.skin_type as string | null) ?? null,
+        age: (profile.age as string | null) ?? null,
+        concernTags: (profile.concern_tags as string | null) ?? null,
+        overlap: (profile.overlap_count as number | null) ?? null,
+        tier: (profile.tier as string | null) ?? null,
       },
       completedDays,
       events,

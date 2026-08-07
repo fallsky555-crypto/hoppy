@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
-import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS } from "@/lib/label-mappings"
+import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS, AGE_LABEL_KEYS } from "@/lib/label-mappings"
 
 interface SettingsPanelProps {
   onStartFresh: () => void
@@ -67,6 +67,24 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
               {diary.skinType && SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS]
                 ? t(SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS], locale)
                 : "미설정"}
+            </p>
+            <p>
+              <span className="font-medium">나이대:</span>{" "}
+              {diary.age && AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS]
+                ? t(AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS], locale)
+                : "미설정"}
+            </p>
+            <p>
+              <span className="font-medium">뷰티 고민:</span>{" "}
+              {diary.concernTags ? diary.concernTags : "미설정"}
+            </p>
+            <p>
+              <span className="font-medium">성분 겹침:</span>{" "}
+              {diary.overlap !== null && diary.overlap !== undefined ? diary.overlap : "미설정"}
+            </p>
+            <p>
+              <span className="font-medium">진단 등급:</span>{" "}
+              {diary.tier ? diary.tier : "미설정"}
             </p>
           </div>
         </div>
