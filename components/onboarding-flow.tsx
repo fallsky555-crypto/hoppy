@@ -76,8 +76,14 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             <Button
               type="button"
               variant="outline"
-              onClick={() => setStep(2)}
-              className="h-auto w-auto px-6 rounded-full py-2.5 text-[15px] mx-auto"
+              disabled={!dataConsent}
+              onClick={() => {
+                if (dataConsent) setStep(2)
+              }}
+              className={cn(
+                "h-auto w-auto px-6 rounded-full py-2.5 text-[15px] mx-auto",
+                !dataConsent && "opacity-50 cursor-not-allowed"
+              )}
             >
               {t("onboarding.introStep.ctaButton", locale)}
             </Button>
@@ -107,7 +113,9 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               </div>
               <button
                 type="button"
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  if (dataConsent) setStep(2)
+                }}
                 disabled={!dataConsent}
                 className={cn(
                   "shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all",
