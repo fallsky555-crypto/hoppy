@@ -228,7 +228,12 @@ function buildProductDetails(itemIds: string[]): UsedProduct[] {
 function contextFromURL(): URLContextPayload | null {
   if (typeof window === "undefined") return null
   const params = new URLSearchParams(window.location.search)
-  if (params.get("type") === null) return null
+
+  const hasType = params.get("type") !== null
+  const hasConcern = params.get("concern") !== null
+  const hasSupport = params.get("support") !== null
+  const hasItems = params.get("items") !== null
+  if (!hasType && !hasConcern && !hasSupport && !hasItems) return null
 
   const itemIds = parseItems(params.get("items"))
 
