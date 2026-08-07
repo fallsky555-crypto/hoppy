@@ -21,6 +21,22 @@ import { X } from "lucide-react"
 
 const DISMISSED_KEY = "hoppy-login-banner-dismissed"
 
+/** 로컬 localStorage에 온보딩 완료 데이터가 있는지 확인 */
+function hasLocalOnboardingData(): boolean {
+  if (typeof window === "undefined") return false
+  try {
+    const raw = window.localStorage.getItem(DIARY_STORAGE_KEY)
+    if (!raw) return false
+    const state = JSON.parse(raw) as any
+    return (
+      state.settings?.activeIntervalDays !== undefined &&
+      state.settings?.bhaIntervalDays !== undefined
+    )
+  } catch {
+    return false
+  }
+}
+
 /**
  * 13-1/13-2/13-4. 로그인을 강제하지 않는다 — 익명 세션으로도 기존처럼 계속 이용
  * 가능하고, 이 배너는 "기기 바뀌어도 이어보기" 이점을 담백하게 안내만 한다.
@@ -49,6 +65,9 @@ export function LoginBanner() {
     entryCount: number
     logCount: number
   } | null>(null)
+  /** 로컬 온보딩 데이터가 있는 상태에서 identity_already_exists 발생 시 데이터 유실 확인 다이얼로그 */
+  const [confirmLocalDataLossDialogOpen, setConfirmLocalDataLossDialogOpen] = useState(false)
+  const [pendingLocalDataLossProvider, setPendingLocalDataLossProvider] = useState<LoginProvider | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -58,44 +77,52 @@ export function LoginBanner() {
     const oauthError = consumeOAuthErrorFromURL()
     if (oauthError) {
       if (oauthError.errorCode === "identity_already_exists" && oauthError.provider) {
-        // identity_already_exists → 익명 세션 데이터 유실 확인 후 처리
-        checkAnonymousDataLoss(oauthError.provider).then(({ hasData, details }) => {
-          if (cancelled) return
-
-          // 데이터가 없으면 자동 폴백
-          if (!hasData) {
-            setError(t("login.message.existing_account_fallback", locale))
-            setVisible(true)
-
-            // 1.5초 후 자동 폴백
-            setTimeout(() => {
-              if (!cancelled) {
-                signInExistingIdentity(oauthError.provider).then((fallbackResult) => {
-                  if (fallbackResult.error) {
-                    setError(t("login.error.signin", locale))
-                  }
-                  // 폴백 성공 시 OAuth 리다이렉트됨
-                })
-              }
-            }, 1500)
-            return
-          }
-
-          // 데이터가 있으면 다이얼로그 표시
-          setAnonymousDataDetails(details)
-          setPendingFallbackProvider(oauthError.provider)
-          setIsDataLossDialogOpen(true)
+        // identity_already_exists → 로컬 온보딩 데이터 우선 확인
+        if (hasLocalOnboardingData()) {
+          // 로컬 데이터가 있으면 사용자 확인 필수 (원격 체크는 스킵)
+          setPendingLocalDataLossProvider(oauthError.provider)
+          setConfirmLocalDataLossDialogOpen(true)
           setVisible(true)
-        }).catch((err) => {
-          if (!cancelled) {
-            console.warn("[Login Fallback] Error checking data loss:", err)
-            // 데이터 확인 실패 시 안전하게 다이얼로그 표시 (데이터가 있을 수도)
-            setAnonymousDataDetails({ hasProfile: false, entryCount: 0, logCount: 0 })
+        } else {
+          // 로컬 데이터가 없으면 기존 원격 체크 로직 (자동 폴백 가능)
+          checkAnonymousDataLoss(oauthError.provider).then(({ hasData, details }) => {
+            if (cancelled) return
+
+            // 데이터가 없으면 자동 폴백
+            if (!hasData) {
+              setError(t("login.message.existing_account_fallback", locale))
+              setVisible(true)
+
+              // 1.5초 후 자동 폴백
+              setTimeout(() => {
+                if (!cancelled) {
+                  signInExistingIdentity(oauthError.provider).then((fallbackResult) => {
+                    if (fallbackResult.error) {
+                      setError(t("login.error.signin", locale))
+                    }
+                    // 폴백 성공 시 OAuth 리다이렉트됨
+                  })
+                }
+              }, 1500)
+              return
+            }
+
+            // 데이터가 있으면 다이얼로그 표시
+            setAnonymousDataDetails(details)
             setPendingFallbackProvider(oauthError.provider)
             setIsDataLossDialogOpen(true)
             setVisible(true)
-          }
-        })
+          }).catch((err) => {
+            if (!cancelled) {
+              console.warn("[Login Fallback] Error checking data loss:", err)
+              // 데이터 확인 실패 시 안전하게 다이얼로그 표시 (데이터가 있을 수도)
+              setAnonymousDataDetails({ hasProfile: false, entryCount: 0, logCount: 0 })
+              setPendingFallbackProvider(oauthError.provider)
+              setIsDataLossDialogOpen(true)
+              setVisible(true)
+            }
+          })
+        }
       } else {
         setError(t("login.error.link", locale))
         setVisible(true)
@@ -177,6 +204,31 @@ export function LoginBanner() {
     setAnonymousDataDetails(null)
     setError(null)
     // 원래 화면으로 돌아감 (데이터는 익명 세션에 그대로 남음)
+  }
+
+  // 로컬 온보딩 데이터가 있는 상태에서 identity_already_exists 발생 시 사용자 확인 후 폴백
+  async function handleConfirmLocalDataLoss() {
+    if (!pendingLocalDataLossProvider) return
+
+    setConfirmLocalDataLossDialogOpen(false)
+    setPending(pendingLocalDataLossProvider)
+
+    // 폴백 진행
+    const fallbackResult = await signInExistingIdentity(pendingLocalDataLossProvider)
+
+    if (fallbackResult.error) {
+      setPending(null)
+      setError(t("login.error.signin", locale))
+    }
+    // 폴백 성공 시 OAuth 리다이렉트됨
+  }
+
+  // 로컬 온보딩 데이터 유실 확인 다이얼로그에서 "취소" 클릭
+  function handleCancelLocalDataLoss() {
+    setConfirmLocalDataLossDialogOpen(false)
+    setPendingLocalDataLossProvider(null)
+    setError(null)
+    // 원래 화면으로 돌아감 (로컬 데이터는 현재 세션에 그대로 남음)
   }
 
   async function handleUseExisting() {
@@ -382,6 +434,44 @@ export function LoginBanner() {
                 className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {t("login.dialog.button.continue", locale)}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
+
+      {confirmLocalDataLossDialogOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="w-full max-w-sm rounded-2xl bg-card shadow-lg ring-1 ring-border">
+          <div className="border-b border-border px-6 py-4">
+            <h3 className="text-base font-semibold text-foreground">
+              {t("login.provider_label.kakao", locale)} 계정 연결
+            </h3>
+          </div>
+
+          <div className="px-6 py-4">
+            <p className="mb-4 text-sm text-muted-foreground">
+              이 {pendingLocalDataLossProvider === "kakao" ? t("login.provider_label.kakao", locale) : t("login.provider_label.google", locale)} 계정은 이미 다른 기기에서 사용 중이에요. 계속 로그인하면 이 기기의 기록은 저장되지 않을 수 있어요. 계속하시겠어요?
+            </p>
+          </div>
+
+          <div className="border-t border-border px-6 py-4">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleCancelLocalDataLoss}
+                className="flex-1 rounded-full border border-border bg-transparent px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmLocalDataLoss}
+                disabled={pending !== null}
+                className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {pending === pendingLocalDataLossProvider ? "계속 중..." : "계속"}
               </button>
             </div>
           </div>
