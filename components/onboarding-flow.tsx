@@ -142,7 +142,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
           </div>
 
           {/* 체커 결과 불러오기 카드 */}
-          {diary.pendingCheckerContext && (checkerChoice === "pending" || checkerChoice === "loaded") && (
+          {(checkerChoice === "pending" || checkerChoice === "loaded" || appliedCheckerSummary) && (
             <div className="rounded-3xl border border-border bg-card/50 p-4 space-y-3">
               {checkerChoice === "pending" && (
                 <>
@@ -155,8 +155,8 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                       onClick={() => {
                         if (diary.pendingCheckerContext) {
                           setAppliedCheckerSummary(diary.pendingCheckerContext)
-                          diary.applyCheckerContext()
                           setCheckerChoice("loaded")
+                          diary.applyCheckerContext()
                         }
                       }}
                       className="flex-1 rounded-2xl border border-primary bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary-text transition-colors hover:bg-primary/20"
