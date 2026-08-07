@@ -10,6 +10,7 @@ import type { Concern, SupportId } from "@/lib/routine-copy"
 import { useDiary } from "@/lib/diary-context"
 import { ReportCard } from "@/components/report-card"
 import { saveContextFlags } from "@/lib/supabase/sync"
+import { TOTAL_DAYS } from "@/lib/schedule"
 
 interface OnboardingFlowProps {
   locale: Locale
@@ -18,6 +19,63 @@ interface OnboardingFlowProps {
 }
 
 type Step = 1 | "Q" | 1.5 | 2
+
+/** KST(Asia/Seoul) 기준 "오늘" day를 계산 */
+function getTodayDayKST(joinISO: string): number {
+  const now = new Date()
+  // UTC timestamp에 KST offset(+9시간) 적용
+  const kstTime = now.getTime() + (9 * 60 * 60 * 1000)
+  const kstNow = new Date(kstTime)
+
+  // 가입일 ISO 문자열을 UTC로 파싱
+  const start = new Date(joinISO)
+
+  // UTC 게터를 사용해서 각각의 자정(00:00:00)을 계산
+  const startMid = new Date(Date.UTC(
+    start.getUTCFullYear(),
+    start.getUTCMonth(),
+    start.getUTCDate(),
+    0, 0, 0, 0
+  ))
+  const kstNowMid = new Date(Date.UTC(
+    kstNow.getUTCFullYear(),
+    kstNow.getUTCMonth(),
+    kstNow.getUTCDate(),
+    0, 0, 0, 0
+  ))
+
+  const diffDays = Math.floor((kstNowMid.getTime() - startMid.getTime()) / 86_400_000)
+  return Math.min(Math.max(diffDays + 1, 1), TOTAL_DAYS)
+}
+
+interface StepQNeeds {
+  needSkinType: boolean
+  needConcernTags: boolean
+  needActiveIngredients: boolean
+  needCondition: boolean
+  hasAnyNeeded: boolean
+}
+
+/** 각 필드별로 Step Q에서 필요한 질문을 판단 */
+function checkStepQNeeds(diary: ReturnType<typeof useDiary>): StepQNeeds {
+  const needSkinType = !diary.skinType
+  const needConcernTags = !diary.concernTags
+  const needActiveIngredients = !diary.activeIngredients || diary.activeIngredients.length === 0
+
+  // Q4: 오늘 condition을 이미 기록했으면 스킵 (KST 기준)
+  const todayDay = getTodayDayKST(diary.joinDate)
+  const needCondition = !(diary.conditions && diary.conditions[todayDay])
+
+  const hasAnyNeeded = needSkinType || needConcernTags || needActiveIngredients || needCondition
+
+  return {
+    needSkinType,
+    needConcernTags,
+    needActiveIngredients,
+    needCondition,
+    hasAnyNeeded,
+  }
+}
 
 function getPrivacyPolicyUrl(locale: Locale): string {
   return locale === "ko"
@@ -89,9 +147,8 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               disabled={!dataConsent}
               onClick={() => {
                 if (dataConsent) {
-                  // age/skin_type/concern_tags 모두 비어있으면 최소 질문 화면
-                  const hasData = diary.age || diary.skinType || diary.concernTags
-                  setStep(hasData ? 1.5 : "Q")
+                  const needs = checkStepQNeeds(diary)
+                  setStep(needs.hasAnyNeeded ? "Q" : 1.5)
                 }
               }}
               className={cn(
@@ -129,8 +186,8 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                 type="button"
                 onClick={() => {
                   if (dataConsent) {
-                    const hasData = diary.age || diary.skinType || diary.concernTags
-                    setStep(hasData ? 1.5 : "Q")
+                    const needs = checkStepQNeeds(diary)
+                    setStep(needs.hasAnyNeeded ? "Q" : 1.5)
                   }
                 }}
                 disabled={!dataConsent}
@@ -149,7 +206,9 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
         </section>
       )}
 
-      {step === "Q" && (
+      {step === "Q" && (() => {
+        const needs = checkStepQNeeds(diary)
+        return (
         <section key="step-Q" className="space-y-4 transition-opacity duration-200 pb-10" aria-label="Minimum Questions">
           <div className="space-y-6">
             {/* 헤더 */}
@@ -163,6 +222,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             </div>
 
             {/* Q1: 피부 타입 */}
+            {needs.needSkinType && (
             <div className="space-y-3">
               <p className="text-sm font-semibold text-foreground">Q1. 피부 타입</p>
               <div className="grid grid-cols-4 gap-2">
@@ -188,8 +248,10 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                 ))}
               </div>
             </div>
+            )}
 
             {/* Q2: 주요 고민 */}
+            {needs.needConcernTags && (
             <div className="space-y-3">
               <p className="text-sm font-semibold text-foreground">Q2. 주요 고민 (복수 선택 가능)</p>
               <div className="space-y-2">
@@ -223,8 +285,10 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                 ))}
               </div>
             </div>
+            )}
 
             {/* Q3: 고민케어 성분 */}
+            {needs.needActiveIngredients && (
             <div className="space-y-3">
               <p className="text-sm font-semibold text-foreground">Q3. 고민케어로 주로 뭘 쓰세요?</p>
               <div className="grid grid-cols-2 gap-2">
@@ -256,8 +320,10 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                 ))}
               </div>
             </div>
+            )}
 
             {/* Q4: 오늘 컨디션 */}
+            {needs.needCondition && (
             <div className="space-y-3">
               <p className="text-sm font-semibold text-foreground">Q4. 오늘 피부 컨디션은 어때요?</p>
               <div className="flex gap-2">
@@ -282,13 +348,22 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                 ))}
               </div>
             </div>
+            )}
 
             {/* 완료 버튼 */}
             <Button
               type="button"
-              disabled={!tempSkinType || tempConcernTags.length === 0 || !tempCondition}
+              disabled={
+                (needs.needSkinType && !tempSkinType) ||
+                (needs.needConcernTags && tempConcernTags.length === 0) ||
+                (needs.needCondition && !tempCondition)
+              }
               onClick={async () => {
-                if (!tempSkinType || tempConcernTags.length === 0 || !tempCondition) return
+                if (
+                  (needs.needSkinType && !tempSkinType) ||
+                  (needs.needConcernTags && tempConcernTags.length === 0) ||
+                  (needs.needCondition && !tempCondition)
+                ) return
 
                 // diary_profiles에 저장
                 const userId = diary.userId
@@ -312,7 +387,8 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             </Button>
           </div>
         </section>
-      )}
+        )
+      })()}
 
       {step === 1.5 && (
         <section key="step-1.5" className="space-y-5 transition-opacity duration-200" aria-label="Report Card">
