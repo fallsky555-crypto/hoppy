@@ -566,6 +566,21 @@ export function useDiary() {
   }, [])
 
   /**
+   * Step Q 답변을 로컬 state에 반영한다. 여기서 직접 Supabase에 쓰지 않는 이유:
+   * 이미 skinType/concernTags를 감시하는 sync effect(아래 saveSkinType/saveConcernTags
+   * 호출)가 있고, completeOnboarding()이 joinDate를 바꿀 때 그 effect가 재실행되며
+   * state 값으로 덮어쓴다 — Step Q가 로컬 state를 안 거치고 Supabase에 직접 쓰면
+   * 이 재실행이 방금 쓴 값을 stale null로 도로 덮어써버린다.
+   */
+  const setSkinType = useCallback((skinType: string | null) => {
+    setState((prev) => ({ ...prev, skinType }))
+  }, [])
+
+  const setConcernTags = useCallback((concernTags: string | null) => {
+    setState((prev) => ({ ...prev, concernTags }))
+  }, [])
+
+  /**
    * 온보딩 4단계 "시작하기" 전용. activeIntervalDays/bhaIntervalDays를 항상 같은
    * 값으로 한 번에 채워 넣고(온보딩 판단 기준이 "둘 다 있는지"라 절대 따로 저장되면
    * 안 된다), 가입일(Day 1)도 이 순간으로 스탬프한다 — 온보딩을 보는 동안은 아직
@@ -720,8 +735,10 @@ export function useDiary() {
     activeIngredients: state.activeIngredients,
     usedProducts: state.usedProducts,
     skinType: state.skinType,
+    setSkinType,
     age: state.age,
     concernTags: state.concernTags,
+    setConcernTags,
     overlap: state.overlap,
     tier: state.tier,
     userId,

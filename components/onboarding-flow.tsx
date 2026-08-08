@@ -9,7 +9,6 @@ import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS } from "@/lib/label-mappings"
 import type { Concern, SupportId } from "@/lib/routine-copy"
 import { useDiary } from "@/lib/diary-context"
 import { ReportCard } from "@/components/report-card"
-import { saveContextFlags } from "@/lib/supabase/sync"
 import { TOTAL_DAYS } from "@/lib/schedule"
 
 interface OnboardingFlowProps {
@@ -365,16 +364,17 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                   (needs.needCondition && !tempCondition)
                 ) return
 
-                // diary_profiles에 저장
-                const userId = diary.userId
-                if (userId) {
-                  await saveContextFlags(userId, diary.joinDate, {
-                    skinType: tempSkinType,
-                    concernTags: tempConcernTags.join(","),
-                    activeIngredients: tempActiveIngredients,
-                  })
-
-                  // condition 저장
+                // 로컬 diary state에 반영 — 기존 sync effect(use-diary.ts)가
+                // 이 값을 diary_profiles에 씀. completeOnboarding()이 joinDate를
+                // 바꿔도 이제 state.skinType/concernTags가 실제 값이라 stale null로
+                // 덮어써지지 않는다.
+                if (needs.needSkinType && tempSkinType) {
+                  diary.setSkinType(tempSkinType)
+                }
+                if (needs.needConcernTags && tempConcernTags.length > 0) {
+                  diary.setConcernTags(tempConcernTags.join(","))
+                }
+                if (needs.needCondition && tempCondition) {
                   diary.recordCondition(0, tempCondition)
                 }
 
@@ -394,6 +394,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
         <section key="step-1.5" className="space-y-5 transition-opacity duration-200" aria-label="Report Card">
           <ReportCard
             mode="onboarding"
+            locale={locale}
             age={diary.age}
             skinType={diary.skinType || tempSkinType}
             concernTags={diary.concernTags || tempConcernTags.join(",")}
