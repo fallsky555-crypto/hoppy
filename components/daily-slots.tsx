@@ -6,7 +6,7 @@ import { Check, Smile, Meh, Frown, ChevronDown } from "lucide-react"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
-import { saveUsageLog } from "@/lib/supabase/sync"
+import { saveUsageLog, saveFreeInputLog } from "@/lib/supabase/sync"
 import { getRecommendedSlot } from "@/lib/slot-mapping"
 import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 
@@ -152,6 +152,67 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
   )
 }
 
+interface FreeInputCardProps {
+  isExpanded: boolean
+  onToggle: () => void
+  value: string
+  onChange: (value: string) => void
+  onSave: () => void
+  justSaved: boolean
+  locale: string
+}
+
+function FreeInputCard({ isExpanded, onToggle, value, onChange, onSave, justSaved, locale }: FreeInputCardProps) {
+  return (
+    <div className="rounded-2xl bg-secondary overflow-hidden">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-4"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">✏️</span>
+          <div className="text-left">
+            <div className="text-sm font-semibold text-foreground">{t("dailySlots.freeInput.title", locale)}</div>
+            <div className="text-xs text-muted-foreground">{t("dailySlots.freeInput.subtitle", locale)}</div>
+          </div>
+        </div>
+        <ChevronDown
+          className={cn(
+            "size-5 text-muted-foreground transition-transform",
+            isExpanded ? "rotate-180" : "",
+          )}
+        />
+      </button>
+
+      {isExpanded && (
+        <div className="border-t border-border p-4 space-y-2 animate-in slide-in-from-top-2 duration-200">
+          <textarea
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={t("dailySlots.freeInput.placeholder", locale)}
+            rows={3}
+            className="w-full rounded-2xl bg-card border border-border p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+          />
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={!value.trim()}
+            className={cn(
+              "w-full rounded-full font-semibold py-2.5 text-sm transition-colors",
+              value.trim()
+                ? "bg-primary hover:bg-primary/80 text-primary-foreground"
+                : "bg-muted text-muted-foreground cursor-not-allowed opacity-60",
+            )}
+          >
+            {justSaved ? t("dailySlots.freeInput.saved", locale) : t("dailySlots.freeInput.saveButton", locale)}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface DailySlotsProps {
   day?: number
   onConditionRecord?: (condition: "good" | "neutral" | "bad", linkedCategory: SlotType) => void
@@ -165,6 +226,9 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const [selectedSpecialCare, setSelectedSpecialCare] = useState<Set<SpecialCareType>>(new Set())
   const [specialCareExpanded, setSpecialCareExpanded] = useState(false)
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
+  const [freeInputExpanded, setFreeInputExpanded] = useState(false)
+  const [freeInputText, setFreeInputText] = useState("")
+  const [freeInputJustSaved, setFreeInputJustSaved] = useState(false)
 
   const checkedSlotsRef = useRef<Set<SlotType>>(new Set())
   const selectedSpecialCareRef = useRef<Set<SpecialCareType>>(new Set())
@@ -253,6 +317,19 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
     diaryRef.current.reportReaction(day, "retinol")
   }, [day])
 
+  const handleSaveFreeInput = useCallback(() => {
+    const content = freeInputText.trim()
+    if (!content) return
+    const userId = diaryRef.current.userId
+    if (userId) {
+      saveFreeInputLog(userId, day, content).catch((err) => {
+        console.error("[saveFreeInputLog] error:", err)
+      })
+    }
+    setFreeInputJustSaved(true)
+    setTimeout(() => setFreeInputJustSaved(false), 1500)
+  }, [day, freeInputText])
+
   const totalSelected = checkedSlots.size + selectedSpecialCare.size
 
   return (
@@ -308,6 +385,17 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
             onToggle={() => setSpecialCareExpanded(!specialCareExpanded)}
             selectedSpecialCare={selectedSpecialCare}
             onToggleSpecialCare={toggleSpecialCare}
+            locale={locale}
+          />
+
+          {/* 자유입력 — raw text 그대로 저장, 정량 분석 대상 아님 */}
+          <FreeInputCard
+            isExpanded={freeInputExpanded}
+            onToggle={() => setFreeInputExpanded(!freeInputExpanded)}
+            value={freeInputText}
+            onChange={setFreeInputText}
+            onSave={handleSaveFreeInput}
+            justSaved={freeInputJustSaved}
             locale={locale}
           />
         </div>

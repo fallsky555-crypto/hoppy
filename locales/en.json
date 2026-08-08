@@ -564,7 +564,14 @@
       "default": "Mark complete"
     },
     "recommendationNote": "⭐ This is your recommended care. Adjust based on how your skin feels.",
-    "tapPrompt": "Tap what applies"
+    "tapPrompt": "Tap what applies",
+    "freeInput": {
+      "title": "Free Input",
+      "subtitle": "Write anything you'd like about today",
+      "placeholder": "e.g. My skin felt a bit sensitive today...",
+      "saveButton": "Save",
+      "saved": "Saved"
+    }
   },
   "metadata": {
     "title": "Hoppy Skin Diary · Your Daily Skin Record",

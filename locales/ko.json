@@ -561,7 +561,14 @@
       "default": "기록 완료"
     },
     "recommendationNote": "⭐ 추천 케어예요. 컨디션에 따라 조절하세요",
-    "tapPrompt": "해당하는것을 눌러주세요"
+    "tapPrompt": "해당하는것을 눌러주세요",
+    "freeInput": {
+      "title": "자유입력",
+      "subtitle": "오늘 하고 싶은 말을 자유롭게 적어보세요",
+      "placeholder": "예: 오늘은 피부가 좀 예민했어요...",
+      "saveButton": "저장",
+      "saved": "저장했어요"
+    }
   },
   "metadata": {
     "title": "호빵이 스킨 다이어리 · 장벽 리셋 캘린더",

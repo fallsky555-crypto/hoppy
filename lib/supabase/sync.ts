@@ -356,6 +356,22 @@ export async function saveUsageLog(
   if (error) console.warn("[supabase] saveUsageLog failed:", error.message)
 }
 
+/**
+ * 자유입력 카드에 쓴 raw text를 free_input_log에 저장한다. 구조화된 분석 대상이
+ * 아니라 그대로 저장만 하는 용도 — 리포트/차트 로직에서 참조하지 않는다.
+ */
+export async function saveFreeInputLog(userId: string, day: number, content: string): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("free_input_log").insert({
+    user_id: userId,
+    day,
+    content,
+  })
+  if (error) console.warn("[supabase] saveFreeInputLog failed:", error.message)
+}
+
 /** 완주 30일 기념 소감을 completion_feedback에 저장한다 */
 export async function saveCompletionFeedback(userId: string, feedbackText: string): Promise<void> {
   const supabase = getSupabaseClient()
