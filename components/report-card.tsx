@@ -5,10 +5,13 @@ import { AlertCircle } from "lucide-react"
 import { getIngredientGuide } from "@/lib/ingredient-guide"
 import { getTrendStat, getDonutChartValues, getAgeLabel } from "@/lib/trend-stats"
 import { getIngredientWarning } from "@/lib/ingredient-warnings"
+import { getFirstConcernTagLabel } from "@/lib/label-mappings"
+import { t, type Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
 interface ReportCardProps {
   mode: "onboarding" | "revisit"
+  locale: Locale
   age?: string | null
   skinType?: string | null
   concernTags?: string | null // 쉼표 구분 또는 배열 형태
@@ -18,6 +21,7 @@ interface ReportCardProps {
 
 export function ReportCard({
   mode,
+  locale,
   age,
   skinType,
   concernTags,
@@ -35,6 +39,14 @@ export function ReportCard({
 
   // 첫 번째 concern tag 사용 (시안에서는 하나씩 표시)
   const primaryConcern = concernTagArray[0] ?? null
+
+  // primaryConcern의 한글 라벨 — 화면 표시 전용. getIngredientGuide/getTrendStat에는
+  // 절대 이 값이 아니라 원본 코드값(primaryConcern)을 넘겨야 한다(그쪽은 대문자 코드를
+  // 키로 기대하는 설계라 라벨을 넘기면 매칭이 깨진다).
+  const primaryConcernLabel = useMemo(() => {
+    const key = getFirstConcernTagLabel(concernTags)
+    return key ? t(key, locale) : null
+  }, [concernTags, locale])
 
   // 트렌드 통계
   const trendStat = useMemo(() => {
@@ -55,8 +67,10 @@ export function ReportCard({
 
   const ageLabel = getAgeLabel(age)
 
-  // revisit 모드에서 핵심 데이터 부재 시 안내 UI 표시
-  const hasCoreData = age && skinType && concernTags
+  // revisit 모드에서 핵심 데이터 부재 시 안내 UI 표시. age는 Step Q에 질문이
+  // 없어서 체커 URL로 안 들어온 유저는 영영 null이라 필수 조건에서 뺐다 —
+  // skinType/concernTags만 있어도 리포트를 보여줄 수 있다.
+  const hasCoreData = skinType && concernTags
   if (mode === "revisit" && !hasCoreData) {
     return (
       <main className="mx-auto w-full max-w-md px-5 py-6 flex flex-col items-center justify-center min-h-[400px]">
@@ -107,9 +121,10 @@ export function ReportCard({
           My Skin Diagnosis
         </div>
         <h1 className="text-2xl font-bold leading-tight text-ink mb-2">
-          {ageLabel && primaryConcern ? (
+          {primaryConcernLabel ? (
             <>
-              {ageLabel} · {primaryConcern}
+              {ageLabel ? `${ageLabel} · ` : ""}
+              {primaryConcernLabel}
               <br />
             </>
           ) : null}
@@ -171,7 +186,7 @@ export function ReportCard({
           <p className="text-sm font-bold leading-relaxed mb-2">
             {ageLabel} 응답자 10명 중 약 {Math.round(trendStat.percentage / 10)}명이
             <br />
-            {primaryConcern} 피부를 고민으로 꼽았어요
+            {primaryConcernLabel} 피부를 고민으로 꼽았어요
           </p>
           <p className="text-xs text-white/55">
             출처: 마크로밀엠브레인 트렌드모니터, 전국 성인 1,200명 설문(2016)
@@ -188,7 +203,7 @@ export function ReportCard({
 
           <div className="bg-card border-1.5 border-line rounded-2xl p-5 mb-4">
             <span className="inline-block text-xs font-bold text-primary-text bg-primary-soft px-2.5 py-1 rounded-full mb-2.5">
-              {primaryConcern}
+              {primaryConcernLabel}
             </span>
             <p className="text-sm font-bold text-ink mb-1 leading-relaxed">
               추가하시면 좋은 성분: <span className="text-primary-text">{ingredients.join(" · ")}</span>
