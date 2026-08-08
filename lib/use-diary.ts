@@ -26,6 +26,7 @@ import {
   saveConditionLog,
   saveContextFlags,
   saveEngineVersion,
+  saveGender,
   saveHabitLog,
   saveOverlap,
   saveSkinType,
@@ -93,6 +94,8 @@ interface DiaryState {
   overlap: number | null
   /** 진단 등급 (0/1/2) */
   tier: string | null
+  /** 체커 Q1에서 선택한 성별 (female/male/other/unspecified) */
+  gender: string | null
 }
 
 /** 로그아웃 시 로컬 캐시를 지우는 용도로도 쓰인다(login-banner.tsx) */
@@ -125,6 +128,7 @@ function freshState(): DiaryState {
     concernTags: null,
     overlap: null,
     tier: null,
+    gender: null,
   }
 }
 
@@ -157,6 +161,7 @@ function loadLocalState(): DiaryState | null {
       concernTags: parsed.concernTags ?? null,
       overlap: parsed.overlap ?? null,
       tier: parsed.tier ?? null,
+      gender: parsed.gender ?? null,
     }
   } catch {
     return null
@@ -207,6 +212,7 @@ interface URLContextPayload {
   concernTags: string | null
   overlap: number | null
   tier: string | null
+  gender: string | null
 }
 
 const VALID_CONCERNS: Concern[] = ["dry", "flush", "flaky", "trouble", "none"]
@@ -215,6 +221,7 @@ const VALID_SKIN_TYPES = ["sensitive", "dry", "combo", "oily"]
 const VALID_AGES = ["teen", "20s", "30s", "40s", "50s", "60s_plus"]
 const VALID_CONCERN_TAGS = ["DRY", "TONE", "TEXTURE", "TROUBLE", "AGING", "BARRIER"]
 const VALID_TIERS = ["0", "1", "2"]
+const VALID_GENDERS = ["female", "male", "other", "unspecified"]
 
 function parseConcern(raw: string | null): Concern {
   return VALID_CONCERNS.includes(raw as Concern) ? (raw as Concern) : "none"
@@ -226,6 +233,10 @@ function parseSkinType(raw: string | null): string | null {
 
 function parseAge(raw: string | null): string | null {
   return raw && VALID_AGES.includes(raw) ? raw : null
+}
+
+function parseGender(raw: string | null): string | null {
+  return raw && VALID_GENDERS.includes(raw) ? raw : null
 }
 
 function parseConcernTags(raw: string | null): string | null {
@@ -282,6 +293,7 @@ function buildProductDetails(itemIds: string[]): UsedProduct[] {
  * ?type={A/B/C}&skin_type={sensitive/dry/combo/oily}&preg={0/1}&rx={0/1}&concern={dry/flush/flaky/trouble/none}
  * &support={hya,cica,nia,cer 콤마 구분}&items={...}&age={teen/20s/30s/40s/50s/60s_plus}
  * &beauty_concerns={DRY,TONE 등 콤마 구분}&overlap={숫자}&tier={0/1/2}
+ * &gender={female/male/other/unspecified}
  */
 function contextFromURL(): URLContextPayload | null {
   if (typeof window === "undefined") return null
@@ -295,8 +307,9 @@ function contextFromURL(): URLContextPayload | null {
   const hasBeautyConcerns = params.get("beauty_concerns") !== null
   const hasOverlap = params.get("overlap") !== null
   const hasTier = params.get("tier") !== null
+  const hasGender = params.get("gender") !== null
 
-  if (!hasSkinType && !hasConcern && !hasSupport && !hasItems && !hasAge && !hasBeautyConcerns && !hasOverlap && !hasTier) return null
+  if (!hasSkinType && !hasConcern && !hasSupport && !hasItems && !hasAge && !hasBeautyConcerns && !hasOverlap && !hasTier && !hasGender) return null
 
   const itemIds = parseItems(params.get("items"))
 
@@ -311,6 +324,7 @@ function contextFromURL(): URLContextPayload | null {
     concernTags: parseConcernTags(params.get("beauty_concerns")),
     overlap: parseOverlap(params.get("overlap")),
     tier: parseTier(params.get("tier")),
+    gender: parseGender(params.get("gender")),
   }
 }
 
@@ -318,14 +332,14 @@ function contextFromURL(): URLContextPayload | null {
 function clearContextURLParams() {
   if (typeof window === "undefined") return
   const params = new URLSearchParams(window.location.search)
-  for (const key of ["type", "preg", "rx", "concern", "support", "skin_type", "items", "age", "beauty_concerns", "overlap", "tier"]) {
+  for (const key of ["type", "preg", "rx", "concern", "support", "skin_type", "items", "age", "beauty_concerns", "overlap", "tier", "gender"]) {
     params.delete(key)
   }
   const query = params.toString()
   window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""))
 }
 
-/** 진단 결과 정보를 자동 적용 (pregnant, prescriptionMeds, usedProducts, skinType, age, concernTags, overlap, tier) */
+/** 진단 결과 정보를 자동 적용 (pregnant, prescriptionMeds, usedProducts, skinType, age, concernTags, overlap, tier, gender) */
 function applyURLContext(base: DiaryState, context: URLContextPayload | null): DiaryState {
   if (!context) return base
   return {
@@ -338,13 +352,14 @@ function applyURLContext(base: DiaryState, context: URLContextPayload | null): D
     concernTags: context.concernTags,
     overlap: context.overlap,
     tier: context.tier,
+    gender: context.gender,
   }
 }
 
 /** 체커에서 돌아온 진단 데이터를 임시 상태로 보류하는 payload */
-function extractCheckerContext(context: URLContextPayload | null): { concern: Concern; supportOwned: SupportId[]; skinType: string | null; age: string | null; concernTags: string | null; overlap: number | null; tier: string | null } | null {
+function extractCheckerContext(context: URLContextPayload | null): { concern: Concern; supportOwned: SupportId[]; skinType: string | null; age: string | null; concernTags: string | null; overlap: number | null; tier: string | null; gender: string | null } | null {
   if (!context) return null
-  if (context.concern === "none" && context.supportOwned.length === 0 && !context.skinType && !context.age && !context.concernTags && !context.overlap && !context.tier) return null
+  if (context.concern === "none" && context.supportOwned.length === 0 && !context.skinType && !context.age && !context.concernTags && !context.overlap && !context.tier && !context.gender) return null
   return {
     concern: context.concern,
     supportOwned: context.supportOwned,
@@ -353,6 +368,7 @@ function extractCheckerContext(context: URLContextPayload | null): { concern: Co
     concernTags: context.concernTags,
     overlap: context.overlap,
     tier: context.tier,
+    gender: context.gender,
   }
 }
 
@@ -361,7 +377,7 @@ export function useDiary() {
   const [state, setState] = useState<DiaryState>(freshState)
   const [hydrated, setHydrated] = useState(false)
   // 체커에서 돌아온 concern/supportOwned를 임시 보류 (새로고침하면 사라짐, localStorage 저장 X)
-  const [pendingCheckerContext, setPendingCheckerContext] = useState<{ concern: Concern; supportOwned: SupportId[] } | null>(null)
+  const [pendingCheckerContext, setPendingCheckerContext] = useState<ReturnType<typeof extractCheckerContext>>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -404,6 +420,7 @@ export function useDiary() {
             concernTags: remote.profile.concernTags,
             overlap: remote.profile.overlap,
             tier: remote.profile.tier,
+            gender: remote.profile.gender,
             loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
             loggedSlots: remote.loggedSlots,
             conditions: remote.conditions,
@@ -516,6 +533,12 @@ export function useDiary() {
     saveAge(userId, state.joinDate, state.age)
   }, [userId, state.joinDate, state.age])
 
+  // 체커 Q1에서 선택한 성별
+  useEffect(() => {
+    if (!userId) return
+    saveGender(userId, state.joinDate, state.gender)
+  }, [userId, state.joinDate, state.gender])
+
   // 체커의 beauty_concerns
   useEffect(() => {
     if (!userId) return
@@ -578,6 +601,16 @@ export function useDiary() {
 
   const setConcernTags = useCallback((concernTags: string | null) => {
     setState((prev) => ({ ...prev, concernTags }))
+  }, [])
+
+  /** Step Q에서 성별을 직접 답한 경우 로컬 state에 반영한다. skinType/concernTags와 동일한 이유로 여기서 직접 Supabase에 쓰지 않는다 (위 saveGender sync effect가 감시) */
+  const setGender = useCallback((gender: string | null) => {
+    setState((prev) => ({ ...prev, gender }))
+  }, [])
+
+  /** Step Q에서 나이대를 직접 답한 경우 로컬 state에 반영한다. setGender와 동일한 이유로 여기서 직접 Supabase에 쓰지 않는다 (위 saveAge sync effect가 감시) */
+  const setAge = useCallback((age: string | null) => {
+    setState((prev) => ({ ...prev, age }))
   }, [])
 
   /**
@@ -672,6 +705,7 @@ export function useDiary() {
       concernTags: pendingCheckerContext.concernTags,
       overlap: pendingCheckerContext.overlap,
       tier: pendingCheckerContext.tier,
+      gender: pendingCheckerContext.gender,
     }))
     setPendingCheckerContext(null)
   }, [pendingCheckerContext])
@@ -737,10 +771,13 @@ export function useDiary() {
     skinType: state.skinType,
     setSkinType,
     age: state.age,
+    setAge,
     concernTags: state.concernTags,
     setConcernTags,
     overlap: state.overlap,
     tier: state.tier,
+    gender: state.gender,
+    setGender,
     userId,
     joinDate: state.joinDate,
     startFresh,

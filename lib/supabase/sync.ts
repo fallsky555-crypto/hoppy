@@ -62,6 +62,7 @@ interface RemoteProfile {
   concernTags: string | null
   overlap: number | null
   tier: string | null
+  gender: string | null
 }
 
 /** BHA/레티놀 도입 간격 슬라이더 + 가입일을 diary_profiles에 upsert한다 */
@@ -157,6 +158,18 @@ export async function saveAge(userId: string, signupDate: string, age: string | 
     { onConflict: "user_id" },
   )
   if (error) console.warn("[supabase] saveAge failed:", error.message)
+}
+
+/** 체커 Q1(성별)에서 선택한 값을 diary_profiles에 반영한다 */
+export async function saveGender(userId: string, signupDate: string, gender: string | null): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), gender },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveGender failed:", error.message)
 }
 
 /** 체커의 beauty_concerns을 diary_profiles.concern_tags에 반영한다 */
@@ -415,7 +428,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
       .select(
-        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, active_ingredients, engine_version, skin_type, age, concern_tags, overlap_count, tier",
+        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, active_ingredients, engine_version, skin_type, age, concern_tags, overlap_count, tier, gender",
       )
       .eq("user_id", userId)
       .maybeSingle()
@@ -482,6 +495,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
         concernTags: (profile.concern_tags as string | null) ?? null,
         overlap: (profile.overlap_count as number | null) ?? null,
         tier: (profile.tier as string | null) ?? null,
+        gender: (profile.gender as string | null) ?? null,
       },
       completedDays,
       events,

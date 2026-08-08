@@ -414,6 +414,14 @@
       "q2Label": "Q2. Main concerns (multiple choice)",
       "q3Label": "Q3. What do you mainly use for concern care?",
       "q4Label": "Q4. How's your skin feeling today?",
+      "q5Label": "Q5. What's your gender?",
+      "q6Label": "Q6. What's your age range?",
+      "gender": {
+        "female": "Female",
+        "male": "Male",
+        "other": "Other",
+        "unspecified": "Prefer not to say"
+      },
       "concern": {
         "dry": "Dehydration · tightness",
         "tone": "Dullness · dark spots",

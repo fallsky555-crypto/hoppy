@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { t, type Locale } from "@/lib/i18n"
-import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS } from "@/lib/label-mappings"
+import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS, AGE_LABEL_KEYS } from "@/lib/label-mappings"
 import type { Concern, SupportId } from "@/lib/routine-copy"
 import { useDiary } from "@/lib/diary-context"
 import { ReportCard } from "@/components/report-card"
@@ -52,6 +52,8 @@ interface StepQNeeds {
   needConcernTags: boolean
   needActiveIngredients: boolean
   needCondition: boolean
+  needGender: boolean
+  needAge: boolean
   hasAnyNeeded: boolean
 }
 
@@ -60,18 +62,23 @@ function checkStepQNeeds(diary: ReturnType<typeof useDiary>): StepQNeeds {
   const needSkinType = !diary.skinType
   const needConcernTags = !diary.concernTags
   const needActiveIngredients = !diary.activeIngredients || diary.activeIngredients.length === 0
+  // 체커를 거치지 않고 앱 온보딩만 완주하는 유저는 gender/age가 URL로 넘어오지 않으므로 여기서도 물어본다
+  const needGender = !diary.gender
+  const needAge = !diary.age
 
   // Q4: 오늘 condition을 이미 기록했으면 스킵 (KST 기준)
   const todayDay = getTodayDayKST(diary.joinDate)
   const needCondition = !(diary.conditions && diary.conditions[todayDay])
 
-  const hasAnyNeeded = needSkinType || needConcernTags || needActiveIngredients || needCondition
+  const hasAnyNeeded = needSkinType || needConcernTags || needActiveIngredients || needCondition || needGender || needAge
 
   return {
     needSkinType,
     needConcernTags,
     needActiveIngredients,
     needCondition,
+    needGender,
+    needAge,
     hasAnyNeeded,
   }
 }
@@ -108,6 +115,8 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
   const [tempConcernTags, setTempConcernTags] = useState<string[]>([])
   const [tempActiveIngredients, setTempActiveIngredients] = useState<string[]>([])
   const [tempCondition, setTempCondition] = useState<"good" | "neutral" | "bad" | null>(null)
+  const [tempGender, setTempGender] = useState<string | null>(null)
+  const [tempAge, setTempAge] = useState<string | null>(null)
 
   const ingredientOptions = [
     { id: "vitc", label: t("onboarding.ingredientCheck.option_vitc", locale) },
@@ -344,19 +353,76 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             </div>
             )}
 
+            {/* Q5: 성별 — 체커를 거치지 않고 앱 온보딩만 완주하는 유저용 사각지대 보완 */}
+            {needs.needGender && (
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q5Label", locale)}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "female", labelKey: "onboarding.stepQ.gender.female" },
+                  { id: "male", labelKey: "onboarding.stepQ.gender.male" },
+                  { id: "other", labelKey: "onboarding.stepQ.gender.other" },
+                  { id: "unspecified", labelKey: "onboarding.stepQ.gender.unspecified" },
+                ].map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setTempGender(g.id)}
+                    className={cn(
+                      "rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
+                      tempGender === g.id
+                        ? "border-primary bg-primary/10 text-primary-text"
+                        : "border-border bg-card text-foreground"
+                    )}
+                  >
+                    {t(g.labelKey, locale)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            )}
+
+            {/* Q6: 나이대 — gender와 동일한 사각지대 보완 */}
+            {needs.needAge && (
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q6Label", locale)}</p>
+              <div className="grid grid-cols-3 gap-2">
+                {(["teen", "20s", "30s", "40s", "50s", "60s_plus"] as const).map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => setTempAge(a)}
+                    className={cn(
+                      "rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
+                      tempAge === a
+                        ? "border-primary bg-primary/10 text-primary-text"
+                        : "border-border bg-card text-foreground"
+                    )}
+                  >
+                    {t(AGE_LABEL_KEYS[a], locale)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            )}
+
             {/* 완료 버튼 */}
             <Button
               type="button"
               disabled={
                 (needs.needSkinType && !tempSkinType) ||
                 (needs.needConcernTags && tempConcernTags.length === 0) ||
-                (needs.needCondition && !tempCondition)
+                (needs.needCondition && !tempCondition) ||
+                (needs.needGender && !tempGender) ||
+                (needs.needAge && !tempAge)
               }
               onClick={async () => {
                 if (
                   (needs.needSkinType && !tempSkinType) ||
                   (needs.needConcernTags && tempConcernTags.length === 0) ||
-                  (needs.needCondition && !tempCondition)
+                  (needs.needCondition && !tempCondition) ||
+                  (needs.needGender && !tempGender) ||
+                  (needs.needAge && !tempAge)
                 ) return
 
                 // 로컬 diary state에 반영 — 기존 sync effect(use-diary.ts)가
@@ -371,6 +437,12 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                 }
                 if (needs.needCondition && tempCondition) {
                   diary.recordCondition(0, tempCondition)
+                }
+                if (needs.needGender && tempGender) {
+                  diary.setGender(tempGender)
+                }
+                if (needs.needAge && tempAge) {
+                  diary.setAge(tempAge)
                 }
 
                 // ReportCard로 이동 (저장된 데이터와 함께)
