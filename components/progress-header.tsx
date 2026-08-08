@@ -10,9 +10,13 @@ interface ProgressHeaderProps {
   loggedDays: number[]
   /** 상단 여정 카드 히어로 이미지 — "스페셜케어 사이클"마다 바뀐다(lib/hero-image.ts 참고) */
   heroImageSrc: string
+  /** 사용자 나이대 i18n 라벨 키 (예: "settings.ageLabel.thirties") — 없으면 배지 미표시 */
+  ageLabel?: string
+  /** 사용자 주요 피부고민 i18n 라벨 키 (예: "onboarding.concernLabel.dry") — 없으면 배지 미표시 */
+  firstConcernTagLabel?: string
 }
 
-export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc }: ProgressHeaderProps) {
+export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc, ageLabel, firstConcernTagLabel }: ProgressHeaderProps) {
   const locale = useLocale()
 
   // 기록한 날 수
@@ -41,9 +45,25 @@ export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc
 
       <div className="px-6 py-7">
         <p className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("progressHeader.tagline", locale)}</p>
-        <h1 className="mt-2.5 font-display text-lg font-semibold leading-tight text-foreground text-balance">
-          {t("progressHeader.title", locale)}
-        </h1>
+        <div className="mt-2.5 flex items-center gap-3">
+          <h1 className="flex-1 truncate font-display text-lg font-semibold leading-tight text-foreground">
+            {t("progressHeader.title", locale)}
+          </h1>
+          {(ageLabel || firstConcernTagLabel) && (
+            <div className="flex shrink-0 gap-1.5">
+              {ageLabel && (
+                <span className="rounded-2xl bg-secondary px-2.5 py-1 text-xs font-medium text-foreground whitespace-nowrap">
+                  {t(ageLabel, locale)}
+                </span>
+              )}
+              {firstConcernTagLabel && (
+                <span className="rounded-2xl bg-secondary px-2.5 py-1 text-xs font-medium text-foreground whitespace-nowrap">
+                  {t(firstConcernTagLabel, locale)}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="mt-6 grid grid-cols-3 gap-2">
           <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary py-3">

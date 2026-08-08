@@ -74,3 +74,35 @@ export function getSkinTypeLabel(skinType: SkinType | string | null | undefined,
   const key = SKIN_TYPE_LABEL_KEYS[skinType as SkinType]
   return key ? key : null
 }
+
+/**
+ * Age → i18n locale key 반환 (util)
+ */
+export function getAgeLabel(age: Age | string | null | undefined): string | null {
+  if (!age || !Object.keys(AGE_LABEL_KEYS).includes(age)) return null
+  return AGE_LABEL_KEYS[age as Age]
+}
+
+/**
+ * concernTags (콤마 구분 문자열) → 첫 번째 태그의 i18n locale key 반환
+ * 예: "DRY,TONE" → CONCERN_LABEL_KEYS["dry"]
+ */
+export function getFirstConcernTagLabel(concernTags: string | null | undefined): string | null {
+  if (!concernTags) return null
+  const tags = concernTags.split(",").map(t => t.trim())
+  if (tags.length === 0) return null
+
+  // API 케이스별 매핑: API는 대문자 (DRY, TONE 등), concern은 소문자 (dry, flush 등)
+  const tagToConcern: Record<string, Concern> = {
+    "DRY": "dry",
+    "TONE": "flush",
+    "TEXTURE": "flaky",
+    "TROUBLE": "trouble",
+    "AGING": "flush", // aging → flush로 매핑
+    "BARRIER": "dry", // barrier → dry로 매핑
+  }
+
+  const firstTag = tags[0]
+  const concern = tagToConcern[firstTag] as Concern | undefined
+  return concern ? CONCERN_LABEL_KEYS[concern] : null
+}

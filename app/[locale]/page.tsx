@@ -14,6 +14,7 @@ import { ThirtyDayReport } from "@/components/thirty-day-report"
 import { InstallBanner } from "@/components/install-banner"
 import { DailyCover } from "@/components/daily-cover"
 import { DiaryProvider, useDiary } from "@/lib/diary-context"
+import { getAgeLabel, getFirstConcernTagLabel } from "@/lib/label-mappings"
 import type { IncidentType } from "@/lib/scheduling-engine"
 import { t } from "@/lib/i18n"
 
@@ -60,6 +61,8 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
           totalDays={totalDays}
           loggedDays={diary.loggedDays}
           heroImageSrc={diary.heroImageSrc}
+          ageLabel={getAgeLabel(diary.age) ?? undefined}
+          firstConcernTagLabel={getFirstConcernTagLabel(diary.concernTags) ?? undefined}
         />
 
         <TodayCareCard />
