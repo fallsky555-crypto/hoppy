@@ -140,7 +140,7 @@ export function ReportCard({
 
       {/* 트렌드 통계 도넛 */}
       {trendStat && (
-        <div className="bg-primary-fg text-white rounded-3xl p-8 mb-5 shadow-lg text-center">
+        <div className="bg-primary-text text-white rounded-3xl p-8 mb-5 shadow-lg text-center">
           <svg width="164" height="164" viewBox="0 0 164 164" className="mx-auto mb-4">
             <circle
               cx="82"
@@ -155,7 +155,7 @@ export function ReportCard({
               cy="82"
               r="70"
               fill="none"
-              stroke="#85B7EB"
+              stroke="var(--primary)"
               strokeWidth="14"
               strokeLinecap="round"
               strokeDasharray={getDonutChartValues(trendStat.percentage).strokeDasharray}
@@ -254,14 +254,14 @@ export function ReportCard({
       {mode === "onboarding" && (
         <>
           {/* 완주 동기 카드 */}
-          <div className="rounded-2xl p-6 mb-6 text-white" style={{ backgroundColor: "#042C53" }}>
-            <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#9CC3EE" }}>
+          <div className="rounded-2xl p-6 mb-6 text-white bg-primary-text">
+            <p className="text-xs font-bold uppercase tracking-wider mb-4 text-white/70">
               {t("reportCard.motivationTitle", locale)}
             </p>
 
             <div className="space-y-3.5">
               <div className="flex gap-4 pb-3.5 border-b border-white/8">
-                <div className="text-xs font-bold flex-shrink-0 w-16" style={{ color: "#9CC3EE" }}>
+                <div className="text-xs font-bold flex-shrink-0 w-16 text-white/70">
                   Day 30
                 </div>
                 <div className="text-sm font-bold text-white leading-relaxed">
@@ -270,7 +270,7 @@ export function ReportCard({
               </div>
 
               <div className="flex gap-4 pb-3.5 border-b border-white/8">
-                <div className="text-xs font-bold flex-shrink-0 w-16" style={{ color: "#9CC3EE" }}>
+                <div className="text-xs font-bold flex-shrink-0 w-16 text-white/70">
                   Month 6
                 </div>
                 <div className="text-sm font-bold text-white leading-relaxed">
@@ -279,7 +279,7 @@ export function ReportCard({
               </div>
 
               <div className="flex gap-4">
-                <div className="text-xs font-bold flex-shrink-0 w-16" style={{ color: "#9CC3EE" }}>
+                <div className="text-xs font-bold flex-shrink-0 w-16 text-white/70">
                   Year 1
                 </div>
                 <div className="text-sm font-bold text-white leading-relaxed">
@@ -299,7 +299,7 @@ export function ReportCard({
           {/* CTA 버튼 */}
           <button
             onClick={onCTAClick}
-            className="w-full bg-primary text-primary-fg font-bold text-base rounded-2xl px-6 py-4.5 shadow-lg hover:opacity-90 transition-opacity mb-3"
+            className="w-full bg-primary text-primary-foreground font-bold text-base rounded-2xl px-6 py-4.5 shadow-lg hover:opacity-90 transition-opacity mb-3"
           >
             {t("reportCard.ctaButton", locale)}
           </button>
