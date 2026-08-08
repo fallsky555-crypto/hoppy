@@ -500,62 +500,71 @@ export function useDiary() {
   const heroImageSrc = useMemo(() => heroImageSrcForDay(calendar, currentDay), [calendar, currentDay])
 
   // 스케줄 설정 + 캘린더 진행 상황(완료 여부 포함)을 diary_profiles / calendar_entries에 반영한다
+  //
+  // [Bug fix] 모든 sync effect가 userId만 확인하고 hydrated는 확인하지 않았다. userId를
+  // 세팅하는 effect(위)와 원격 프로필을 state에 반영하는 하이드레이션 effect가 서로 독립적으로
+  // 실행되는데, ensureAnonSession()은 캐시된 세션이면 빠르게 끝나는 반면 loadRemoteState()는
+  // 네트워크 왕복이 필요해 더 오래 걸린다 — 그 사이에 userId는 채워졌지만 state는 아직
+  // freshState()(전부 null)인 렌더가 실제로 발생했고, 이 순간 아래 모든 effect가 null 값으로
+  // diary_profiles를 upsert해 방금 복원했어야 할 기존 프로필을 통째로 덮어썼다. hydrated는
+  // localStorage/원격 복원이 끝나고 state가 실제 값으로 세팅된 시점에만 true가 되므로, 이
+  // 가드 하나로 레이스를 원천 차단한다.
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !hydrated) return
     saveSettings(userId, state.joinDate, state.settings)
     saveCalendar(
       userId,
       calendar.map((entry) => ({ ...entry, completed: state.loggedDays.includes(entry.day) })),
     )
-  }, [userId, state.joinDate, state.settings, state.loggedDays, calendar])
+  }, [userId, hydrated, state.joinDate, state.settings, state.loggedDays, calendar])
 
   // 임신/처방약 플래그
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !hydrated) return
     saveContextFlags(userId, state.joinDate, { pregnant: state.pregnant, prescriptionMeds: state.prescriptionMeds })
-  }, [userId, state.joinDate, state.pregnant, state.prescriptionMeds])
+  }, [userId, hydrated, state.joinDate, state.pregnant, state.prescriptionMeds])
 
   // 루틴 문구에 강조할 관심사 + 보유 성분
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !hydrated) return
     saveConcern(userId, state.joinDate, state.concern, state.supportOwned)
-  }, [userId, state.joinDate, state.concern, state.supportOwned])
+  }, [userId, hydrated, state.joinDate, state.concern, state.supportOwned])
 
   // 체커에서 선택한 피부 타입
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !hydrated) return
     saveSkinType(userId, state.joinDate, state.skinType)
-  }, [userId, state.joinDate, state.skinType])
+  }, [userId, hydrated, state.joinDate, state.skinType])
 
   // 체커에서 선택한 나이대
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !hydrated) return
     saveAge(userId, state.joinDate, state.age)
-  }, [userId, state.joinDate, state.age])
+  }, [userId, hydrated, state.joinDate, state.age])
 
   // 체커 Q1에서 선택한 성별
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !hydrated) return
     saveGender(userId, state.joinDate, state.gender)
-  }, [userId, state.joinDate, state.gender])
+  }, [userId, hydrated, state.joinDate, state.gender])
 
   // 체커의 beauty_concerns
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !hydrated) return
     saveConcernTags(userId, state.joinDate, state.concernTags)
-  }, [userId, state.joinDate, state.concernTags])
+  }, [userId, hydrated, state.joinDate, state.concernTags])
 
   // 성분 겹침 개수
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !hydrated) return
     saveOverlap(userId, state.joinDate, state.overlap)
-  }, [userId, state.joinDate, state.overlap])
+  }, [userId, hydrated, state.joinDate, state.overlap])
 
   // 진단 등급
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !hydrated) return
     saveTier(userId, state.joinDate, state.tier)
-  }, [userId, state.joinDate, state.tier])
+  }, [userId, hydrated, state.joinDate, state.tier])
 
   // incident_log / reaction_log는 append-only라, 새로 생긴 항목만 골라 반영한다
   const syncedIncidentCount = useRef(0)
