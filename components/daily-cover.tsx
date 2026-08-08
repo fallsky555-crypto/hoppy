@@ -49,10 +49,10 @@ export function DailyCover({ locale, onClose }: DailyCoverProps) {
 
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-foreground">
-              나만의 기록으로 만드는 스킨케어
+              {t("onboarding.startToday.subtitle", locale)}
             </h2>
             <p className="text-lg text-muted-foreground">
-              오늘부터 시작합니다
+              {t("onboarding.startToday.title", locale)}
             </p>
           </div>
 

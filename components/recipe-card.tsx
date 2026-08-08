@@ -120,7 +120,7 @@ export function RecipeCard({
     return (
       <section
         className="rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border border-l-4 border-l-primary"
-        aria-label="주간 인사이트"
+        aria-label={t("weeklyInsight.ariaLabel", locale)}
       >
         <div className="text-center">
           <p className="text-sm font-semibold leading-relaxed text-foreground">
@@ -137,7 +137,7 @@ export function RecipeCard({
         "rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border",
         isToday && "border-l-4 border-l-primary",
       )}
-      aria-label="오늘의 레시피 상세"
+      aria-label={t("common.viewRecipeDetails", locale)}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1.5">

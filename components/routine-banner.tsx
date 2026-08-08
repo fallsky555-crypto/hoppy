@@ -46,7 +46,7 @@ export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerP
         "relative overflow-hidden rounded-4xl px-[22px] py-5 ring-1",
         isCelebrate ? "bg-card ring-primary/40" : "bg-secondary ring-border",
       )}
-      aria-label={isCelebrate ? "완주 안내" : "주차 오리엔테이션"}
+      aria-label={isCelebrate ? t("routine_banner.completion_aria_label", locale) : t("common.weeklyOrientation", locale)}
     >
       <div className="flex items-start gap-3">
         <span
@@ -96,7 +96,7 @@ export function RoutineBanner({ copy, tone = "info", onDismiss }: RoutineBannerP
           <button
             type="button"
             onClick={onDismiss}
-            aria-label="닫기"
+            aria-label={t("routine_banner.close", locale)}
             className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card/70"
           >
             <X className="size-3.5" aria-hidden />

@@ -6,7 +6,7 @@ import { getIngredientGuide } from "@/lib/ingredient-guide"
 import { getTrendStat, getDonutChartValues, getAgeLabel } from "@/lib/trend-stats"
 import { getIngredientWarning } from "@/lib/ingredient-warnings"
 import { getFirstConcernTagLabel } from "@/lib/label-mappings"
-import { t, type Locale } from "@/lib/i18n"
+import { t, interpolate, type Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
 interface ReportCardProps {
@@ -57,15 +57,16 @@ export function ReportCard({
   // 성분 가이드
   const ingredients = useMemo(() => {
     if (!primaryConcern || !skinType) return []
-    return getIngredientGuide(primaryConcern, skinType)
-  }, [primaryConcern, skinType])
+    return getIngredientGuide(primaryConcern, skinType, locale)
+  }, [primaryConcern, skinType, locale])
 
   // 성분 경고
   const warning = useMemo(() => {
-    return getIngredientWarning(activeIngredients)
-  }, [activeIngredients])
+    return getIngredientWarning(activeIngredients, locale)
+  }, [activeIngredients, locale])
 
-  const ageLabel = getAgeLabel(age)
+  const ageLabelKey = getAgeLabel(age)
+  const ageLabel = ageLabelKey ? t(ageLabelKey, locale) : null
 
   // revisit 모드에서 핵심 데이터 부재 시 안내 UI 표시. age는 Step Q에 질문이
   // 없어서 체커 URL로 안 들어온 유저는 영영 null이라 필수 조건에서 뺐다 —
@@ -77,23 +78,23 @@ export function ReportCard({
         <div className="text-center space-y-6">
           <img
             src="/onboarding/intro-02.jpeg"
-            alt="호빵이"
+            alt={t("reportCard.hoppiAlt", locale)}
             className="w-16 h-16 rounded-full object-cover mx-auto"
           />
           <div className="space-y-2">
             <h2 className="text-lg font-bold text-foreground">
-              아직 진단 정보가 부족해요
+              {t("reportCard.emptyStateTitle", locale)}
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              검사지에서 답변을 추가하면<br />
-              더 정확한 정보를 볼 수 있어요
+              {t("reportCard.emptyStateDescLine1", locale)}<br />
+              {t("reportCard.emptyStateDescLine2", locale)}
             </p>
           </div>
           <a
             href="/"
             className="inline-block bg-primary text-primary-foreground font-semibold px-8 py-3 rounded-full hover:opacity-90 transition-opacity"
           >
-            검사지 다시 보기
+            {t("reportCard.emptyStateCta", locale)}
           </a>
         </div>
       </main>
@@ -106,12 +107,12 @@ export function ReportCard({
       <div className="flex items-center gap-3 mb-6">
         <img
           src="/onboarding/intro-02.jpeg"
-          alt="호빵이"
+          alt={t("reportCard.hoppiAlt", locale)}
           className="w-10 h-10 rounded-full object-cover border border-card shadow-sm"
         />
         <div className="text-xs text-ink-3 leading-tight">
-          <div className="text-sm font-bold text-ink-2">호빵이</div>
-          <div>당신의 기록을 함께 정리했어요</div>
+          <div className="text-sm font-bold text-ink-2">{t("reportCard.hoppiAlt", locale)}</div>
+          <div>{t("reportCard.greeting", locale)}</div>
         </div>
       </div>
 
@@ -128,12 +129,12 @@ export function ReportCard({
               <br />
             </>
           ) : null}
-          기록을 정리했어요
+          {t("reportCard.titleFallback", locale)}
         </h1>
         <p className="text-sm text-ink-2 leading-relaxed">
-          검사지에서 답해주신 내용을 바탕으로
+          {t("reportCard.subtitleLine1", locale)}
           <br />
-          참고할 만한 정보를 모아봤어요
+          {t("reportCard.subtitleLine2", locale)}
         </p>
       </div>
 
@@ -180,16 +181,16 @@ export function ReportCard({
               fontSize="12"
               fill="rgba(255,255,255,.65)"
             >
-              {ageLabel} 응답 비율
+              {interpolate(t("reportCard.donutResponseRate", locale), { ageLabel: ageLabel ?? "" })}
             </text>
           </svg>
           <p className="text-sm font-bold leading-relaxed mb-2">
-            {ageLabel} 응답자 10명 중 약 {Math.round(trendStat.percentage / 10)}명이
+            {interpolate(t("reportCard.donutLine1", locale), { ageLabel: ageLabel ?? "", count: String(Math.round(trendStat.percentage / 10)) })}
             <br />
-            {primaryConcernLabel} 피부를 고민으로 꼽았어요
+            {interpolate(t("reportCard.donutLine2", locale), { concern: primaryConcernLabel ?? "" })}
           </p>
           <p className="text-xs text-white/55">
-            출처: 마크로밀엠브레인 트렌드모니터, 전국 성인 1,200명 설문(2016)
+            {t("reportCard.donutSource", locale)}
           </p>
         </div>
       )}
@@ -198,7 +199,7 @@ export function ReportCard({
       {ingredients.length > 0 && (
         <>
           <p className="text-xs font-bold uppercase tracking-wider text-primary-text mt-6 mb-3">
-            피부 기준 성분가이드
+            {t("reportCard.ingredientGuideTitle", locale)}
           </p>
 
           <div className="bg-card border-1.5 border-line rounded-2xl p-5 mb-4">
@@ -206,10 +207,10 @@ export function ReportCard({
               {primaryConcernLabel}
             </span>
             <p className="text-sm font-bold text-ink mb-1 leading-relaxed">
-              추가하시면 좋은 성분: <span className="text-primary-text">{ingredients.join(" · ")}</span>
+              {t("reportCard.ingredientRecommend", locale)}<span className="text-primary-text">{ingredients.join(" · ")}</span>
             </p>
             <p className="text-xs text-ink-2 leading-relaxed">
-              나이아신아마이드는 다른 성분과 궁합을 타는 편이니, 처음엔 가볍게 시작해보시고 피부 반응을 보면서 횟수를 조절해보시는 것도 방법이에요.
+              {t("reportCard.niacinamideTip", locale)}
             </p>
           </div>
         </>
@@ -241,10 +242,10 @@ export function ReportCard({
       {activeIngredients && activeIngredients.length > 0 && (
         <div className="bg-primary-soft rounded-2xl p-4.5 mb-6">
           <p className="text-xs leading-relaxed text-primary-fg">
-            <span className="font-bold">지금 쓰고 계신 성분</span> — {activeIngredients.join(" · ")}
+            <span className="font-bold">{t("reportCard.currentIngredientsLabel", locale)}</span> — {activeIngredients.join(" · ")}
           </p>
           <p className="text-xs leading-relaxed text-primary-fg mt-2">
-            레티놀은 효과보다 <span className="font-bold">사용 간격</span>이 더 중요한 성분이에요. 호빵이 스킨저널에서 얼마나 자주, 어떤 간격으로 쓰고 계신지 함께 기록해보시면 도움이 될 거예요.
+            {t("reportCard.retinolTipPrefix", locale)}<span className="font-bold">{t("reportCard.retinolTipBold", locale)}</span>{t("reportCard.retinolTipSuffix", locale)}
           </p>
         </div>
       )}
@@ -255,7 +256,7 @@ export function ReportCard({
           {/* 완주 동기 카드 */}
           <div className="rounded-2xl p-6 mb-6 text-white" style={{ backgroundColor: "#042C53" }}>
             <p className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: "#9CC3EE" }}>
-              기록을 시작하면
+              {t("reportCard.motivationTitle", locale)}
             </p>
 
             <div className="space-y-3.5">
@@ -264,7 +265,7 @@ export function ReportCard({
                   Day 30
                 </div>
                 <div className="text-sm font-bold text-white leading-relaxed">
-                  뭐가 나한테 맞았는지 보여요
+                  {t("reportCard.motivationDay30", locale)}
                 </div>
               </div>
 
@@ -273,7 +274,7 @@ export function ReportCard({
                   Month 6
                 </div>
                 <div className="text-sm font-bold text-white leading-relaxed">
-                  새던 돈이 줄어들어요
+                  {t("reportCard.motivationMonth6", locale)}
                 </div>
               </div>
 
@@ -282,7 +283,7 @@ export function ReportCard({
                   Year 1
                 </div>
                 <div className="text-sm font-bold text-white leading-relaxed">
-                  이건 나만의 데이터가 돼요
+                  {t("reportCard.motivationYear1", locale)}
                 </div>
               </div>
             </div>
@@ -290,9 +291,9 @@ export function ReportCard({
 
           {/* 철학 문구 */}
           <p className="text-xs text-ink-3 text-center leading-relaxed mb-6">
-            남의 데이터 그만 보고,
+            {t("reportCard.philosophyLine1", locale)}
             <br />
-            내 데이터로 나만의 디지털 에스테틱을 체험해보세요.
+            {t("reportCard.philosophyLine2", locale)}
           </p>
 
           {/* CTA 버튼 */}
@@ -300,12 +301,12 @@ export function ReportCard({
             onClick={onCTAClick}
             className="w-full bg-primary text-primary-fg font-bold text-base rounded-2xl px-6 py-4.5 shadow-lg hover:opacity-90 transition-opacity mb-3"
           >
-            나만의 디지털 에스테틱 체험하기
+            {t("reportCard.ctaButton", locale)}
           </button>
           <p className="text-xs text-ink-3 text-center leading-relaxed">
-            광고 없이, 협찬 없이 —
+            {t("reportCard.noAdsLine1", locale)}
             <br />
-            처음부터 끝까지 당신의 이야기만 들어요
+            {t("reportCard.noAdsLine2", locale)}
           </p>
         </>
       )}
@@ -314,17 +315,17 @@ export function ReportCard({
       {mode === "revisit" && (
         <>
           <p className="text-xs text-ink-3 text-center leading-relaxed mb-4">
-            당신의 피부에 정답은 없어요.
+            {t("reportCard.revisitFooterLine1", locale)}
             <br />
-            하지만 꾸준히 쌓인 기록은, 무엇이 당신에게
+            {t("reportCard.revisitFooterLine2", locale)}
             <br />
-            잘 맞았는지 스스로 알아가는 가장 좋은 단서가 돼요.
+            {t("reportCard.revisitFooterLine3", locale)}
           </p>
           <button className="w-full text-center text-sm font-bold text-primary-text bg-card border-1.5 border-line rounded-2xl px-6 py-3.5 hover:bg-secondary transition-colors">
-            설정 &gt; 내 정보 다시보기에서 언제든 확인하세요
+            {t("reportCard.revisitSettingsButton", locale)}
           </button>
           <p className="text-xs text-ink-3 text-center mt-3">
-            내 피부의 기록, Hoppy
+            {t("reportCard.revisitBrandFooter", locale)}
           </p>
         </>
       )}

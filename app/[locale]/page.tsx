@@ -76,8 +76,8 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
         {(diary.pregnant || diary.prescriptionMeds) && (
           <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
-            {diary.pregnant && <p>🤰 임신·수유 중으로 확인됐어요. 레티놀 성분은 이 코스에서 제외돼요.</p>}
-            {diary.prescriptionMeds && <p>💊 처방약을 사용 중이시군요. 담당 병원의 처방 지도가 이 앱의 가이드보다 항상 우선이에요.</p>}
+            {diary.pregnant && <p>{t("homeStats.pregnantWarning", locale)}</p>}
+            {diary.prescriptionMeds && <p>{t("homeStats.prescriptionWarning", locale)}</p>}
           </div>
         )}
 

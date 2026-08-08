@@ -3,6 +3,8 @@
  * 우선순위: 트리플 > 더블 조합
  */
 
+import { t } from "@/lib/i18n"
+
 export interface IngredientWarning {
   level: "caution" | "warning"
   title: string
@@ -35,7 +37,7 @@ function normalizeIngredient(ingredient: string): string {
  * @param activeIngredients 사용 중인 성분 배열 (한글명 또는 ID)
  * @returns IngredientWarning 또는 null (경고 없음)
  */
-export function getIngredientWarning(activeIngredients: string[] | null | undefined): IngredientWarning | null {
+export function getIngredientWarning(activeIngredients: string[] | null | undefined, locale: "ko" | "en" = "ko"): IngredientWarning | null {
   if (!activeIngredients || activeIngredients.length === 0) return null
 
   const normalized = activeIngredients
@@ -52,9 +54,8 @@ export function getIngredientWarning(activeIngredients: string[] | null | undefi
   if (hasRetinol && hasVitC && hasExfoliate) {
     return {
       level: "warning",
-      title: "세 가지 활성 성분을 동시에 사용하고 계세요",
-      message:
-        "레티놀, 비타민C, 각질케어 성분을 함께 쓰면 피부에 자극이 커질 수 있어요. 사용 간격을 충분히 두거나(예: 아침/저녁 분리, 요일 분리) 농도를 낮춰서 피부 반응을 보면서 진행하세요. 호빵이 스킨저널에서 사용 패턴을 함께 기록해보세요.",
+      title: t("ingredientWarnings.triple.title", locale),
+      message: t("ingredientWarnings.triple.message", locale),
       conflictingIngredients: ["레티놀", "비타민C", "각질케어"],
     }
   }
@@ -63,9 +64,8 @@ export function getIngredientWarning(activeIngredients: string[] | null | undefi
   if (hasRetinol && hasExfoliate) {
     return {
       level: "caution",
-      title: "레티놀과 각질케어를 함께 사용 중이에요",
-      message:
-        "두 성분 모두 진피층에 자극을 주는 활성 성분이에요. 같은 날 사용할 때는 한 번에 한 가지만 사용하거나, 며칠 간격을 두고 번갈아 사용하세요.",
+      title: t("ingredientWarnings.retinolExfoliate.title", locale),
+      message: t("ingredientWarnings.retinolExfoliate.message", locale),
       conflictingIngredients: ["레티놀", "각질케어"],
     }
   }
@@ -74,9 +74,8 @@ export function getIngredientWarning(activeIngredients: string[] | null | undefi
   if (hasRetinol && hasVitC) {
     return {
       level: "caution",
-      title: "레티놀과 비타민C를 함께 사용 중이에요",
-      message:
-        "두 성분 모두 강력한 활성 성분이므로 아침/저녁으로 분리하거나 며칠 간격을 두고 사용하는 것을 추천해요. 호빵이 스킨저널에서 어떤 간격으로 쓰고 있는지 기록해보세요.",
+      title: t("ingredientWarnings.retinolVitC.title", locale),
+      message: t("ingredientWarnings.retinolVitC.message", locale),
       conflictingIngredients: ["레티놀", "비타민C"],
     }
   }
@@ -85,9 +84,8 @@ export function getIngredientWarning(activeIngredients: string[] | null | undefi
   if (hasExfoliate && hasVitC) {
     return {
       level: "caution",
-      title: "각질케어와 비타민C를 함께 사용 중이에요",
-      message:
-        "산성 성분인 비타민C와 각질케어 성분을 함께 쓸 때는 피부 반응을 잘 살펴보세요. 처음에는 일주일에 2-3회만 사용하고, 피부가 적응하면 횟수를 늘리세요.",
+      title: t("ingredientWarnings.exfoliateVitC.title", locale),
+      message: t("ingredientWarnings.exfoliateVitC.message", locale),
       conflictingIngredients: ["각질케어", "비타민C"],
     }
   }

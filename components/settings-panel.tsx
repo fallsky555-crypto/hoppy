@@ -34,61 +34,61 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
       {/* 내 정보 다시보기 섹션 */}
       <div className="space-y-2.5 text-xs text-foreground/80">
         <div className="pt-2 border-t border-border">
-          <p className="font-semibold text-foreground mb-2">내 정보 다시보기</p>
+          <p className="font-semibold text-foreground mb-2">{t("settings.reviewTitle", locale)}</p>
           <div className="space-y-1.5 text-[12px]">
             <p>
-              <span className="font-medium">관심사:</span>{" "}
+              <span className="font-medium">{t("settings.reviewLabels.concern", locale)}:</span>{" "}
               {diary.concern && diary.concern !== "none"
                 ? t(CONCERN_LABEL_KEYS[diary.concern], locale)
-                : "미설정"}
+                : t("settings.notSet", locale)}
             </p>
             <p>
-              <span className="font-medium">보유 성분:</span>{" "}
+              <span className="font-medium">{t("settings.reviewLabels.supportOwned", locale)}:</span>{" "}
               {diary.supportOwned && diary.supportOwned.length > 0
                 ? diary.supportOwned
                     .map((id) => t(SUPPORT_LABEL_KEYS[id], locale))
                     .join(", ")
-                : "미설정"}
+                : t("settings.notSet", locale)}
             </p>
             <p>
-              <span className="font-medium">고민케어:</span>{" "}
+              <span className="font-medium">{t("settings.reviewLabels.activeIngredients", locale)}:</span>{" "}
               {diary.activeIngredients && diary.activeIngredients.length > 0
                 ? diary.activeIngredients.join(", ")
-                : "미설정"}
+                : t("settings.notSet", locale)}
             </p>
             <p>
-              <span className="font-medium">사용 제품:</span>{" "}
+              <span className="font-medium">{t("settings.reviewLabels.usedProducts", locale)}:</span>{" "}
               {diary.usedProducts && diary.usedProducts.length > 0
                 ? diary.usedProducts
                     .map((p) => `${p.brand} ${p.name}`)
                     .join("; ")
-                : "미설정"}
+                : t("settings.notSet", locale)}
             </p>
             <p>
-              <span className="font-medium">피부 타입:</span>{" "}
+              <span className="font-medium">{t("settings.reviewLabels.skinType", locale)}:</span>{" "}
               {diary.skinType && SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS]
                 ? t(SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS], locale)
-                : "미설정"}
+                : t("settings.notSet", locale)}
             </p>
             <p>
-              <span className="font-medium">나이대:</span>{" "}
+              <span className="font-medium">{t("settings.reviewLabels.age", locale)}:</span>{" "}
               {diary.age && AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS]
                 ? t(AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS], locale)
-                : "미설정"}
+                : t("settings.notSet", locale)}
             </p>
             <p>
-              <span className="font-medium">뷰티 고민:</span>{" "}
+              <span className="font-medium">{t("settings.reviewLabels.concernTags", locale)}:</span>{" "}
               {diary.concernTags && getFirstConcernTagLabel(diary.concernTags)
                 ? t(getFirstConcernTagLabel(diary.concernTags) as string, locale)
-                : "미설정"}
+                : t("settings.notSet", locale)}
             </p>
             <p>
-              <span className="font-medium">성분 겹침:</span>{" "}
-              {diary.overlap !== null && diary.overlap !== undefined ? diary.overlap : "미설정"}
+              <span className="font-medium">{t("settings.reviewLabels.overlap", locale)}:</span>{" "}
+              {diary.overlap !== null && diary.overlap !== undefined ? diary.overlap : t("settings.notSet", locale)}
             </p>
             <p>
-              <span className="font-medium">진단 등급:</span>{" "}
-              {diary.tier ? diary.tier : "미설정"}
+              <span className="font-medium">{t("settings.reviewLabels.tier", locale)}:</span>{" "}
+              {diary.tier ? diary.tier : t("settings.notSet", locale)}
             </p>
           </div>
 
@@ -99,7 +99,7 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
             onClick={() => setShowReportCard(true)}
             className="w-full rounded-full text-xs font-bold mt-3"
           >
-            진단표 다시보기
+            {t("settings.reviewReportButton", locale)}
           </Button>
         </div>
       </div>

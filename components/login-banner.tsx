@@ -446,13 +446,17 @@ export function LoginBanner() {
         <div className="w-full max-w-sm rounded-2xl bg-card shadow-lg ring-1 ring-border">
           <div className="border-b border-border px-6 py-4">
             <h3 className="text-base font-semibold text-foreground">
-              {t("login.provider_label.kakao", locale)} 계정 연결
+              {interpolate(t("login.localDataLossDialog.title", locale), {
+                provider: pendingLocalDataLossProvider === "kakao" ? t("login.provider_label.kakao", locale) : t("login.provider_label.google", locale),
+              })}
             </h3>
           </div>
 
           <div className="px-6 py-4">
             <p className="mb-4 text-sm text-muted-foreground">
-              이 {pendingLocalDataLossProvider === "kakao" ? t("login.provider_label.kakao", locale) : t("login.provider_label.google", locale)} 계정은 이미 다른 기기에서 사용 중이에요. 계속 로그인하면 이 기기의 기록은 저장되지 않을 수 있어요. 계속하시겠어요?
+              {interpolate(t("login.localDataLossDialog.description", locale), {
+                provider: pendingLocalDataLossProvider === "kakao" ? t("login.provider_label.kakao", locale) : t("login.provider_label.google", locale),
+              })}
             </p>
           </div>
 
@@ -463,7 +467,7 @@ export function LoginBanner() {
                 onClick={handleCancelLocalDataLoss}
                 className="flex-1 rounded-full border border-border bg-transparent px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
               >
-                취소
+                {t("login.localDataLossDialog.cancel", locale)}
               </button>
               <button
                 type="button"
@@ -471,7 +475,7 @@ export function LoginBanner() {
                 disabled={pending !== null}
                 className="flex-1 rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
-                {pending === pendingLocalDataLossProvider ? "계속 중..." : "계속"}
+                {pending === pendingLocalDataLossProvider ? t("login.localDataLossDialog.continuing", locale) : t("login.localDataLossDialog.continue", locale)}
               </button>
             </div>
           </div>

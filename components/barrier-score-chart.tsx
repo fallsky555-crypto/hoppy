@@ -34,7 +34,7 @@ export function BarrierScoreChart({ currentDay, totalDays, locale }: BarrierScor
       }
 
   return (
-    <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label="주차 완주 격려">
+    <section className="rounded-4xl bg-card px-5 py-[22px] ring-1 ring-border" aria-label={t("common.weeklyEncourage", locale)}>
       <h2 className="font-display text-base font-bold text-foreground">{copy.title}</h2>
       <p className="mt-1.5 text-[13.5px] leading-relaxed text-[#4A4438]">{copy.detail}</p>
     </section>

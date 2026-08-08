@@ -297,6 +297,13 @@
         "cancel": "Cancel",
         "continue": "Continue"
       }
+    },
+    "localDataLossDialog": {
+      "title": "Link {{provider}} account",
+      "description": "This {{provider}} account is already in use on another device. If you continue signing in, this device's records may not be saved. Continue anyway?",
+      "cancel": "Cancel",
+      "continue": "Continue",
+      "continuing": "Continuing..."
     }
   },
   "common": {
@@ -399,6 +406,28 @@
       "cica": "Cica",
       "nia": "Niacinamide",
       "cer": "Ceramide"
+    },
+    "stepQ": {
+      "title": "A few basics for your diagnosis",
+      "subtitle": "Tell us about your skin",
+      "q1Label": "Q1. Skin type",
+      "q2Label": "Q2. Main concerns (multiple choice)",
+      "q3Label": "Q3. What do you mainly use for concern care?",
+      "q4Label": "Q4. How's your skin feeling today?",
+      "concern": {
+        "dry": "Dehydration · tightness",
+        "tone": "Dullness · dark spots",
+        "texture": "Rough texture · pores",
+        "trouble": "Sensitivity · breakouts",
+        "aging": "Loss of firmness · wrinkles",
+        "barrier": "Redness · weakened barrier"
+      },
+      "ingredient": {
+        "vitc": "Vitamin C",
+        "retinol": "Retinol",
+        "niacinamide": "Niacinamide",
+        "unknown": "Not sure"
+      }
     }
   },
   "completionFeedback": {
@@ -423,11 +452,14 @@
     "loggedDays": "Days Logged",
     "thisWeek": "This Week",
     "untilReport": "Until Report",
-    "reportReady": "Report Ready"
+    "reportReady": "Report Ready",
+    "pregnantWarning": "🤰 We've noted you're pregnant or nursing. Retinol is excluded from this course.",
+    "prescriptionWarning": "💊 Looks like you're on prescription medication. Your doctor's guidance always takes priority over this app's guidance."
   },
   "weeklyInsight": {
     "message": "{{days}}-day milestone! You've been focused on {{topTag}} this week 👏 ({{remaining}} days until report)",
-    "close": "Close"
+    "close": "Close",
+    "ariaLabel": "Weekly insight"
   },
   "routineBanner": {
     "wallpaper_title": "Completion wallpaper",
@@ -456,6 +488,20 @@
     "cancel": "Cancel",
     "restart": "Start over",
     "restart_button": "Start from day 1 again",
+    "reviewTitle": "My info",
+    "notSet": "Not set",
+    "reviewReportButton": "Revisit diagnosis report",
+    "reviewLabels": {
+      "concern": "Concern",
+      "supportOwned": "Ingredients on hand",
+      "activeIngredients": "Concern care",
+      "usedProducts": "Products used",
+      "skinType": "Skin type",
+      "age": "Age group",
+      "concernTags": "Beauty concern",
+      "overlap": "Ingredient overlap",
+      "tier": "Diagnosis tier"
+    },
     "skinTypeLabel": {
       "sensitive": "Sensitive",
       "dry": "Dry",
@@ -494,7 +540,9 @@
     "wallpaper_rose": "Rose",
     "wallpaper_peony": "Peony",
     "completion_wallpaper_title": "Your 30-day wallpaper",
-    "download": "Download"
+    "download": "Download",
+    "completion_aria_label": "Course complete",
+    "close": "Close"
   },
   "bridgeInterstitial": {
     "step1": {
@@ -572,6 +620,60 @@
       "saveButton": "Save",
       "saved": "Saved"
     }
+  },
+  "ingredientWarnings": {
+    "triple": {
+      "title": "You're using three active ingredients at once",
+      "message": "Combining retinol, vitamin C, and exfoliants can increase skin irritation. Try spacing out use (e.g. AM/PM split, alternating days) or lowering concentration while you watch how your skin responds. Try logging your usage pattern in Hoppy Skin Journal."
+    },
+    "retinolExfoliate": {
+      "title": "You're using retinol and exfoliants together",
+      "message": "Both are active ingredients that stimulate the dermis. If using them the same day, use only one at a time, or alternate every few days."
+    },
+    "retinolVitC": {
+      "title": "You're using retinol and vitamin C together",
+      "message": "Both are strong active ingredients, so we recommend splitting them AM/PM or spacing them a few days apart. Try logging the interval you're using in Hoppy Skin Journal."
+    },
+    "exfoliateVitC": {
+      "title": "You're using exfoliants and vitamin C together",
+      "message": "When combining acidic vitamin C with exfoliants, watch closely how your skin responds. Start with just 2-3 times a week and increase frequency as your skin adjusts."
+    }
+  },
+  "reportCard": {
+    "hoppiAlt": "Hoppy",
+    "greeting": "We put together your records for you",
+    "titleFallback": "Your records, organized",
+    "subtitleLine1": "Based on your answers from the checker",
+    "subtitleLine2": "here's some info you might find helpful",
+    "donutResponseRate": "{{ageLabel}} response rate",
+    "donutLine1": "About {{count}} out of 10 {{ageLabel}} respondents",
+    "donutLine2": "picked {{concern}} skin as a top concern",
+    "donutSource": "Source: Macromill Embrain Trend Monitor, national survey of 1,200 adults (2016)",
+    "ingredientGuideTitle": "Ingredient guide for your skin",
+    "ingredientRecommend": "Ingredients worth adding: ",
+    "niacinamideTip": "Niacinamide can react with other ingredients, so start light and adjust how often you use it based on how your skin responds.",
+    "currentIngredientsLabel": "Ingredients you're currently using",
+    "retinolTipPrefix": "With retinol, ",
+    "retinolTipBold": "how often you use it",
+    "retinolTipSuffix": " matters more than the effect itself. Try logging how often and at what interval you use it in Hoppy Skin Journal — it can help.",
+    "motivationTitle": "Once you start logging",
+    "motivationDay30": "you'll see what actually worked for you",
+    "motivationMonth6": "you'll waste less money on the wrong products",
+    "motivationYear1": "this becomes your own personal data",
+    "philosophyLine1": "Stop looking at other people's data —",
+    "philosophyLine2": "experience your own digital esthetic, built from your own data.",
+    "ctaButton": "Try your own digital esthetic",
+    "noAdsLine1": "No ads, no sponsorships —",
+    "noAdsLine2": "just your story, start to finish",
+    "revisitFooterLine1": "There's no single right answer for your skin.",
+    "revisitFooterLine2": "But records kept over time are the best clue",
+    "revisitFooterLine3": "to figuring out what actually works for you.",
+    "revisitSettingsButton": "Check anytime in Settings > My info",
+    "revisitBrandFooter": "Your skin's record, Hoppy",
+    "emptyStateTitle": "Not enough diagnosis info yet",
+    "emptyStateDescLine1": "Add more answers in the checker",
+    "emptyStateDescLine2": "for more accurate info",
+    "emptyStateCta": "Revisit the checker"
   },
   "metadata": {
     "title": "Hoppy Skin Diary · Your Daily Skin Record",

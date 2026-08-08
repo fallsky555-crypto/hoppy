@@ -297,6 +297,13 @@
         "cancel": "취소",
         "continue": "계속 진행"
       }
+    },
+    "localDataLossDialog": {
+      "title": "{{provider}} 계정 연결",
+      "description": "이 {{provider}} 계정은 이미 다른 기기에서 사용 중이에요. 계속 로그인하면 이 기기의 기록은 저장되지 않을 수 있어요. 계속하시겠어요?",
+      "cancel": "취소",
+      "continue": "계속",
+      "continuing": "계속 중..."
     }
   },
   "common": {
@@ -396,6 +403,28 @@
       "cica": "시카",
       "nia": "나이아신아마이드",
       "cer": "세라마이드"
+    },
+    "stepQ": {
+      "title": "진단을 위한 기본 정보",
+      "subtitle": "피부 정보를 알려주세요",
+      "q1Label": "Q1. 피부 타입",
+      "q2Label": "Q2. 주요 고민 (복수 선택 가능)",
+      "q3Label": "Q3. 고민케어로 주로 뭘 쓰세요?",
+      "q4Label": "Q4. 오늘 피부 컨디션은 어때요?",
+      "concern": {
+        "dry": "속건조·속당김",
+        "tone": "칙칙함·잡티",
+        "texture": "오돌토돌 결·모공",
+        "trouble": "민감 자극·트러블",
+        "aging": "탄력저하·주름",
+        "barrier": "홍조·약해진 피부장벽"
+      },
+      "ingredient": {
+        "vitc": "비타민C",
+        "retinol": "레티놀",
+        "niacinamide": "나이아신아마이드",
+        "unknown": "잘 모르겠어요"
+      }
     }
   },
   "completionFeedback": {
@@ -420,11 +449,14 @@
     "loggedDays": "기록한 날",
     "thisWeek": "이번 주 기록",
     "untilReport": "리포트까지",
-    "reportReady": "리포트 준비 완료"
+    "reportReady": "리포트 준비 완료",
+    "pregnantWarning": "🤰 임신·수유 중으로 확인됐어요. 레티놀 성분은 이 코스에서 제외돼요.",
+    "prescriptionWarning": "💊 처방약을 사용 중이시군요. 담당 병원의 처방 지도가 이 앱의 가이드보다 항상 우선이에요."
   },
   "weeklyInsight": {
     "message": "{{days}}일 완주! 이번 주는 {{topTag}}에 집중한 한 주였네요 👏 (다음 리포트까지 D-{{remaining}})",
-    "close": "닫기"
+    "close": "닫기",
+    "ariaLabel": "주간 인사이트"
   },
   "routineBanner": {
     "wallpaper_title": "완주 기념 배경화면",
@@ -453,6 +485,20 @@
     "cancel": "취소",
     "restart": "새로 시작하기",
     "restart_button": "루틴 처음부터 다시 시작하기",
+    "reviewTitle": "내 정보 다시보기",
+    "notSet": "미설정",
+    "reviewReportButton": "진단표 다시보기",
+    "reviewLabels": {
+      "concern": "관심사",
+      "supportOwned": "보유 성분",
+      "activeIngredients": "고민케어",
+      "usedProducts": "사용 제품",
+      "skinType": "피부 타입",
+      "age": "나이대",
+      "concernTags": "뷰티 고민",
+      "overlap": "성분 겹침",
+      "tier": "진단 등급"
+    },
     "skinTypeLabel": {
       "sensitive": "민감성",
       "dry": "건성",
@@ -491,7 +537,9 @@
     "wallpaper_rose": "장미",
     "wallpaper_peony": "작약",
     "completion_wallpaper_title": "완주 기념 배경화면",
-    "download": "다운로드"
+    "download": "다운로드",
+    "completion_aria_label": "완주 안내",
+    "close": "닫기"
   },
   "bridgeInterstitial": {
     "step1": {
@@ -569,6 +617,60 @@
       "saveButton": "저장",
       "saved": "저장했어요"
     }
+  },
+  "ingredientWarnings": {
+    "triple": {
+      "title": "세 가지 활성 성분을 동시에 사용하고 계세요",
+      "message": "레티놀, 비타민C, 각질케어 성분을 함께 쓰면 피부에 자극이 커질 수 있어요. 사용 간격을 충분히 두거나(예: 아침/저녁 분리, 요일 분리) 농도를 낮춰서 피부 반응을 보면서 진행하세요. 호빵이 스킨저널에서 사용 패턴을 함께 기록해보세요."
+    },
+    "retinolExfoliate": {
+      "title": "레티놀과 각질케어를 함께 사용 중이에요",
+      "message": "두 성분 모두 진피층에 자극을 주는 활성 성분이에요. 같은 날 사용할 때는 한 번에 한 가지만 사용하거나, 며칠 간격을 두고 번갈아 사용하세요."
+    },
+    "retinolVitC": {
+      "title": "레티놀과 비타민C를 함께 사용 중이에요",
+      "message": "두 성분 모두 강력한 활성 성분이므로 아침/저녁으로 분리하거나 며칠 간격을 두고 사용하는 것을 추천해요. 호빵이 스킨저널에서 어떤 간격으로 쓰고 있는지 기록해보세요."
+    },
+    "exfoliateVitC": {
+      "title": "각질케어와 비타민C를 함께 사용 중이에요",
+      "message": "산성 성분인 비타민C와 각질케어 성분을 함께 쓸 때는 피부 반응을 잘 살펴보세요. 처음에는 일주일에 2-3회만 사용하고, 피부가 적응하면 횟수를 늘리세요."
+    }
+  },
+  "reportCard": {
+    "hoppiAlt": "호빵이",
+    "greeting": "당신의 기록을 함께 정리했어요",
+    "titleFallback": "기록을 정리했어요",
+    "subtitleLine1": "검사지에서 답해주신 내용을 바탕으로",
+    "subtitleLine2": "참고할 만한 정보를 모아봤어요",
+    "donutResponseRate": "{{ageLabel}} 응답 비율",
+    "donutLine1": "{{ageLabel}} 응답자 10명 중 약 {{count}}명이",
+    "donutLine2": "{{concern}} 피부를 고민으로 꼽았어요",
+    "donutSource": "출처: 마크로밀엠브레인 트렌드모니터, 전국 성인 1,200명 설문(2016)",
+    "ingredientGuideTitle": "피부 기준 성분가이드",
+    "ingredientRecommend": "추가하시면 좋은 성분: ",
+    "niacinamideTip": "나이아신아마이드는 다른 성분과 궁합을 타는 편이니, 처음엔 가볍게 시작해보시고 피부 반응을 보면서 횟수를 조절해보시는 것도 방법이에요.",
+    "currentIngredientsLabel": "지금 쓰고 계신 성분",
+    "retinolTipPrefix": "레티놀은 효과보다 ",
+    "retinolTipBold": "사용 간격",
+    "retinolTipSuffix": "이 더 중요한 성분이에요. 호빵이 스킨저널에서 얼마나 자주, 어떤 간격으로 쓰고 계신지 함께 기록해보시면 도움이 될 거예요.",
+    "motivationTitle": "기록을 시작하면",
+    "motivationDay30": "뭐가 나한테 맞았는지 보여요",
+    "motivationMonth6": "새던 돈이 줄어들어요",
+    "motivationYear1": "이건 나만의 데이터가 돼요",
+    "philosophyLine1": "남의 데이터 그만 보고,",
+    "philosophyLine2": "내 데이터로 나만의 디지털 에스테틱을 체험해보세요.",
+    "ctaButton": "나만의 디지털 에스테틱 체험하기",
+    "noAdsLine1": "광고 없이, 협찬 없이 —",
+    "noAdsLine2": "처음부터 끝까지 당신의 이야기만 들어요",
+    "revisitFooterLine1": "당신의 피부에 정답은 없어요.",
+    "revisitFooterLine2": "하지만 꾸준히 쌓인 기록은, 무엇이 당신에게",
+    "revisitFooterLine3": "잘 맞았는지 스스로 알아가는 가장 좋은 단서가 돼요.",
+    "revisitSettingsButton": "설정 > 내 정보 다시보기에서 언제든 확인하세요",
+    "revisitBrandFooter": "내 피부의 기록, Hoppy",
+    "emptyStateTitle": "아직 진단 정보가 부족해요",
+    "emptyStateDescLine1": "검사지에서 답변을 추가하면",
+    "emptyStateDescLine2": "더 정확한 정보를 볼 수 있어요",
+    "emptyStateCta": "검사지 다시 보기"
   },
   "metadata": {
     "title": "호빵이 스킨 다이어리 · 장벽 리셋 캘린더",

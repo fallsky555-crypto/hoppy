@@ -12,22 +12,22 @@ interface IngredientGuide {
   caution?: string
 }
 
-/** 한글 성분명 매핑 (id → 한글명) */
-const INGREDIENT_NAMES: Record<string, string> = {
-  hya: "히알루론산",
-  gly: "글리세린",
-  cer: "세라마이드",
-  chol: "콜레스테롤",
-  pant: "판테놀",
-  niacinamide: "나이아신아마이드",
-  fer: "발효 성분",
-  vit_c: "비타민C",
-  ret: "레티놀",
-  aha: "AHA",
-  bha: "BHA",
-  azeic: "아젤라산",
-  squalane: "스쿠알란",
-  spf: "자외선차단제",
+/** 성분명 매핑 (id → 언어별 성분명) */
+const INGREDIENT_NAMES: Record<string, Record<"ko" | "en", string>> = {
+  hya: { ko: "히알루론산", en: "Hyaluronic Acid" },
+  gly: { ko: "글리세린", en: "Glycerin" },
+  cer: { ko: "세라마이드", en: "Ceramide" },
+  chol: { ko: "콜레스테롤", en: "Cholesterol" },
+  pant: { ko: "판테놀", en: "Panthenol" },
+  niacinamide: { ko: "나이아신아마이드", en: "Niacinamide" },
+  fer: { ko: "발효 성분", en: "Fermented ingredients" },
+  vit_c: { ko: "비타민C", en: "Vitamin C" },
+  ret: { ko: "레티놀", en: "Retinol" },
+  aha: { ko: "AHA", en: "AHA" },
+  bha: { ko: "BHA", en: "BHA" },
+  azeic: { ko: "아젤라산", en: "Azelaic Acid" },
+  squalane: { ko: "스쿠알란", en: "Squalane" },
+  spf: { ko: "자외선차단제", en: "SPF/Sunscreen" },
 }
 
 /** 피부 고민별 × 피부 타입별 추천 성분 매트릭스 */
@@ -79,6 +79,7 @@ const CONCERN_RECOMMEND: Record<ConcernTag, Record<SkinType, string[]>> = {
 export function getIngredientGuide(
   concernTag: ConcernTag | string | null | undefined,
   skinType: SkinType | string | null | undefined,
+  locale: "ko" | "en" = "ko",
 ): string[] {
   if (!concernTag || !skinType) return []
 
@@ -91,15 +92,15 @@ export function getIngredientGuide(
 
   const ingredientIds = CONCERN_RECOMMEND[tag][type]
   return ingredientIds
-    .map((id) => INGREDIENT_NAMES[id])
+    .map((id) => INGREDIENT_NAMES[id]?.[locale])
     .filter(Boolean)
 }
 
 /**
- * 성분 id를 한글명으로 변환
+ * 성분 id를 언어별 성분명으로 변환
  */
-export function getIngredientName(ingredientId: string): string {
-  return INGREDIENT_NAMES[ingredientId] || ingredientId
+export function getIngredientName(ingredientId: string, locale: "ko" | "en" = "ko"): string {
+  return INGREDIENT_NAMES[ingredientId]?.[locale] || ingredientId
 }
 
 /**

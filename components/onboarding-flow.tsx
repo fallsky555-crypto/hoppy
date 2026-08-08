@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { t, type Locale } from "@/lib/i18n"
-import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS } from "@/lib/label-mappings"
+import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS } from "@/lib/label-mappings"
 import type { Concern, SupportId } from "@/lib/routine-copy"
 import { useDiary } from "@/lib/diary-context"
 import { ReportCard } from "@/components/report-card"
@@ -213,19 +213,19 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             {/* 헤더 */}
             <div className="space-y-2">
               <h2 className="text-lg font-bold text-foreground">
-                진단을 위한 기본 정보
+                {t("onboarding.stepQ.title", locale)}
               </h2>
               <p className="text-sm text-muted-foreground">
-                피부 정보를 알려주세요
+                {t("onboarding.stepQ.subtitle", locale)}
               </p>
             </div>
 
             {/* Q1: 피부 타입 */}
             {needs.needSkinType && (
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">Q1. 피부 타입</p>
+              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q1Label", locale)}</p>
               <div className="grid grid-cols-4 gap-2">
-                {["sensitive", "dry", "combo", "oily"].map((type) => (
+                {(["sensitive", "dry", "combo", "oily"] as const).map((type) => (
                   <button
                     key={type}
                     type="button"
@@ -237,12 +237,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                         : "border-border bg-card text-foreground"
                     )}
                   >
-                    {{
-                      sensitive: "민감성",
-                      dry: "건성",
-                      combo: "복합성",
-                      oily: "지성",
-                    }[type]}
+                    {t(SKIN_TYPE_LABEL_KEYS[type], locale)}
                   </button>
                 ))}
               </div>
@@ -252,15 +247,15 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             {/* Q2: 주요 고민 */}
             {needs.needConcernTags && (
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">Q2. 주요 고민 (복수 선택 가능)</p>
+              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q2Label", locale)}</p>
               <div className="space-y-2">
                 {[
-                  { id: "DRY", label: "속건조·속당김" },
-                  { id: "TONE", label: "칙칙함·잡티" },
-                  { id: "TEXTURE", label: "오돌토돌 결·모공" },
-                  { id: "TROUBLE", label: "민감 자극·트러블" },
-                  { id: "AGING", label: "탄력저하·주름" },
-                  { id: "BARRIER", label: "홍조·약해진 피부장벽" },
+                  { id: "DRY", labelKey: "onboarding.stepQ.concern.dry" },
+                  { id: "TONE", labelKey: "onboarding.stepQ.concern.tone" },
+                  { id: "TEXTURE", labelKey: "onboarding.stepQ.concern.texture" },
+                  { id: "TROUBLE", labelKey: "onboarding.stepQ.concern.trouble" },
+                  { id: "AGING", labelKey: "onboarding.stepQ.concern.aging" },
+                  { id: "BARRIER", labelKey: "onboarding.stepQ.concern.barrier" },
                 ].map((concern) => (
                   <button
                     key={concern.id}
@@ -279,7 +274,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                         : "border-border bg-card text-foreground"
                     )}
                   >
-                    {concern.label}
+                    {t(concern.labelKey, locale)}
                   </button>
                 ))}
               </div>
@@ -289,13 +284,13 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             {/* Q3: 고민케어 성분 */}
             {needs.needActiveIngredients && (
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">Q3. 고민케어로 주로 뭘 쓰세요?</p>
+              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q3Label", locale)}</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { id: "vitc", label: "비타민C" },
-                  { id: "ret", label: "레티놀" },
-                  { id: "nia", label: "나이아신아마이드" },
-                  { id: "unknown", label: "잘 모르겠어요" },
+                  { id: "vitc", labelKey: "onboarding.stepQ.ingredient.vitc" },
+                  { id: "ret", labelKey: "onboarding.stepQ.ingredient.retinol" },
+                  { id: "nia", labelKey: "onboarding.stepQ.ingredient.niacinamide" },
+                  { id: "unknown", labelKey: "onboarding.stepQ.ingredient.unknown" },
                 ].map((ing) => (
                   <button
                     key={ing.id}
@@ -314,7 +309,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                         : "border-border bg-card text-foreground"
                     )}
                   >
-                    {ing.label}
+                    {t(ing.labelKey, locale)}
                   </button>
                 ))}
               </div>
@@ -324,12 +319,12 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             {/* Q4: 오늘 컨디션 */}
             {needs.needCondition && (
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">Q4. 오늘 피부 컨디션은 어때요?</p>
+              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q4Label", locale)}</p>
               <div className="flex gap-2">
                 {[
-                  { id: "good", label: "좋아요" },
-                  { id: "neutral", label: "보통이에요" },
-                  { id: "bad", label: "안 좋아요" },
+                  { id: "good", labelKey: "onboarding.hoppiIntro.condition_good" },
+                  { id: "neutral", labelKey: "onboarding.hoppiIntro.condition_neutral" },
+                  { id: "bad", labelKey: "onboarding.hoppiIntro.condition_bad" },
                 ].map((cond) => (
                   <button
                     key={cond.id}
@@ -342,7 +337,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                         : "border-border bg-card text-foreground"
                     )}
                   >
-                    {cond.label}
+                    {t(cond.labelKey, locale)}
                   </button>
                 ))}
               </div>
