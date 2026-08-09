@@ -15,7 +15,6 @@ import { InstallBanner } from "@/components/install-banner"
 import { DailyCover } from "@/components/daily-cover"
 import { DiaryProvider, useDiary } from "@/lib/diary-context"
 import { getAgeLabel, getFirstConcernTagLabel } from "@/lib/label-mappings"
-import type { IncidentType } from "@/lib/scheduling-engine"
 import { t } from "@/lib/i18n"
 
 interface PageProps {
@@ -44,10 +43,6 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
   const isCourseComplete = currentDay >= totalDays
 
-  function handleReportIncident(incidentType: IncidentType) {
-    diary.reportIncident(currentDay, incidentType)
-  }
-
   return (
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
@@ -73,13 +68,6 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
         />
 
         <WeeklyMiniInsight />
-
-        {(diary.pregnant || diary.prescriptionMeds) && (
-          <div className="space-y-1.5 rounded-4xl bg-secondary/60 p-4 text-xs leading-relaxed text-secondary-foreground ring-1 ring-border">
-            {diary.pregnant && <p>{t("homeStats.pregnantWarning", locale)}</p>}
-            {diary.prescriptionMeds && <p>{t("homeStats.prescriptionWarning", locale)}</p>}
-          </div>
-        )}
 
         <CalendarGrid
           totalDays={totalDays}

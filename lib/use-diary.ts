@@ -1,21 +1,12 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { dayFromJoinDate, DEFAULT_ACTIVE_INTERVAL_DAYS, DEFAULT_BHA_INTERVAL_DAYS, RECIPES, TOTAL_DAYS, type Recipe, type RecipeType, type ScheduleSettings } from "@/lib/schedule"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { dayFromJoinDate, DEFAULT_ACTIVE_INTERVAL_DAYS, DEFAULT_BHA_INTERVAL_DAYS, RECIPES, TOTAL_DAYS, type Recipe, type ScheduleSettings } from "@/lib/schedule"
 import {
   CURRENT_ENGINE_VERSION,
-  delayForReaction,
   generateCalendar,
-  REACTION_DELAY_DAYS,
-  startIncidentOverride,
-  type CalendarEntry,
-  type IncidentLogEntry,
-  type IncidentType,
-  type ReactionLogEntry,
 } from "@/lib/scheduling-engine"
 import {
-  appendIncidentLog,
-  appendReactionLog,
   ensureAnonSession,
   loadRemoteState,
   saveAge,
@@ -45,11 +36,6 @@ export interface UsedProduct {
   lang: "ko" | "en"
 }
 
-/** 유저가 실시간으로 트리거하는 캘린더 조정 이벤트 (인시던트 / 자극 신고). day 순서로 재생(replay)한다 */
-type ScheduleEvent =
-  | { kind: "incident"; day: number; incidentType: IncidentType; durationDays?: number }
-  | { kind: "reaction"; day: number; category: RecipeType }
-
 interface DiaryState {
   /** 가입일(Day 1) — ISO 문자열 */
   joinDate: string
@@ -62,11 +48,6 @@ interface DiaryState {
   conditions: Record<number, "good" | "neutral" | "bad">
   /** BHA/레티놀 도입 간격 슬라이더. 아무것도 안 건드리면 워크북 기본값(7/7)을 그대로 쓴다 */
   settings: ScheduleSettings
-  events: ScheduleEvent[]
-  /** 임신/수유 중 — 레티놀 슬롯 잠금 안내에 사용 */
-  pregnant: boolean
-  /** 처방약 사용 중 — "처방 지도가 앱 가이드보다 우선" 고지에 사용 */
-  prescriptionMeds: boolean
   /** 루틴 문구에 강조할 관심사. 스케줄 계산과는 무관하고 문구에만 영향을 준다 */
   concern: Concern
   /** 유저가 이미 갖고 있다고 답한 성분 id 목록 */
@@ -113,9 +94,6 @@ function freshState(): DiaryState {
     loggedSlots: {},
     conditions: {},
     settings: {},
-    events: [],
-    pregnant: false,
-    prescriptionMeds: false,
     concern: "none",
     supportOwned: [],
     activeIngredients: [],
@@ -146,9 +124,6 @@ function loadLocalState(): DiaryState | null {
       loggedSlots: parsed.loggedSlots ?? {},
       conditions: parsed.conditions ?? {},
       settings: parsed.settings ?? {},
-      events: parsed.events ?? [],
-      pregnant: parsed.pregnant ?? false,
-      prescriptionMeds: parsed.prescriptionMeds ?? false,
       concern: parsed.concern ?? "none",
       supportOwned: parsed.supportOwned ?? [],
       activeIngredients: parsed.activeIngredients ?? [],
@@ -168,32 +143,6 @@ function loadLocalState(): DiaryState | null {
   }
 }
 
-/**
- * 인시던트/자극 신고 이벤트를 day 순서로 캘린더에 순차 적용한다.
- * 인시던트 기간 중에는 액티브가 이미 응급 루틴으로 대체돼 있으므로, 그 기간에 신고된
- * 자극은 자연히 "인시던트 종료 후 재개 시점"의 다음 해당 카테고리 일정부터 지연된다.
- */
-function applyEvents(baseCalendar: CalendarEntry[], events: ScheduleEvent[]) {
-  const sorted = [...events].sort((a, b) => a.day - b.day)
-  let calendar = baseCalendar
-  const incidentLog: IncidentLogEntry[] = []
-  const reactionLog: ReactionLogEntry[] = []
-
-  for (const event of sorted) {
-    if (event.kind === "incident") {
-      const result = startIncidentOverride(calendar, event.day, event.incidentType, event.durationDays)
-      calendar = result.calendar
-      incidentLog.push(result.incident)
-    } else {
-      const result = delayForReaction(calendar, event.day, event.category)
-      calendar = result.calendar
-      reactionLog.push(result.reaction)
-    }
-  }
-
-  return { calendar, incidentLog, reactionLog }
-}
-
 /** 동적으로 생성: products.json에서 모든 id 추출 */
 const VALID_PRODUCT_IDS = new Set(PRODUCTS_DATA.map(p => p.id))
 const PRODUCTS_BY_ID = new Map(
@@ -202,8 +151,6 @@ const PRODUCTS_BY_ID = new Map(
 
 /** 체커(checker.html)에서 돌아올 때 실려오는, 스케줄과 무관한 부가 정보 */
 interface URLContextPayload {
-  pregnant: boolean
-  prescriptionMeds: boolean
   concern: Concern
   supportOwned: SupportId[]
   usedProducts: UsedProduct[] | null
@@ -290,7 +237,7 @@ function buildProductDetails(itemIds: string[]): UsedProduct[] {
 
 /**
  * 외부 진단 화면(myroutinediet.com의 checker.html)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
- * ?type={A/B/C}&skin_type={sensitive/dry/combo/oily}&preg={0/1}&rx={0/1}&concern={dry/flush/flaky/trouble/none}
+ * ?type={A/B/C}&skin_type={sensitive/dry/combo/oily}&concern={dry/flush/flaky/trouble/none}
  * &support={hya,cica,nia,cer 콤마 구분}&items={...}&age={teen/20s/30s/40s/50s/60s_plus}
  * &beauty_concerns={DRY,TONE 등 콤마 구분}&overlap={숫자}&tier={0/1/2}
  * &gender={female/male/other/unspecified}
@@ -314,8 +261,6 @@ function contextFromURL(): URLContextPayload | null {
   const itemIds = parseItems(params.get("items"))
 
   return {
-    pregnant: params.get("preg") === "1",
-    prescriptionMeds: params.get("rx") === "1",
     concern: parseConcern(params.get("concern")),
     supportOwned: parseSupportOwned(params.get("support")),
     usedProducts: itemIds.length > 0 ? buildProductDetails(itemIds) : null,
@@ -339,13 +284,11 @@ function clearContextURLParams() {
   window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""))
 }
 
-/** 진단 결과 정보를 자동 적용 (pregnant, prescriptionMeds, usedProducts, skinType, age, concernTags, overlap, tier, gender) */
+/** 진단 결과 정보를 자동 적용 (usedProducts, skinType, age, concernTags, overlap, tier, gender) */
 function applyURLContext(base: DiaryState, context: URLContextPayload | null): DiaryState {
   if (!context) return base
   return {
     ...base,
-    pregnant: context.pregnant,
-    prescriptionMeds: context.prescriptionMeds,
     usedProducts: context.usedProducts,
     skinType: context.skinType,
     age: context.age,
@@ -386,7 +329,7 @@ export function useDiary() {
 
     if (localState) {
       // 이 기기에 이미 진행 중인 로컬 기록이 있다 — joinDate/진행 기록은 그대로 두고,
-      // 체커에서 돌아온 경우라면 concern/support/preg/rx 같은 부가 정보만 갱신한다
+      // 체커에서 돌아온 경우라면 concern/support 같은 부가 정보만 갱신한다
       // URL 파라미터에서 checkerContext를 먼저 추출 (clearContextURLParams 전에)
       const checkerCtx = extractCheckerContext(urlContext)
       setState(applyURLContext(localState, urlContext))
@@ -409,8 +352,6 @@ export function useDiary() {
             ...freshState(),
             joinDate: remote.profile.signupDate,
             settings: remote.profile.settings,
-            pregnant: remote.profile.pregnant,
-            prescriptionMeds: remote.profile.prescriptionMeds,
             concern: remote.profile.concern,
             supportOwned: remote.profile.supportOwned,
             activeIngredients: remote.profile.activeIngredients,
@@ -424,11 +365,6 @@ export function useDiary() {
             loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
             loggedSlots: remote.loggedSlots,
             conditions: remote.conditions,
-            events: remote.events.map((event) =>
-              event.kind === "incident"
-                ? { kind: "incident" as const, day: event.day, incidentType: event.incidentType!, durationDays: event.durationDays }
-                : { kind: "reaction" as const, day: event.day, category: event.category! },
-            ),
           }
         : freshState()
 
@@ -486,13 +422,10 @@ export function useDiary() {
    */
   const onboarded = state.settings.activeIntervalDays !== undefined && state.settings.bhaIntervalDays !== undefined
 
-  const baseCalendar = useMemo(
+  const calendar = useMemo(
     () => generateCalendar({ signupDate: state.joinDate, settings: state.settings }),
     [state.joinDate, state.settings],
   )
-
-  // 인시던트 오버라이드 / 자극 지연 이벤트를 기본 캘린더 위에 순차 적용한다
-  const { calendar, incidentLog, reactionLog } = useMemo(() => applyEvents(baseCalendar, state.events), [baseCalendar, state.events])
 
   const totalDays = calendar.length
 
@@ -517,12 +450,6 @@ export function useDiary() {
       calendar.map((entry) => ({ ...entry, completed: state.loggedDays.includes(entry.day) })),
     )
   }, [userId, hydrated, state.joinDate, state.settings, state.loggedDays, calendar])
-
-  // 임신/처방약 플래그
-  useEffect(() => {
-    if (!userId || !hydrated) return
-    saveContextFlags(userId, state.joinDate, { pregnant: state.pregnant, prescriptionMeds: state.prescriptionMeds })
-  }, [userId, hydrated, state.joinDate, state.pregnant, state.prescriptionMeds])
 
   // 루틴 문구에 강조할 관심사 + 보유 성분
   useEffect(() => {
@@ -565,25 +492,6 @@ export function useDiary() {
     if (!userId || !hydrated) return
     saveTier(userId, state.joinDate, state.tier)
   }, [userId, hydrated, state.joinDate, state.tier])
-
-  // incident_log / reaction_log는 append-only라, 새로 생긴 항목만 골라 반영한다
-  const syncedIncidentCount = useRef(0)
-  useEffect(() => {
-    if (!userId) return
-    const fresh = incidentLog.slice(syncedIncidentCount.current)
-    if (fresh.length === 0) return
-    fresh.forEach((entry) => appendIncidentLog(userId, entry))
-    syncedIncidentCount.current = incidentLog.length
-  }, [userId, incidentLog])
-
-  const syncedReactionCount = useRef(0)
-  useEffect(() => {
-    if (!userId) return
-    const fresh = reactionLog.slice(syncedReactionCount.current)
-    if (fresh.length === 0) return
-    fresh.forEach((entry) => appendReactionLog(userId, entry))
-    syncedReactionCount.current = reactionLog.length
-  }, [userId, reactionLog])
 
   const getRecipeForDay = useCallback(
     (day: number): Recipe => {
@@ -654,16 +562,6 @@ export function useDiary() {
     [userId, state.usedProducts],
   )
 
-  /** [Period] / [Sunburn] / [Treatment] 버튼에서 호출 — 캘린더를 응급 루틴으로 전환한다 */
-  const reportIncident = useCallback((day: number, incidentType: IncidentType, durationDays?: number) => {
-    setState((prev) => ({ ...prev, events: [...prev.events, { kind: "incident", day, incidentType, durationDays }] }))
-  }, [])
-
-  /** 특정 카테고리에 자극이 신고되면 그 카테고리의 향후 일정을 5일 연기한다 */
-  const reportReaction = useCallback((day: number, category: RecipeType) => {
-    setState((prev) => ({ ...prev, events: [...prev.events, { kind: "reaction", day, category }] }))
-  }, [])
-
   const recordLoggedDay = useCallback((day: number) => {
     setState((prev) =>
       prev.loggedDays.includes(day) ? prev : { ...prev, loggedDays: [...prev.loggedDays, day] },
@@ -730,7 +628,7 @@ export function useDiary() {
    * 지우되, 슬라이더 설정·관심사·보유 성분 등 개인화 정보는 그대로 유지한다.
    */
   const startFresh = useCallback(() => {
-    setState((prev) => ({ ...prev, joinDate: todayISO(), conditions: {}, events: [] }))
+    setState((prev) => ({ ...prev, joinDate: todayISO(), conditions: {} }))
   }, [])
 
   const submitFeedback = useCallback(
@@ -740,12 +638,6 @@ export function useDiary() {
     },
     [userId],
   )
-
-  /** 최근 N일 내 안전 관련 인시던트(period/sunburn/treatment)가 있는지 판단 */
-  const hasRecentSafetyIncident = useCallback((day: number, windowDays: number = REACTION_DELAY_DAYS): boolean => {
-    const windowStart = day - windowDays
-    return incidentLog.some((incident) => incident.day >= windowStart && incident.day <= day)
-  }, [incidentLog])
 
   return {
     hydrated,
@@ -766,13 +658,6 @@ export function useDiary() {
     settings: state.settings,
     setSettings,
     getRecipeForDay,
-    incidentLog,
-    reactionLog,
-    reportIncident,
-    reportReaction,
-    hasRecentSafetyIncident,
-    pregnant: state.pregnant,
-    prescriptionMeds: state.prescriptionMeds,
     concern: state.concern,
     supportOwned: state.supportOwned,
     activeIngredients: state.activeIngredients,

@@ -229,20 +229,6 @@
     "condition_neutral": "보통",
     "condition_bad": "안 좋음"
   },
-  "incident": {
-    "ariaLabel": "스킨 인시던트",
-    "title": "특별한 일이 있었나요?",
-    "description": "선택하면 오늘부터 응급 진정 루틴으로 자동 전환되고, 남은 일정은 그만큼 뒤로 밀려요.",
-    "medical_notice": "화상이 심하거나 시술 직후 통증이 있다면 앱의 루틴보다 담당 병원·피부과의 안내를 우선하세요. 이 루틴은 진료를 대체하지 않습니다.",
-    "labels": {
-      "period": "생리 시작",
-      "sunburn": "선번",
-      "treatment": "시술 후"
-    },
-    "active": "{{label}} 진정 루틴 진행 중이에요. Day {{resumeDay}}부터 원래 캘린더가 다시 시작돼요.",
-    "cancel": "취소",
-    "confirm": "확인, 진정 루틴 시작"
-  },
   "login": {
     "error": {
       "link": "계정을 연결하는 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.",
@@ -457,9 +443,7 @@
     "loggedDays": "기록한 날",
     "thisWeek": "이번 주 기록",
     "untilReport": "리포트까지",
-    "reportReady": "리포트 준비 완료",
-    "pregnantWarning": "🤰 임신·수유 중으로 확인됐어요. 레티놀 성분은 이 코스에서 제외돼요.",
-    "prescriptionWarning": "💊 처방약을 사용 중이시군요. 담당 병원의 처방 지도가 이 앱의 가이드보다 항상 우선이에요."
+    "reportReady": "리포트 준비 완료"
   },
   "weeklyInsight": {
     "message": "{{days}}일 완주! 이번 주는 {{topTag}}에 집중한 한 주였네요 👏 (다음 리포트까지 D-{{remaining}})",
@@ -527,9 +511,7 @@
     "recorded": "기록 완료했어요",
     "record_button": "기록 완료",
     "not_yet_available": "아직 오지 않은 날이에요. 그날이 되면 기록할 수 있어요.",
-    "past_routine": "지나간 날의 루틴이에요.",
-    "reaction_reported": "오늘 자극을 신고했어요. 이 성분은 {{days}}일 뒤로 미뤄져요.",
-    "report_reaction": "오늘 이 성분에 자극이 있었어요"
+    "past_routine": "지나간 날의 루틴이에요."
   },
   "daily_habits": {
     "title": "매일 기본 습관",
@@ -587,12 +569,10 @@
     "ariaLabel": "오늘의 슬롯 선택",
     "todayBadge": "+ 오늘의 추천",
     "recommendationLabel": "추천 케어예요. 컨디션에 따라 조절하세요",
-    "incidentWarning": "지금은 진정에 집중하세요",
     "selectPrompt": "오늘 하신 일을 선택해주세요",
     "selectHint": "(복수 선택 가능)",
     "selectedCount": "{{count}}개 선택했어요",
     "conditionQuestion": "오늘 하신 케어, 피부 어땠어요?",
-    "reportReaction": "자극 신고하기",
     "slots": {
       "exfoliation": "각질케어",
       "hydration": "수분케어",

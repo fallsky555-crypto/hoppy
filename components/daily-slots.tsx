@@ -8,7 +8,6 @@ import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
 import { saveUsageLog, saveFreeInputLog } from "@/lib/supabase/sync"
 import { getRecommendedSlot } from "@/lib/slot-mapping"
-import { REACTION_DELAY_DAYS } from "@/lib/scheduling-engine"
 
 export type SlotType = "exfoliation" | "hydration" | "active" | "barrier" | "sun_care"
 type SpecialCareType = "mask" | "trouble"
@@ -234,10 +233,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const selectedSpecialCareRef = useRef<Set<SpecialCareType>>(new Set())
 
   const todayRecipe = diary.getRecipeForDay(day)
-  const hasRecentIncident = diary.hasRecentSafetyIncident(day)
-  const recommendedSlot: SlotType | null = hasRecentIncident
-    ? "barrier"
-    : (getRecommendedSlot(todayRecipe.type) as SlotType | null)
+  const recommendedSlot: SlotType | null = getRecommendedSlot(todayRecipe.type) as SlotType | null
 
   useEffect(() => {
     diaryRef.current = diary
@@ -312,10 +308,6 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
       return newSet
     })
   }, [day, recommendedSlot])
-
-  const handleReportReaction = useCallback(() => {
-    diaryRef.current.reportReaction(day, "retinol")
-  }, [day])
 
   const handleSaveFreeInput = useCallback(() => {
     const content = freeInputText.trim()
@@ -404,9 +396,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
         {recommendedSlot && (
           <div className="border-t border-border pt-2">
             <p className="text-xs text-center text-muted-foreground mt-1">
-              {hasRecentIncident
-                ? t("dailySlots.incidentWarning", locale)
-                : t("dailySlots.recommendationNote", locale)}
+              {t("dailySlots.recommendationNote", locale)}
             </p>
           </div>
         )}
@@ -480,16 +470,6 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
                 {t("common.later", locale)}
               </button>
             </div>
-          )}
-
-          {checkedSlots.has("active") && (
-            <button
-              type="button"
-              onClick={handleReportReaction}
-              className="w-full rounded-full border-2 border-primary bg-transparent hover:bg-primary/10 text-primary-text font-semibold py-3 transition-colors text-sm"
-            >
-              {t("dailySlots.reportReaction", locale)}
-            </button>
           )}
 
           <button

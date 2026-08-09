@@ -39,8 +39,7 @@ export function TodayCareCard() {
   }, [])
 
   const todayRecipe = diary.getRecipeForDay(diary.currentDay)
-  const hasRecentIncident = diary.hasRecentSafetyIncident(diary.currentDay)
-  const recommendedSlot: SlotType | null = hasRecentIncident ? "barrier" : (getRecommendedSlot(todayRecipe.type) as SlotType | null)
+  const recommendedSlot: SlotType | null = getRecommendedSlot(todayRecipe.type) as SlotType | null
 
   const activeIngredients = diary.activeIngredients ?? []
   if (!diary.activeIngredients || diary.activeIngredients.length === 0) {
@@ -50,7 +49,6 @@ export function TodayCareCard() {
   const copy = buildCareCardCopy({
     weather,
     recommendedSlot,
-    hasSafetyIncident: hasRecentIncident,
     locale,
     activeIngredients,
   })

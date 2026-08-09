@@ -168,7 +168,6 @@ function getNightTipKey(condition: WeatherCondition): "hot" | "dry" | "rain" | n
 interface BuildCareCardCopyParams {
   weather: WeatherData
   recommendedSlot: SlotType | null
-  hasSafetyIncident: boolean
   locale: string
   activeIngredients?: string[]
 }
@@ -179,18 +178,9 @@ interface CareCardCopy {
 }
 
 export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy {
-  const { weather, recommendedSlot, hasSafetyIncident, locale, activeIngredients = [] } = params
+  const { weather, recommendedSlot, locale, activeIngredients = [] } = params
   const condition = analyzeWeather(weather)
   const title = locale === "ko" ? "오늘의 케어" : "Today's Care"
-
-  if (hasSafetyIncident) {
-    return {
-      title,
-      description: locale === "ko"
-        ? "지금은 피부가 좀 예민한 시기예요. 진정케어(시카, 세라마이드)로 편안하게 감싸주세요."
-        : "Instead of adding more, focus on protecting what you have. Wrap your skin barrier with soothing care.",
-    }
-  }
 
   const weatherSnippet = buildWeatherSnippet(condition, locale)
   let dayDescription = ""
@@ -229,15 +219,13 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
   }
 
   let finalDescription = dayDescription
-  if (!hasSafetyIncident) {
-    const nightTipKey = getNightTipKey(condition)
-    if (nightTipKey) {
-      const nightTip = getNightTip(recommendedSlot, locale)
-      const intro = nightIntros[locale === "ko" ? "ko" : "en"][nightTipKey]
-      finalDescription = locale === "ko"
-        ? `${dayDescription} ${intro} ${nightTip}.`
-        : `${dayDescription} ${intro} ${nightTip}`
-    }
+  const nightTipKey = getNightTipKey(condition)
+  if (nightTipKey) {
+    const nightTip = getNightTip(recommendedSlot, locale)
+    const intro = nightIntros[locale === "ko" ? "ko" : "en"][nightTipKey]
+    finalDescription = locale === "ko"
+      ? `${dayDescription} ${intro} ${nightTip}.`
+      : `${dayDescription} ${intro} ${nightTip}`
   }
 
   return {

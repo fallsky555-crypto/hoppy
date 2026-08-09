@@ -6,8 +6,9 @@
  * 하루 단위 순차 시뮬레이션만 남긴다. 액티브(BHA/레티놀)는 각자 독립적인 고정
  * 간격으로 도입되고, 액티브가 아닌 날은 6단계 서브 로테이션을 돈다.
  *
- * NOTE: startIncidentOverride, delayForReaction은 use-diary.ts의 applyEvents()에서만 호출됨.
- * 향후 경량 배지 시스템(slot-mapping.ts) 완성 시 이들 함수의 필요성 재평가 필요.
+ * [2026-08-09] 인시던트(생리/선번/시술)·자극 신고 구조화 기능은 자유입력(condition_log)
+ * 도입으로 역할이 대체되어 전체 삭제됨 — startIncidentOverride/delayForReaction 및
+ * 관련 타입은 더 이상 존재하지 않는다.
  */
 import {
   DEFAULT_ACTIVE_INTERVAL_DAYS,
@@ -209,131 +210,6 @@ export function calculateBarrierScore({ elapsedDays, recordedDays, irritationDay
   return Math.round((completionRate * 0.5 + irritationFreeRate * 0.5) * 100)
 }
 
-// ── 스킨 인시던트 — 비상 재생 주기 ─────────────────────────
-
-export type IncidentType = "period" | "sunburn" | "treatment"
-
-export interface IncidentLogEntry {
-  day: number
-  incidentType: IncidentType
-  startedAt: string
-  overrideRoutine: RecipeType
-  resumesNormalAtDay: number
-}
-
-/** period 5~7일의 기본값. sunburn/treatment는 48시간 쿨링 + 5일 복구 = 7일 */
-const DEFAULT_INCIDENT_DURATION_DAYS: Record<IncidentType, number> = {
-  period: 6,
-  sunburn: 7,
-  treatment: 7,
-}
-
-/** 인시던트 기간 동안 전면 대체되는 루틴. 기능성 성분은 전부 배제하고 SOS Rest로 통일한다 */
-const INCIDENT_OVERRIDE_ROUTINE: Record<IncidentType, RecipeType> = {
-  period: "sos_rest",
-  sunburn: "sos_rest",
-  treatment: "sos_rest",
-}
-
-/**
- * atDay 위치에 count일만큼 새 일정을 끼워 넣고, atDay 이후의 기존 일정은 전부
- * count일만큼 뒤로 밀어낸다. atDay 이전 일정은 그대로 유지된다.
- *
- * "기존 항목을 그 자리에서 재색칠"하는 방식 대신 항상 새 슬롯을 삽입하기 때문에,
- * 인시던트·자극 지연을 몇 번을 적용해도 캘린더에 빈 Day가 생기거나 두 일정이
- * 같은 Day를 두고 충돌하는 일이 구조적으로 발생하지 않는다.
- *
- * TOTAL_DAYS(30)를 넘어가는 일정은 자동으로 잘려나간다. 인시던트로 밀린 날짜만큼
- * 뒤쪽 일정이 30일 안에서 밀리되, 그 이상은 캘린더에서 제거된다.
- */
-function insertDays(
-  calendar: CalendarEntry[],
-  atDay: number,
-  count: number,
-  categoryForInsertedDay: (day: number) => RecipeType,
-): CalendarEntry[] {
-  const past = calendar.filter((entry) => entry.day < atDay && entry.day <= TOTAL_DAYS)
-  const baseDate = calendar.find((entry) => entry.day === atDay)?.date ?? calendar[calendar.length - 1]?.date ?? new Date().toISOString()
-
-  const inserted: CalendarEntry[] = Array.from({ length: count }, (_, i) => {
-    const day = atDay + i
-    const category = categoryForInsertedDay(day)
-    return {
-      day,
-      date: addDays(baseDate, i),
-      category,
-      recipe: RECIPES[category],
-      completed: null,
-      reactionFlag: null,
-      afterActiveRestDay: false,
-    }
-  }).filter((entry) => entry.day <= TOTAL_DAYS)
-
-  const shiftedFuture = calendar
-    .filter((entry) => entry.day >= atDay)
-    .map((entry) => ({ ...entry, day: entry.day + count, date: addDays(entry.date, count) }))
-    .filter((entry) => entry.day <= TOTAL_DAYS)
-
-  return [...past, ...inserted, ...shiftedFuture]
-}
-
-/**
- * 인시던트 오버라이드. 지난 일정은 유지하고, 트리거된 날부터 durationDays만큼
- * SOS Rest 일정을 새로 끼워 넣는다. 원래 그 자리에 있던 미래 일정은 그만큼
- * 통째로 뒤로 밀린다("종료 시 NORMAL로 복귀, 미래 일정만 뒤로 밀림").
- */
-export function startIncidentOverride(
-  calendar: CalendarEntry[],
-  day: number,
-  incidentType: IncidentType,
-  durationDays: number = DEFAULT_INCIDENT_DURATION_DAYS[incidentType],
-): { calendar: CalendarEntry[]; incident: IncidentLogEntry } {
-  const overrideCategory = INCIDENT_OVERRIDE_ROUTINE[incidentType]
-  const startedAt = calendar.find((entry) => entry.day === day)?.date ?? new Date().toISOString()
-
-  const next = insertDays(calendar, day, durationDays, () => overrideCategory)
-
-  return {
-    calendar: next,
-    incident: {
-      day,
-      incidentType,
-      startedAt,
-      overrideRoutine: overrideCategory,
-      resumesNormalAtDay: day + durationDays,
-    },
-  }
-}
-
-// ── 반응 피드백 루프 — 자극 신고 시 5일 연기 ────────────────
-
-export interface ReactionLogEntry {
-  day: number
-  category: RecipeType
-  flag: boolean
-  delayedToDay: number
-}
-
-export const REACTION_DELAY_DAYS = 5
-
-/**
- * 자극이 신고된 날의 기록은 그대로 두되(reactionFlag만 표시), 그 다음 날부터
- * 5일간 SOS Rest 버퍼를 끼워 넣어 이후 일정 전체를 5일 뒤로 미룬다.
- */
-export function delayForReaction(
-  calendar: CalendarEntry[],
-  day: number,
-  category: RecipeType,
-): { calendar: CalendarEntry[]; reaction: ReactionLogEntry } {
-  const flagged = calendar.map((entry) => (entry.day === day ? { ...entry, reactionFlag: true } : entry))
-  const next = insertDays(flagged, day + 1, REACTION_DELAY_DAYS, () => "sos_rest")
-
-  return {
-    calendar: next,
-    reaction: { day, category, flag: true, delayedToDay: day + REACTION_DELAY_DAYS },
-  }
-}
-
 // ── 장벽 점수 시계열 ────────────────────────────────────────
 
 export interface BarrierScorePoint {
@@ -342,17 +218,14 @@ export interface BarrierScorePoint {
 }
 
 /**
- * fromDay~toDay 구간의 장벽 점수 시계열을 계산한다. 인시던트 오버라이드 기간은
- * 완료율·자극 계산에서 통째로 제외한다.
+ * fromDay~toDay 구간의 장벽 점수 시계열을 계산한다.
  */
 export function buildBarrierScoreLog(
   calendar: CalendarEntry[],
-  incidentLog: IncidentLogEntry[],
   completedDays: number[],
   fromDay: number,
   toDay: number,
 ): BarrierScorePoint[] {
-  const isIncidentDay = (day: number) => incidentLog.some((entry) => day >= entry.day && day < entry.resumesNormalAtDay)
   const entryByDay = new Map(calendar.map((entry) => [entry.day, entry]))
   const completedSet = new Set(completedDays)
 
@@ -362,7 +235,6 @@ export function buildBarrierScoreLog(
     let recordedDays = 0
     let irritationDays = 0
     for (let d = 1; d <= day; d++) {
-      if (isIncidentDay(d)) continue
       elapsedDays++
       if (completedSet.has(d)) recordedDays++
       if (entryByDay.get(d)?.reactionFlag) irritationDays++

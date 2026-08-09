@@ -1,6 +1,6 @@
 import { getSupabaseClient } from "@/lib/supabase/client"
-import type { RecipeType, ScheduleSettings } from "@/lib/schedule"
-import type { BarrierScorePoint, CalendarEntry, IncidentLogEntry, IncidentType, ReactionLogEntry } from "@/lib/scheduling-engine"
+import type { ScheduleSettings } from "@/lib/schedule"
+import type { BarrierScorePoint, CalendarEntry } from "@/lib/scheduling-engine"
 import type { Concern, SupportId } from "@/lib/routine-copy"
 import type { UsedProduct } from "@/lib/use-diary"
 
@@ -50,8 +50,6 @@ export function ensureAnonSession(): Promise<string | null> {
 interface RemoteProfile {
   signupDate: string
   settings: ScheduleSettings
-  pregnant: boolean
-  prescriptionMeds: boolean
   concern: Concern
   supportOwned: SupportId[]
   activeIngredients: string[]
@@ -82,13 +80,11 @@ export async function saveSettings(userId: string, signupDate: string, settings:
   if (error) console.warn("[supabase] saveSettings failed:", error.message)
 }
 
-/** 임신/처방약 플래그 + 데이터 수집 동의 + 피부 타입을 diary_profiles에 반영한다 */
+/** 데이터 수집 동의 + 관심사/보유 성분 + 피부 타입을 diary_profiles에 반영한다 */
 export async function saveContextFlags(
   userId: string,
   signupDate: string,
   flags: {
-    pregnant?: boolean
-    prescriptionMeds?: boolean
     concern?: string
     supportOwned?: string[]
     dataConsent?: boolean
@@ -104,8 +100,6 @@ export async function saveContextFlags(
     signup_date: signupDate.slice(0, 10),
   }
 
-  if (flags.pregnant !== undefined) updatePayload.pregnant = flags.pregnant
-  if (flags.prescriptionMeds !== undefined) updatePayload.prescription_meds = flags.prescriptionMeds
   if (flags.concern !== undefined) updatePayload.concern = flags.concern
   if (flags.supportOwned !== undefined) updatePayload.support_owned = flags.supportOwned
   if (flags.activeIngredients !== undefined) updatePayload.active_ingredients = flags.activeIngredients
@@ -270,35 +264,6 @@ export async function markCalendarDayCompleted(userId: string, day: number): Pro
   if (error) console.warn("[supabase] markCalendarDayCompleted failed:", error.message)
 }
 
-export async function appendIncidentLog(userId: string, entry: IncidentLogEntry): Promise<void> {
-  const supabase = getSupabaseClient()
-  if (!supabase) return
-
-  const { error } = await supabase.from("incident_log").insert({
-    user_id: userId,
-    day: entry.day,
-    incident_type: entry.incidentType,
-    started_at: entry.startedAt,
-    override_routine: entry.overrideRoutine,
-    resumes_normal_at_day: entry.resumesNormalAtDay,
-  })
-  if (error) console.warn("[supabase] appendIncidentLog failed:", error.message)
-}
-
-export async function appendReactionLog(userId: string, entry: ReactionLogEntry): Promise<void> {
-  const supabase = getSupabaseClient()
-  if (!supabase) return
-
-  const { error } = await supabase.from("reaction_log").insert({
-    user_id: userId,
-    day: entry.day,
-    category: entry.category,
-    flag: entry.flag,
-    delayed_to_day: entry.delayedToDay,
-  })
-  if (error) console.warn("[supabase] appendReactionLog failed:", error.message)
-}
-
 export async function saveBarrierScoreLog(userId: string, points: BarrierScorePoint[]): Promise<void> {
   const supabase = getSupabaseClient()
   if (!supabase || points.length === 0) return
@@ -397,19 +362,9 @@ export async function saveCompletionFeedback(userId: string, feedbackText: strin
   if (error) console.warn("[supabase] saveCompletionFeedback failed:", error.message)
 }
 
-export interface RemoteScheduleEvent {
-  kind: "incident" | "reaction"
-  day: number
-  incidentType?: IncidentType
-  durationDays?: number
-  category?: RecipeType
-}
-
 export interface RemoteState {
   profile: RemoteProfile
   completedDays: number[]
-  /** incident_log · reaction_log로부터 재구성한, 로컬 엔진이 그대로 재생(replay)할 수 있는 이벤트 목록 */
-  events: RemoteScheduleEvent[]
   /** usage_log로부터 로드한 슬롯 기록 */
   loggedSlots: Record<number, Array<{ slot: string; tag: string }>>
   /** condition_log로부터 로드한 컨디션 기록 */
@@ -428,7 +383,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
       .select(
-        "signup_date, active_interval_days, bha_interval_days, pregnant, prescription_meds, concern, support_owned, active_ingredients, engine_version, skin_type, age, concern_tags, overlap_count, tier, gender",
+        "signup_date, active_interval_days, bha_interval_days, concern, support_owned, active_ingredients, engine_version, skin_type, age, concern_tags, overlap_count, tier, gender",
       )
       .eq("user_id", userId)
       .maybeSingle()
@@ -439,10 +394,8 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     }
     if (!profile) return null
 
-    const [{ data: calendarRows }, { data: incidentRows }, { data: reactionRows }, { data: usageLogRows }, { data: conditionLogRows }] = await Promise.all([
+    const [{ data: calendarRows }, { data: usageLogRows }, { data: conditionLogRows }] = await Promise.all([
       supabase.from("calendar_entries").select("day, completed").eq("user_id", userId),
-      supabase.from("incident_log").select("day, incident_type, resumes_normal_at_day").eq("user_id", userId),
-      supabase.from("reaction_log").select("day, category, delayed_to_day").eq("user_id", userId),
       supabase.from("usage_log").select("day, slots").eq("user_id", userId),
       supabase.from("condition_log").select("day, condition").eq("user_id", userId),
     ])
@@ -463,20 +416,6 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
       }
     }
 
-    const events: RemoteScheduleEvent[] = [
-      ...(incidentRows ?? []).map((row) => ({
-        kind: "incident" as const,
-        day: row.day,
-        incidentType: row.incident_type as IncidentType,
-        durationDays: row.resumes_normal_at_day - row.day,
-      })),
-      ...(reactionRows ?? []).map((row) => ({
-        kind: "reaction" as const,
-        day: row.day,
-        category: row.category as RecipeType,
-      })),
-    ]
-
     return {
       profile: {
         signupDate: new Date(profile.signup_date).toISOString(),
@@ -484,8 +423,6 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
           activeIntervalDays: profile.active_interval_days ?? undefined,
           bhaIntervalDays: profile.bha_interval_days ?? undefined,
         },
-        pregnant: profile.pregnant ?? false,
-        prescriptionMeds: profile.prescription_meds ?? false,
         concern: (profile.concern as Concern) ?? "none",
         supportOwned: (profile.support_owned as SupportId[] | null) ?? [],
         activeIngredients: (profile.active_ingredients as string[] | null) ?? [],
@@ -498,7 +435,6 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
         gender: (profile.gender as string | null) ?? null,
       },
       completedDays,
-      events,
       loggedSlots,
       conditions,
     }
