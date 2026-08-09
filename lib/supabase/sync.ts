@@ -19,19 +19,80 @@ import type { UsedProduct } from "@/lib/use-diary"
  */
 let anonSessionPromise: Promise<string | null> | null = null
 
+/**
+ * [2026-08-09] GoTrue 클라이언트가 특별 취급하는 3개 에러코드. URL에 이 중 하나가 있으면
+ * @supabase/auth-js의 _initialize()가 스토리지의 기존 세션을 메모리로 복구하지 않고 그냥
+ * 리턴해버린다(SDK 소스 확인: node_modules/@supabase/auth-js/dist/main/GoTrueClient.js의
+ * _initialize() — "Don't remove existing session on URL login failure" 주석 부분). 세션
+ * 토큰 자체는 localStorage에 멀쩡히 남아있는데 GoTrue가 그걸 메모리로 안 읽어들이는 것뿐이라,
+ * getSession()이 null을 리턴해도 실제로는 "세션이 없는" 게 아니다.
+ */
+const RECOVERABLE_SESSION_ERROR_CODES = ["identity_already_exists", "identity_not_found", "single_identity_not_deletable"]
+
+/** [임시 디버그용, 검증 끝나면 제거] */
+function hasRecoverableSessionErrorInURL(): boolean {
+  if (typeof window === "undefined") return false
+  const params = new URLSearchParams(window.location.search)
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""))
+  const errorCode = params.get("error_code") ?? hashParams.get("error_code")
+  return errorCode !== null && RECOVERABLE_SESSION_ERROR_CODES.includes(errorCode)
+}
+
+/** localStorage에 supabase-js가 직접 저장해둔 세션 토큰을 읽는다. 스토리지 키는 supabase-js
+ * 기본 규칙(sb-<project-ref>-auth-token, SupabaseClient 생성자 로직과 동일)을 재현한다. */
+function readPersistedSessionTokens(): { access_token: string; refresh_token: string } | null {
+  if (typeof window === "undefined") return null
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!url) return null
+  try {
+    const projectRef = new URL(url).hostname.split(".")[0]
+    const raw = window.localStorage.getItem(`sb-${projectRef}-auth-token`)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (typeof parsed?.access_token === "string" && typeof parsed?.refresh_token === "string") {
+      return { access_token: parsed.access_token, refresh_token: parsed.refresh_token }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 async function createOrRecoverAnonSession(): Promise<string | null> {
   const supabase = getSupabaseClient()
   if (!supabase) return null
 
   try {
     const { data } = await supabase.auth.getSession()
-    if (data.session?.user.id) return data.session.user.id
+    if (data.session?.user.id) {
+      console.log("[createOrRecoverAnonSession] getSession()에서 바로 세션 찾음:", data.session.user.id)
+      return data.session.user.id
+    }
+
+    // getSession()이 null이어도, URL에 identity_already_exists류 에러가 있으면 GoTrue가
+    // 세션 복구를 스킵한 것뿐일 수 있다 — 새 익명 세션을 만들기 전에 로컬에 남아있는 기존
+    // 토큰으로 직접 복구를 먼저 시도한다.
+    if (hasRecoverableSessionErrorInURL()) {
+      console.log("[createOrRecoverAnonSession] URL에 identity_already_exists류 에러 감지 — 로컬 저장 토큰으로 세션 복구 시도")
+      const tokens = readPersistedSessionTokens()
+      if (tokens) {
+        const { data: restoreData, error: restoreError } = await supabase.auth.setSession(tokens)
+        if (!restoreError && restoreData.session?.user.id) {
+          console.log("[createOrRecoverAnonSession] setSession() 복구 성공, 새 익명 세션 생성 안 함:", restoreData.session.user.id)
+          return restoreData.session.user.id
+        }
+        console.log("[createOrRecoverAnonSession] setSession() 복구 실패, 새 익명 세션으로 폴백:", restoreError?.message)
+      } else {
+        console.log("[createOrRecoverAnonSession] 로컬에 저장된 세션 토큰을 못 찾음, 새 익명 세션으로 폴백")
+      }
+    }
 
     const { data: signInData, error } = await supabase.auth.signInAnonymously()
     if (error) {
       console.warn("[supabase] anonymous sign-in failed:", error.message)
       return null
     }
+    console.log("[createOrRecoverAnonSession] 새 익명 세션 생성됨:", signInData.user?.id)
     return signInData.user?.id ?? null
   } catch (err) {
     console.warn("[supabase] anonymous sign-in threw:", err)
