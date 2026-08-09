@@ -487,6 +487,7 @@
       "usedProducts": "사용 제품",
       "skinType": "피부 타입",
       "age": "나이대",
+      "gender": "성별",
       "concernTags": "뷰티 고민",
       "overlap": "성분 겹침",
       "tier": "진단 등급"

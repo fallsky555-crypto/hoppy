@@ -490,6 +490,7 @@
       "usedProducts": "Products used",
       "skinType": "Skin type",
       "age": "Age group",
+      "gender": "Gender",
       "concernTags": "Beauty concern",
       "overlap": "Ingredient overlap",
       "tier": "Diagnosis tier"

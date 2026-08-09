@@ -2,6 +2,7 @@ import type { Concern, SupportId } from "@/lib/routine-copy"
 
 export type SkinType = "sensitive" | "dry" | "combo" | "oily"
 export type Age = "teen" | "20s" | "30s" | "40s" | "50s" | "60s_plus"
+export type Gender = "female" | "male" | "other" | "unspecified"
 
 /**
  * Concern → i18n locale key 매핑
@@ -48,6 +49,17 @@ export const AGE_LABEL_KEYS: Record<Age, string> = {
   "40s": "settings.ageLabel.forties",
   "50s": "settings.ageLabel.fifties",
   "60s_plus": "settings.ageLabel.sixtyPlus",
+}
+
+/**
+ * Gender → i18n locale key 매핑. 온보딩 Step Q5에서 쓰는 라벨을 그대로 재사용.
+ * 사용: const label = t(GENDER_LABEL_KEYS[gender], locale)
+ */
+export const GENDER_LABEL_KEYS: Record<Gender, string> = {
+  female: "onboarding.stepQ.gender.female",
+  male: "onboarding.stepQ.gender.male",
+  other: "onboarding.stepQ.gender.other",
+  unspecified: "onboarding.stepQ.gender.unspecified",
 }
 
 /**

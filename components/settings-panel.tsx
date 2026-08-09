@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
-import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS, AGE_LABEL_KEYS, getFirstConcernTagLabel } from "@/lib/label-mappings"
+import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS, AGE_LABEL_KEYS, GENDER_LABEL_KEYS, getFirstConcernTagLabel } from "@/lib/label-mappings"
 import { ReportCard } from "@/components/report-card"
 
 interface SettingsPanelProps {
@@ -74,6 +74,12 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
               <span className="font-medium">{t("settings.reviewLabels.age", locale)}:</span>{" "}
               {diary.age && AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS]
                 ? t(AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS], locale)
+                : t("settings.notSet", locale)}
+            </p>
+            <p>
+              <span className="font-medium">{t("settings.reviewLabels.gender", locale)}:</span>{" "}
+              {diary.gender && GENDER_LABEL_KEYS[diary.gender as keyof typeof GENDER_LABEL_KEYS]
+                ? t(GENDER_LABEL_KEYS[diary.gender as keyof typeof GENDER_LABEL_KEYS], locale)
                 : t("settings.notSet", locale)}
             </p>
             <p>
