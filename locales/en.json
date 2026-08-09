@@ -576,6 +576,7 @@
     "selectHint": "(select multiple)",
     "selectedCount": "{{count}} selected",
     "conditionQuestion": "How did your skin feel after today's care?",
+    "conditionQuestionDynamic": "How did your {{concern}} feel after today's care?",
     "slots": {
       "exfoliation": "Exfoliation",
       "hydration": "Hydration",
@@ -608,6 +609,14 @@
       "saveButton": "Save",
       "saved": "Saved"
     }
+  },
+  "concernShortLabel": {
+    "DRY": "hydration",
+    "TONE": "tone",
+    "TEXTURE": "pores",
+    "TROUBLE": "breakouts",
+    "AGING": "firmness",
+    "BARRIER": "redness"
   },
   "ingredientWarnings": {
     "triple": {

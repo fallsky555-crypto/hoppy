@@ -8,6 +8,7 @@ import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
 import { saveUsageLog, saveFreeInputLog } from "@/lib/supabase/sync"
 import { getRecommendedSlot } from "@/lib/slot-mapping"
+import { getFirstConcernTagShortLabelKey } from "@/lib/label-mappings"
 
 export type SlotType = "exfoliation" | "hydration" | "active" | "barrier" | "sun_care"
 type SpecialCareType = "mask" | "trouble"
@@ -235,6 +236,13 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const todayRecipe = diary.getRecipeForDay(day)
   const recommendedSlot: SlotType | null = getRecommendedSlot(todayRecipe.type) as SlotType | null
 
+  const concernShortLabelKey = getFirstConcernTagShortLabelKey(diary.concernTags)
+  const conditionQuestion = concernShortLabelKey
+    ? interpolate(t("dailySlots.conditionQuestionDynamic", locale), {
+        concern: t(concernShortLabelKey, locale),
+      })
+    : t("dailySlots.conditionQuestion", locale)
+
   useEffect(() => {
     diaryRef.current = diary
   }, [diary])
@@ -411,7 +419,7 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
 
           {showConditionPrompt && (
             <div className="space-y-3 bg-secondary p-4 rounded-lg">
-              <p className="text-sm font-semibold text-foreground">{t("dailySlots.conditionQuestion", locale)}</p>
+              <p className="text-sm font-semibold text-foreground">{conditionQuestion}</p>
               <div className="flex gap-2">
                 <button
                   type="button"

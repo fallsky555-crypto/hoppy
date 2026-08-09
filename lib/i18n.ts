@@ -27,3 +27,16 @@ export function t(key: string, locale: Locale = "ko"): any {
 export function interpolate(text: string, variables: Record<string, string>): string {
   return text.replace(/\{\{(\w+)\}\}/g, (_, key) => variables[key] || `{{${key}}}`)
 }
+
+/** 한글 문자열 마지막 글자의 받침 유무 (체커 checker-ko.html의 동명 함수 이식) */
+export function hasBatchim(str: string): boolean {
+  if (!str) return false
+  const code = str.charCodeAt(str.length - 1)
+  if (code < 0xac00 || code > 0xd7a3) return false
+  return (code - 0xac00) % 28 !== 0
+}
+
+/** 받침 유무에 따라 조사를 고른다. 예: josa("모공", "이", "가") */
+export function josa(str: string, withBatchim: string, noBatchim: string): string {
+  return hasBatchim(str) ? withBatchim : noBatchim
+}

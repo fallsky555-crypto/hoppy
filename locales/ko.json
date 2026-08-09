@@ -573,6 +573,7 @@
     "selectHint": "(복수 선택 가능)",
     "selectedCount": "{{count}}개 선택했어요",
     "conditionQuestion": "오늘 하신 케어, 피부 어땠어요?",
+    "conditionQuestionDynamic": "오늘 하신 케어, {{concern}}엔 어땠어요?",
     "slots": {
       "exfoliation": "각질케어",
       "hydration": "수분케어",
@@ -605,6 +606,14 @@
       "saveButton": "저장",
       "saved": "저장했어요"
     }
+  },
+  "concernShortLabel": {
+    "DRY": "속건조",
+    "TONE": "칙칙함",
+    "TEXTURE": "모공",
+    "TROUBLE": "트러블",
+    "AGING": "탄력",
+    "BARRIER": "홍조"
   },
   "ingredientWarnings": {
     "triple": {

@@ -84,6 +84,32 @@ export function getAgeLabel(age: Age | string | null | undefined): string | null
 }
 
 /**
+ * concernTags 원본 코드값(체커/온보딩 Q2 공용) → 단문용 짧은 라벨 i18n key.
+ * CONCERN_LABEL_KEYS(단일어)와 별개로, "오늘 하신 케어, {concern}엔 어땠어요?" 같은
+ * 문장에 자연스럽게 들어가도록 기존 복합어 라벨(예: "오돌토돌 결·모공")에서
+ * 핵심 단어만 뽑은 축약형.
+ */
+export const CONCERN_TAG_SHORT_LABEL_KEYS: Record<string, string> = {
+  DRY: "concernShortLabel.DRY",
+  TONE: "concernShortLabel.TONE",
+  TEXTURE: "concernShortLabel.TEXTURE",
+  TROUBLE: "concernShortLabel.TROUBLE",
+  AGING: "concernShortLabel.AGING",
+  BARRIER: "concernShortLabel.BARRIER",
+}
+
+/**
+ * concernTags (콤마 구분 문자열) → 첫 번째 태그의 단문용 짧은 라벨 i18n key 반환
+ * 예: "TEXTURE,TROUBLE" → CONCERN_TAG_SHORT_LABEL_KEYS["TEXTURE"]
+ */
+export function getFirstConcernTagShortLabelKey(concernTags: string | null | undefined): string | null {
+  if (!concernTags) return null
+  const firstTag = concernTags.split(",")[0]?.trim()
+  if (!firstTag) return null
+  return CONCERN_TAG_SHORT_LABEL_KEYS[firstTag] ?? null
+}
+
+/**
  * concernTags (콤마 구분 문자열) → 첫 번째 태그의 i18n locale key 반환
  * 예: "DRY,TONE" → CONCERN_LABEL_KEYS["dry"]
  */
