@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useLocale } from "@/lib/locale-context"
-import type { Locale } from "@/lib/locale-context"
+import type { Locale } from "@/lib/i18n"
 import { t, interpolate } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 

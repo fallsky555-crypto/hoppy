@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Check, Smile, Meh, Frown, ChevronDown } from "lucide-react"
 import { t, interpolate } from "@/lib/i18n"
+import type { Locale } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
 import { saveUsageLog, saveFreeInputLog } from "@/lib/supabase/sync"
@@ -91,7 +92,7 @@ interface SpecialCareCardProps {
   onToggle: () => void
   selectedSpecialCare: Set<SpecialCareType>
   onToggleSpecialCare: (id: SpecialCareType) => void
-  locale: string
+  locale: Locale
 }
 
 function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSpecialCare, locale }: SpecialCareCardProps) {
@@ -159,7 +160,7 @@ interface FreeInputCardProps {
   onChange: (value: string) => void
   onSave: () => void
   justSaved: boolean
-  locale: string
+  locale: Locale
 }
 
 function FreeInputCard({ isExpanded, onToggle, value, onChange, onSave, justSaved, locale }: FreeInputCardProps) {

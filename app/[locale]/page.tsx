@@ -18,9 +18,9 @@ import { getAgeLabel, getFirstConcernTagLabel } from "@/lib/label-mappings"
 import { t } from "@/lib/i18n"
 
 interface PageProps {
-  params: {
+  params: Promise<{
     locale: 'ko' | 'en'
-  }
+  }>
 }
 
 function PageContent({ locale }: { locale: 'ko' | 'en' }) {

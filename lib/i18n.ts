@@ -18,7 +18,7 @@ export function getMessages(locale: Locale = "ko") {
  */
 export function t(key: string, locale: Locale = "ko"): any {
   const msg = getMessages(locale)
-  return key.split(".").reduce((obj, k) => obj?.[k], msg)
+  return key.split(".").reduce((obj: any, k) => obj?.[k], msg)
 }
 
 /**

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { t } from "@/lib/i18n"
-import type { Locale } from "@/lib/locale-context"
+import type { Locale } from "@/lib/i18n"
 
 interface DailyCoverProps {
   locale: Locale

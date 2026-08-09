@@ -1,15 +1,15 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { Playfair_Display, Noto_Serif_KR } from 'next/font/google'
-import { LocalFont } from 'next/font/local'
+import LocalFont from 'next/font/local'
 import { t } from '@/lib/i18n'
 import { LocaleProvider } from '@/lib/locale-provider'
 
 interface LocaleLayoutProps {
   children: React.ReactNode
-  params: {
-    locale: 'ko' | 'en'
-  }
+  params: Promise<{
+    locale: string
+  }>
 }
 
 export async function generateMetadata({ params }: LocaleLayoutProps): Promise<Metadata> {

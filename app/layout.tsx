@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Noto_Serif_KR, Gowun_Batang } from 'next/font/google'
-import { LocalFont } from 'next/font/local'
+import LocalFont from 'next/font/local'
 import './globals.css'
 
 export const metadata: Metadata = {

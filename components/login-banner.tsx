@@ -77,15 +77,18 @@ export function LoginBanner() {
     const oauthError = consumeOAuthErrorFromURL()
     if (oauthError) {
       if (oauthError.errorCode === "identity_already_exists" && oauthError.provider) {
+        // narrowing한 provider를 변수로 고정 — 클로저 안에서 oauthError.provider를 다시
+        // 참조하면 TS가 narrowing을 못 따라가 LoginProvider | null로 되돌아간다
+        const provider = oauthError.provider
         // identity_already_exists → 로컬 온보딩 데이터 우선 확인
         if (hasLocalOnboardingData()) {
           // 로컬 데이터가 있으면 사용자 확인 필수 (원격 체크는 스킵)
-          setPendingLocalDataLossProvider(oauthError.provider)
+          setPendingLocalDataLossProvider(provider)
           setConfirmLocalDataLossDialogOpen(true)
           setVisible(true)
         } else {
           // 로컬 데이터가 없으면 기존 원격 체크 로직 (자동 폴백 가능)
-          checkAnonymousDataLoss(oauthError.provider).then(({ hasData, details }) => {
+          checkAnonymousDataLoss(provider).then(({ hasData, details }) => {
             if (cancelled) return
 
             // 데이터가 없으면 자동 폴백
@@ -96,7 +99,7 @@ export function LoginBanner() {
               // 1.5초 후 자동 폴백
               setTimeout(() => {
                 if (!cancelled) {
-                  signInExistingIdentity(oauthError.provider).then((fallbackResult) => {
+                  signInExistingIdentity(provider).then((fallbackResult) => {
                     if (fallbackResult.error) {
                       setError(t("login.error.signin", locale))
                     }
@@ -109,7 +112,7 @@ export function LoginBanner() {
 
             // 데이터가 있으면 다이얼로그 표시
             setAnonymousDataDetails(details)
-            setPendingFallbackProvider(oauthError.provider)
+            setPendingFallbackProvider(provider)
             setIsDataLossDialogOpen(true)
             setVisible(true)
           }).catch((err) => {
@@ -117,7 +120,7 @@ export function LoginBanner() {
               console.warn("[Login Fallback] Error checking data loss:", err)
               // 데이터 확인 실패 시 안전하게 다이얼로그 표시 (데이터가 있을 수도)
               setAnonymousDataDetails({ hasProfile: false, entryCount: 0, logCount: 0 })
-              setPendingFallbackProvider(oauthError.provider)
+              setPendingFallbackProvider(provider)
               setIsDataLossDialogOpen(true)
               setVisible(true)
             }

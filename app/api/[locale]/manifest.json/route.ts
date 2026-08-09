@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ locale: 'ko' | 'en' }> }
+  { params }: { params: Promise<{ locale: string }> }
 ) {
-  const { locale } = await params
+  const { locale } = await params as { locale: 'ko' | 'en' }
 
   const manifests: Record<'ko' | 'en', object> = {
     ko: {
