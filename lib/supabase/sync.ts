@@ -39,23 +39,61 @@ function hasRecoverableSessionErrorInURL(): boolean {
 }
 
 /** localStorage에 supabase-js가 직접 저장해둔 세션 토큰을 읽는다. 스토리지 키는 supabase-js
- * 기본 규칙(sb-<project-ref>-auth-token, SupabaseClient 생성자 로직과 동일)을 재현한다. */
+ * 기본 규칙(sb-<project-ref>-auth-token, SupabaseClient 생성자 로직과 동일)을 재현한다.
+ * [임시 디버그용, 검증 끝나면 제거] 어느 단계에서 왜 실패했는지 구분해서 로그를 남긴다. */
 function readPersistedSessionTokens(): { access_token: string; refresh_token: string } | null {
   if (typeof window === "undefined") return null
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  if (!url) return null
-  try {
-    const projectRef = new URL(url).hostname.split(".")[0]
-    const raw = window.localStorage.getItem(`sb-${projectRef}-auth-token`)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    if (typeof parsed?.access_token === "string" && typeof parsed?.refresh_token === "string") {
-      return { access_token: parsed.access_token, refresh_token: parsed.refresh_token }
-    }
-    return null
-  } catch {
+  if (!url) {
+    console.log("[readPersistedSessionTokens] NEXT_PUBLIC_SUPABASE_URL이 비어있음")
     return null
   }
+
+  let storageKey: string
+  try {
+    const projectRef = new URL(url).hostname.split(".")[0]
+    storageKey = `sb-${projectRef}-auth-token`
+  } catch (err) {
+    console.log("[readPersistedSessionTokens] NEXT_PUBLIC_SUPABASE_URL 파싱 실패:", url, err)
+    return null
+  }
+
+  let raw: string | null
+  try {
+    raw = window.localStorage.getItem(storageKey)
+  } catch (err) {
+    console.log(`[readPersistedSessionTokens] localStorage.getItem("${storageKey}") 자체가 실패:`, err)
+    return null
+  }
+
+  console.log(`[readPersistedSessionTokens] localStorage["${storageKey}"] raw 값:`, raw)
+
+  if (!raw) {
+    console.log("[readPersistedSessionTokens] 이 스토리지 키 자체가 없음(raw === null)")
+    return null
+  }
+
+  let parsed: any
+  try {
+    parsed = JSON.parse(raw)
+  } catch (err) {
+    console.log("[readPersistedSessionTokens] JSON.parse 실패:", err)
+    return null
+  }
+
+  const hasAccessToken = typeof parsed?.access_token === "string"
+  const hasRefreshToken = typeof parsed?.refresh_token === "string"
+  console.log(
+    "[readPersistedSessionTokens] 파싱 성공 — access_token 존재:", hasAccessToken,
+    ", refresh_token 존재:", hasRefreshToken,
+    ", parsed 최상위 키 목록:", Object.keys(parsed ?? {}),
+  )
+
+  if (hasAccessToken && hasRefreshToken) {
+    return { access_token: parsed.access_token, refresh_token: parsed.refresh_token }
+  }
+  return null
 }
 
 async function createOrRecoverAnonSession(): Promise<string | null> {
