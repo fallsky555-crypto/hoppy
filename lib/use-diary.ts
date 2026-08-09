@@ -81,6 +81,18 @@ interface DiaryState {
 
 /** 로그아웃 시 로컬 캐시를 지우는 용도로도 쓰인다(login-banner.tsx) */
 export const STORAGE_KEY = "hoppy-skin-diary-v1"
+/**
+ * [2026-08-09] STORAGE_KEY에 저장된 진단 데이터가 어느 userId 소유인지 기록해두는 태그.
+ * 다른 계정으로 로그인 전환(signInExistingIdentity 등)했을 때, 하이드레이션이 "로컬에
+ * 뭐라도 있으면 무조건 그걸 신뢰"하던 기존 방식이 소유자 확인을 전혀 안 해서 다른 계정의
+ * 원격 기록을 못 불러오던 버그의 수정 — 태그 없는(이 수정 이전) 로컬 데이터는 하위호환으로
+ * "내 것"으로 간주한다.
+ */
+const OWNER_STORAGE_KEY = "hoppy-skin-diary-v1-owner"
+/** 소유자 불일치로 원격 데이터를 우선하게 될 때, 실제 기록이 있던 로컬 데이터를 조용히
+ * 버리지 않고 백업해두는 키 접두사. UI 노출은 없고, 필요 시 개발자가 브라우저 스토리지에서
+ * 직접 복구할 수 있는 수준의 안전망이다. */
+const ORPHANED_BACKUP_PREFIX = "hoppy-skin-diary-v1-orphaned-"
 
 function todayISO() {
   return new Date().toISOString()
@@ -140,6 +152,33 @@ function loadLocalState(): DiaryState | null {
     }
   } catch {
     return null
+  }
+}
+
+/** STORAGE_KEY의 로컬 데이터가 어느 userId 소유인지 읽는다. 태그가 없으면(이 수정 이전
+ * 데이터, 또는 애초에 저장된 적 없음) null을 반환한다. */
+function loadLocalOwner(): string | null {
+  if (typeof window === "undefined") return null
+  try {
+    return window.localStorage.getItem(OWNER_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+/** 소유자가 다른 로컬 데이터를 원격 데이터로 대체하기 전, 실제 기록이 있으면 별도 키로
+ * 백업해 조용히 유실되지 않게 한다. UI로 노출하지 않는 안전망이라 console.warn으로만 남긴다. */
+function backupOrphanedLocalState(localState: DiaryState): void {
+  if (typeof window === "undefined") return
+  try {
+    const backupKey = `${ORPHANED_BACKUP_PREFIX}${Date.now()}`
+    window.localStorage.setItem(backupKey, JSON.stringify(localState))
+    console.warn(
+      `[useDiary] 로컬 기록(${localState.loggedDays.length}일치)이 현재 로그인 계정 소유가 아니라 ` +
+        `원격 데이터로 대체됩니다. 백업: localStorage["${backupKey}"]`
+    )
+  } catch {
+    // 백업 실패해도 원격 데이터 로드는 계속 진행 — 백업은 최선 노력 수준의 안전망이다
   }
 }
 
@@ -322,28 +361,60 @@ export function useDiary() {
   // 체커에서 돌아온 concern/supportOwned를 임시 보류 (새로고침하면 사라짐, localStorage 저장 X)
   const [pendingCheckerContext, setPendingCheckerContext] = useState<ReturnType<typeof extractCheckerContext>>(null)
 
+  // Supabase 익명 세션 — localStorage가 여전히 1차 캐시이고, 이건 기기 간 복원용 백엔드다.
+  // 아래 하이드레이션 effect도 소유자 비교를 위해 독립적으로 ensureAnonSession()을 호출하는데,
+  // 두 곳 다 같은 캐시된 promise(anonSessionPromise)를 공유해서 중복 요청은 아니다.
+  const [userId, setUserId] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
-    const localState = loadLocalState()
-    const urlContext = contextFromURL()
-
-    if (localState) {
-      // 이 기기에 이미 진행 중인 로컬 기록이 있다 — joinDate/진행 기록은 그대로 두고,
-      // 체커에서 돌아온 경우라면 concern/support 같은 부가 정보만 갱신한다
-      // URL 파라미터에서 checkerContext를 먼저 추출 (clearContextURLParams 전에)
-      const checkerCtx = extractCheckerContext(urlContext)
-      setState(applyURLContext(localState, urlContext))
-      setPendingCheckerContext(checkerCtx)
-      if (urlContext) clearContextURLParams()
-      setHydrated(true)
-      return
+    ensureAnonSession().then((id) => {
+      if (!cancelled) setUserId(id)
+    })
+    return () => {
+      cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
 
     ;(async () => {
-      // 이 기기는 로컬 기록이 없다 — 로그인 계정이면 다른 기기에서 이어오던 원격 기록이
-      // 있는지 먼저 확인한다 (없으면 새 계정으로 보고 기본 워크북 시퀀스를 새로 시작)
+      const localState = loadLocalState()
+      const urlContext = contextFromURL()
+
+      // [2026-08-09] 로컬 데이터를 신뢰하기 전에 지금 로그인된 userId부터 확인한다 — 이전엔
+      // 로컬에 뭐라도 있으면 소유자 확인 없이 무조건 그걸 썼는데, 다른 계정으로 로그인
+      // 전환(signInExistingIdentity 등)했을 때 그 계정의 원격 기록을 영영 못 불러오는
+      // 버그가 있었다(로컬 데이터가 이전 세션/다른 계정 것이어도 구분 못 함).
       const userId = await ensureAnonSession()
       if (cancelled) return
+
+      const localOwner = loadLocalOwner()
+      // userId를 못 구했으면(Supabase 미설정 등) 소유자 비교가 불가능하니 기존 동작대로
+      // 로컬을 그대로 신뢰한다. 태그가 없는 로컬 데이터(이 수정 이전 유저)도 하위호환으로
+      // "내 것"으로 간주한다.
+      const ownerMatches = !userId || localOwner === null || localOwner === userId
+
+      if (localState && ownerMatches) {
+        // 이 기기에 이미 진행 중인 로컬 기록이 있고, 지금 로그인된 계정 소유가 맞다 —
+        // joinDate/진행 기록은 그대로 두고, 체커에서 돌아온 경우라면 concern/support 같은
+        // 부가 정보만 갱신한다
+        const checkerCtx = extractCheckerContext(urlContext)
+        setState(applyURLContext(localState, urlContext))
+        setPendingCheckerContext(checkerCtx)
+        if (urlContext) clearContextURLParams()
+        setHydrated(true)
+        return
+      }
+
+      if (localState && !ownerMatches && localState.loggedDays.length > 0) {
+        // 소유자가 다른데 로컬에 실제 기록이 있다 — 조용히 버리지 않고 별도 키로 백업해둔다
+        backupOrphanedLocalState(localState)
+      }
+
+      // 로컬 기록이 없거나(신규 기기) 소유자가 다르다(계정 전환) — 로그인 계정이면 다른
+      // 기기에서 이어오던 원격 기록이 있는지 확인한다 (없으면 새 계정으로 보고 기본 워크북
+      // 시퀀스를 새로 시작)
       const remote = userId ? await loadRemoteState(userId) : null
       if (cancelled) return
 
@@ -385,22 +456,13 @@ export function useDiary() {
     if (!hydrated) return
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      // 소유자 태그를 상태와 함께 갱신한다 — userId가 아직 안 풀렸으면(드문 타이밍) 이번엔
+      // 건너뛰고 userId effect가 값을 채운 뒤 이 effect가 재실행될 때 같이 써진다.
+      if (userId) window.localStorage.setItem(OWNER_STORAGE_KEY, userId)
     } catch {
       // 저장 실패는 무시 (사파리 프라이빗 모드 등)
     }
-  }, [state, hydrated])
-
-  // Supabase 익명 세션 — localStorage가 여전히 1차 캐시이고, 이건 기기 간 복원용 백엔드다
-  const [userId, setUserId] = useState<string | null>(null)
-  useEffect(() => {
-    let cancelled = false
-    ensureAnonSession().then((id) => {
-      if (!cancelled) setUserId(id)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  }, [state, hydrated, userId])
 
   // 캐시 무효화. 엔진 로직이 바뀔 때마다 CURRENT_ENGINE_VERSION을 올리도록 강제하는 릴리스 체크포인트다.
   useEffect(() => {

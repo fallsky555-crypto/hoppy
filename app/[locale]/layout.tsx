@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: LocaleLayoutProps): Promise<M
   return {
     title: t('metadata.title', locale),
     description: t('metadata.description', locale),
-    manifest: `/${locale}/manifest.json`,
+    manifest: `/api/${locale}/manifest.json`,
   }
 }
 
