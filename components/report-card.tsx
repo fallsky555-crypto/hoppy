@@ -3,9 +3,9 @@
 import { useMemo } from "react"
 import { AlertCircle } from "lucide-react"
 import { getIngredientGuide } from "@/lib/ingredient-guide"
-import { getTrendStat, getDonutChartValues, getAgeLabel } from "@/lib/trend-stats"
+import { getTrendStat, getDonutChartValues } from "@/lib/trend-stats"
 import { getIngredientWarning } from "@/lib/ingredient-warnings"
-import { getFirstConcernTagLabel } from "@/lib/label-mappings"
+import { getFirstConcernTagLabel, getAgeLabel } from "@/lib/label-mappings"
 import { t, interpolate, type Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
