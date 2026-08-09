@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Noto_Serif_KR, Gowun_Batang } from 'next/font/google'
 import LocalFont from 'next/font/local'
+import { AuthTokenWatcherInit } from '@/lib/debug/auth-token-watcher-init'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -66,6 +67,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
       </head>
       <body className="bg-background font-sans antialiased">
+        <AuthTokenWatcherInit />
         {children}
       </body>
     </html>
