@@ -46,7 +46,15 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   return (
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
-        {!coverClosed && <DailyCover locale={locale} onClose={() => setCoverClosed(true)} />}
+        {!coverClosed && (
+          <DailyCover
+            locale={locale}
+            name={diary.name}
+            joinDate={diary.joinDate}
+            onSaveName={diary.setName}
+            onClose={() => setCoverClosed(true)}
+          />
+        )}
         <InstallBanner />
 
         {/* <ProgressBar30 loggedDays={diary.loggedDays} /> */}

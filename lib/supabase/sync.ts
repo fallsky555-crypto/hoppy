@@ -265,6 +265,18 @@ export async function saveGender(userId: string, signupDate: string, gender: str
   if (error) console.warn("[supabase] saveGender failed:", error.message)
 }
 
+/** 다이어리 커버에서 입력한 이름을 diary_profiles에 반영한다 */
+export async function saveName(userId: string, signupDate: string, name: string | null): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), name },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveName failed:", error.message)
+}
+
 /** 체커의 beauty_concerns을 diary_profiles.concern_tags에 반영한다 */
 export async function saveConcernTags(userId: string, signupDate: string, concernTags: string | null): Promise<void> {
   const supabase = getSupabaseClient()

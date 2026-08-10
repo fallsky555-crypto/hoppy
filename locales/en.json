@@ -678,6 +678,11 @@
     "description": "Track your daily skincare routine and observe the changes in your skin over time. Log each step, note what works for you, and learn your own skin.",
     "tagline": "myroutinediet · 30 days from your start date, at your own pace"
   },
+  "dailyCover": {
+    "namePlaceholder": "Leave your name (optional)",
+    "nameSave": "Save and continue",
+    "recordSuffix": "'s Skincare Journal"
+  },
   "report30day": {
     "title": "30-Day Expert Analysis Report",
     "section_goal": "This Month's Goal",

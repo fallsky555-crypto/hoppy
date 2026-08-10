@@ -19,6 +19,7 @@ import {
   saveEngineVersion,
   saveGender,
   saveHabitLog,
+  saveName,
   saveOverlap,
   saveSkinType,
   saveTier,
@@ -77,6 +78,8 @@ interface DiaryState {
   tier: string | null
   /** 체커 Q1에서 선택한 성별 (female/male/other/unspecified) */
   gender: string | null
+  /** 다이어리 커버에서 입력한 이름 (선택, 미입력 시 null) */
+  name: string | null
 }
 
 /** 로그아웃 시 로컬 캐시를 지우는 용도로도 쓰인다(login-banner.tsx) */
@@ -119,6 +122,7 @@ function freshState(): DiaryState {
     overlap: null,
     tier: null,
     gender: null,
+    name: null,
   }
 }
 
@@ -149,6 +153,7 @@ function loadLocalState(): DiaryState | null {
       overlap: parsed.overlap ?? null,
       tier: parsed.tier ?? null,
       gender: parsed.gender ?? null,
+      name: parsed.name ?? null,
     }
   } catch {
     return null
@@ -537,6 +542,12 @@ export function useDiary() {
     saveGender(userId, state.joinDate, state.gender)
   }, [userId, hydrated, state.joinDate, state.gender])
 
+  // 다이어리 커버에서 입력한 이름
+  useEffect(() => {
+    if (!userId || !hydrated) return
+    saveName(userId, state.joinDate, state.name)
+  }, [userId, hydrated, state.joinDate, state.name])
+
   // 체커의 beauty_concerns
   useEffect(() => {
     if (!userId || !hydrated) return
@@ -585,6 +596,11 @@ export function useDiary() {
   /** Step Q에서 성별을 직접 답한 경우 로컬 state에 반영한다. skinType/concernTags와 동일한 이유로 여기서 직접 Supabase에 쓰지 않는다 (위 saveGender sync effect가 감시) */
   const setGender = useCallback((gender: string | null) => {
     setState((prev) => ({ ...prev, gender }))
+  }, [])
+
+  /** 다이어리 커버에서 이름을 입력/스킵한 경우 로컬 state에 반영한다 */
+  const setName = useCallback((name: string | null) => {
+    setState((prev) => ({ ...prev, name }))
   }, [])
 
   /** Step Q에서 나이대를 직접 답한 경우 로컬 state에 반영한다. setGender와 동일한 이유로 여기서 직접 Supabase에 쓰지 않는다 (위 saveAge sync effect가 감시) */
@@ -734,6 +750,8 @@ export function useDiary() {
     tier: state.tier,
     gender: state.gender,
     setGender,
+    name: state.name,
+    setName,
     userId,
     joinDate: state.joinDate,
     startFresh,
