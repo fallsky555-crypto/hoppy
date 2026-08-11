@@ -358,14 +358,6 @@
       "skip": "Skip",
       "bridge": "Let me just check your routine strength once more."
     },
-    "ingredientCheck": {
-      "question": "Which ingredients do you usually use for active care?",
-      "option_vitc": "Vitamin C",
-      "option_ret": "Retinol",
-      "option_nia": "Niacinamide",
-      "option_unknown": "I'm not sure",
-      "next": "Next"
-    },
     "mappingResult": {
       "mapping_with_interval": "You said every {{days}} days, so",
       "mapping_never_uses": "You said active care is rare, so",
@@ -392,36 +384,6 @@
       "cica": "Cica",
       "nia": "Niacinamide",
       "cer": "Ceramide"
-    },
-    "stepQ": {
-      "title": "A few basics for your diagnosis",
-      "subtitle": "Tell us about your skin",
-      "q1Label": "Q1. Skin type",
-      "q2Label": "Q2. Main concerns (multiple choice)",
-      "q3Label": "Q3. What do you mainly use for concern care?",
-      "q4Label": "Q4. How's your skin feeling today?",
-      "q5Label": "Q5. What's your gender?",
-      "q6Label": "Q6. What's your age range?",
-      "gender": {
-        "female": "Female",
-        "male": "Male",
-        "other": "Other",
-        "unspecified": "Prefer not to say"
-      },
-      "concern": {
-        "dry": "Dehydration · tightness",
-        "tone": "Dullness · dark spots",
-        "texture": "Rough texture · pores",
-        "trouble": "Sensitivity · breakouts",
-        "aging": "Loss of firmness · wrinkles",
-        "barrier": "Redness · weakened barrier"
-      },
-      "ingredient": {
-        "vitc": "Vitamin C",
-        "retinol": "Retinol",
-        "niacinamide": "Niacinamide",
-        "unknown": "Not sure"
-      }
     }
   },
   "completionFeedback": {
@@ -508,6 +470,12 @@
       "forties": "40s",
       "fifties": "50s",
       "sixtyPlus": "60s and up"
+    },
+    "genderLabel": {
+      "female": "Female",
+      "male": "Male",
+      "other": "Other",
+      "unspecified": "Prefer not to say"
     }
   },
   "recipe_card": {
@@ -535,28 +503,6 @@
     "completion_aria_label": "Course complete",
     "close": "Close"
   },
-  "bridgeInterstitial": {
-    "step1": {
-      "label": "2026 SKIN JOURNAL",
-      "title": "Load your analysis\nresults now",
-      "button": "Load",
-      "consent_label": "[Required] I agree to the collection and use of my personal data",
-      "consent_link": "View details"
-    },
-    "step2": {
-      "title_with_name": "{{name}}'s Ingredient Analysis",
-      "title_without_name": "Your Ingredient Analysis",
-      "concern_description": "Your concern is {{concern}}",
-      "recommended_ingredient": "Recommended ingredient: {{ingredient}}",
-      "record_section_title": "Today's Progress",
-      "record_hint": "Day {{day}} / 30",
-      "next_button_description": "Just one gentle tap, and we'll guide you through the rest. No need to remember alone—just take one light step.",
-      "next_button": "Let's begin"
-    },
-    "head": "You've seen the result.\nNow I'll remember it for you.",
-    "sub": "In 30 days, we'll check together if this combo actually worked.",
-    "button": "Start logging"
-  },
   "installBanner": {
     "title": "Add to home screen for faster access",
     "iosInstruction": "Tap share, then select 'Add to Home Screen'",
@@ -571,6 +517,8 @@
   "dailySlots": {
     "headline": "What did you do for your skin today?",
     "ariaLabel": "Select today's slots",
+    "dailyCareLabel": "Daily Care",
+    "situationalCareLabel": "Situational Care",
     "todayBadge": "+ Recommended today",
     "recommendationLabel": "A recommended care routine. Adjust based on your skin's condition",
     "selectPrompt": "Select what you did today",
@@ -596,6 +544,12 @@
       "subtitle": "Sheet mask, troubleshooting, etc.",
       "option_mask": "Sheet Mask",
       "option_trouble": "Troubleshooting"
+    },
+    "concernCare": {
+      "option_vitc": "Vitamin C",
+      "option_ret": "Retinol",
+      "option_nia": "Niacinamide",
+      "option_unknown": "Not sure"
     },
     "recordButton": {
       "done": "Today's record complete!",
@@ -676,9 +630,9 @@
     "revisitSettingsButton": "Check anytime in Settings > My info",
     "revisitBrandFooter": "Your skin's record, Hoppy",
     "emptyStateTitle": "Not enough diagnosis info yet",
-    "emptyStateDescLine1": "Add more answers in the checker",
+    "emptyStateDescLine1": "Take the skin checker first",
     "emptyStateDescLine2": "for more accurate info",
-    "emptyStateCta": "Revisit the checker"
+    "emptyStateCta": "Go to the skin checker"
   },
   "metadata": {
     "title": "Hoppy Skin Diary · Your Daily Skin Record",

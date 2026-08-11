@@ -9,6 +9,7 @@ import {
 import {
   ensureAnonSession,
   loadRemoteState,
+  saveActiveIngredients,
   saveAge,
   saveCalendar,
   saveConcern,
@@ -566,6 +567,12 @@ export function useDiary() {
     saveTier(userId, state.joinDate, state.tier)
   }, [userId, hydrated, state.joinDate, state.tier])
 
+  // 데일리슬롯 "고민케어" 드롭다운에서 누적된 성분 목록
+  useEffect(() => {
+    if (!userId || !hydrated) return
+    saveActiveIngredients(userId, state.joinDate, state.activeIngredients)
+  }, [userId, hydrated, state.joinDate, state.activeIngredients])
+
   const getRecipeForDay = useCallback(
     (day: number): Recipe => {
       const entry = calendar.find((e) => e.day === day)
@@ -609,13 +616,27 @@ export function useDiary() {
   }, [])
 
   /**
-   * 온보딩 4단계 "시작하기" 전용. activeIntervalDays/bhaIntervalDays를 항상 같은
+   * 데일리슬롯 "고민케어" 드롭다운에서 성분을 선택하면 호출된다. 그날 기록을 지워도(체크
+   * 해제) 이 목록에서는 빼지 않는다 — 한 번이라도 쓴다고 답한 성분은 성분 경고 카드 등에서
+   * 계속 참고할 값이라 "이 사람이 지금까지 답한 성분들의 누적 집합"으로 취급한다.
+   */
+  const addActiveIngredient = useCallback((ingredientId: string) => {
+    setState((prev) =>
+      prev.activeIngredients.includes(ingredientId)
+        ? prev
+        : { ...prev, activeIngredients: [...prev.activeIngredients, ingredientId] },
+    )
+  }, [])
+
+  /**
+   * 온보딩 consent 단계 전용. activeIntervalDays/bhaIntervalDays를 항상 같은
    * 값으로 한 번에 채워 넣고(온보딩 판단 기준이 "둘 다 있는지"라 절대 따로 저장되면
    * 안 된다), 가입일(Day 1)도 이 순간으로 스탬프한다 — 온보딩을 보는 동안은 아직
-   * Day 1이 시작되지 않은 것으로 취급한다.
+   * Day 1이 시작되지 않은 것으로 취급한다. StepQ가 사라지면서 activeIngredients/condition은
+   * 더 이상 온보딩 시점에 묻지 않는다(고민케어 성분은 데일리슬롯에서, 컨디션은 daily_checkin에서).
    */
   const completeOnboarding = useCallback(
-    async (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => {
+    async (dataConsent: boolean) => {
       const now = todayISO()
       setState((prev) => ({
         ...prev,
@@ -623,12 +644,10 @@ export function useDiary() {
         settings: { activeIntervalDays: DEFAULT_ACTIVE_INTERVAL_DAYS, bhaIntervalDays: DEFAULT_BHA_INTERVAL_DAYS },
         dataConsent,
         dataConsentAt: dataConsent ? now : null,
-        activeIngredients,
       }))
       if (userId) {
         // diary_profiles 행이 반드시 먼저 생성되도록 await
-        await saveContextFlags(userId, now, { dataConsent, activeIngredients })
-        saveConditionLog(userId, 0, condition, "onboarding")
+        await saveContextFlags(userId, now, { dataConsent })
 
         // 이후 used_products 저장 (fire-and-forget, 위의 await로 안전성 보장)
         // Day 0 전용: 갱신은 별도 self-report 기능에서 처리 예정
@@ -739,6 +758,7 @@ export function useDiary() {
     concern: state.concern,
     supportOwned: state.supportOwned,
     activeIngredients: state.activeIngredients,
+    addActiveIngredient,
     usedProducts: state.usedProducts,
     skinType: state.skinType,
     setSkinType,

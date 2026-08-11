@@ -156,6 +156,7 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
               skinType={diary.skinType}
               concernTags={diary.concernTags}
               activeIngredients={diary.activeIngredients}
+              onClose={() => setShowReportCard(false)}
             />
           </div>
         </div>

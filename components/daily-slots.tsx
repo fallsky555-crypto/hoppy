@@ -14,9 +14,11 @@ import { DailyRewardCard, type RewardCardData } from "@/components/daily-reward-
 
 export type SlotType = "exfoliation" | "hydration" | "active" | "barrier" | "sun_care"
 type SpecialCareType = "mask" | "trouble"
+type ConcernCareIngredient = "vitc" | "ret" | "nia" | "unknown"
 
 const ALL_SLOT_IDS: SlotType[] = ["sun_care", "exfoliation", "hydration", "active", "barrier"]
 const ALL_SPECIAL_CARE_IDS: SpecialCareType[] = ["mask", "trouble"]
+const ALL_CONCERN_CARE_INGREDIENTS: ConcernCareIngredient[] = ["vitc", "ret", "nia", "unknown"]
 
 interface Slot {
   id: SlotType
@@ -37,12 +39,31 @@ const SPECIAL_CARE_TAGS: Record<SpecialCareType, string> = {
   trouble: "Trouble",
 }
 
+const CONCERN_CARE_TAGS: Record<ConcernCareIngredient, string> = {
+  vitc: "VitaminC",
+  ret: "Retinol",
+  nia: "Niacinamide",
+  unknown: "Unknown",
+}
+
+const CONCERN_CARE_EMOJI: Record<ConcernCareIngredient, string> = {
+  vitc: "🍊",
+  ret: "🌙",
+  nia: "🤍",
+  unknown: "❓",
+}
+
 const SUN_CARE_SLOT: Slot = { id: "sun_care", emoji: "☀️", labelKey: "dailySlots.slots.sun_care" }
 
-const OTHER_SLOTS: Slot[] = [
-  { id: "exfoliation", emoji: "✨", labelKey: "dailySlots.slots.exfoliation" },
+/** 매일 케어 그룹 — 완료 토글만 있는 단순 슬롯 */
+const DAILY_SLOTS: Slot[] = [
+  SUN_CARE_SLOT,
   { id: "hydration", emoji: "💧", labelKey: "dailySlots.slots.hydration" },
-  { id: "active", emoji: "🎯", labelKey: "dailySlots.slots.active" },
+]
+
+/** 상황별 케어 그룹 — 2열 카드. "고민케어"는 그리드가 아니라 아래 아코디언으로 대체됨 */
+const SITUATIONAL_SLOTS: Slot[] = [
+  { id: "exfoliation", emoji: "✨", labelKey: "dailySlots.slots.exfoliation" },
   { id: "barrier", emoji: "🌿", labelKey: "dailySlots.slots.barrier" },
 ]
 
@@ -157,6 +178,67 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
   )
 }
 
+interface ConcernCareCardProps {
+  isExpanded: boolean
+  onToggle: () => void
+  selectedConcernCare: Set<ConcernCareIngredient>
+  onToggleConcernCare: (id: ConcernCareIngredient) => void
+  locale: Locale
+  isRecommended?: boolean
+}
+
+function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleConcernCare, locale, isRecommended }: ConcernCareCardProps) {
+  return (
+    <div className="relative border-2 border-border rounded-2xl overflow-hidden">
+      {isRecommended && (
+        <span className="absolute -top-1.5 -left-1.5 z-10 flex size-[22px] items-center justify-center rounded-full bg-white shadow-sm text-[10px]">
+          ⭐
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-4 bg-card hover:bg-secondary transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🎯</span>
+          <div className="text-left">
+            <div className="text-sm font-semibold text-foreground">{t("dailySlots.slots.active", locale)}</div>
+            <div className="text-xs text-muted-foreground">{t("dailySlots.slotDescriptions.active", locale)}</div>
+          </div>
+        </div>
+        <ChevronDown
+          className={cn(
+            "size-5 text-muted-foreground transition-transform",
+            isExpanded ? "rotate-180" : "",
+          )}
+        />
+      </button>
+
+      {isExpanded && (
+        <div className="border-t border-border bg-secondary p-4 grid grid-cols-2 gap-2 animate-in slide-in-from-top-2 duration-200">
+          {ALL_CONCERN_CARE_INGREDIENTS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onToggleConcernCare(id)}
+              className={cn(
+                "flex items-center gap-2 p-3 rounded-lg border-2 transition-all",
+                selectedConcernCare.has(id)
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-card",
+              )}
+            >
+              <span>{CONCERN_CARE_EMOJI[id]}</span>
+              <span className="text-sm font-semibold text-foreground">{t(`dailySlots.concernCare.option_${id}`, locale)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface FreeInputCardProps {
   isExpanded: boolean
   onToggle: () => void
@@ -231,6 +313,8 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   const [checkedSlots, setCheckedSlots] = useState<Set<SlotType>>(new Set())
   const [selectedSpecialCare, setSelectedSpecialCare] = useState<Set<SpecialCareType>>(new Set())
   const [specialCareExpanded, setSpecialCareExpanded] = useState(false)
+  const [selectedConcernCare, setSelectedConcernCare] = useState<Set<ConcernCareIngredient>>(new Set())
+  const [concernCareExpanded, setConcernCareExpanded] = useState(false)
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
   const [freeInputExpanded, setFreeInputExpanded] = useState(false)
   const [freeInputText, setFreeInputText] = useState("")
@@ -243,6 +327,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
 
   const checkedSlotsRef = useRef<Set<SlotType>>(new Set())
   const selectedSpecialCareRef = useRef<Set<SpecialCareType>>(new Set())
+  const selectedConcernCareRef = useRef<Set<ConcernCareIngredient>>(new Set())
   const restoredDayRef = useRef<number | null>(null)
   const collapseContentRef = useRef<HTMLDivElement>(null)
   // 마지막으로 애니메이션을 재생한 collapsed 값. 초기값을 collapsed의 초기값과 동일하게
@@ -271,6 +356,10 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
     selectedSpecialCareRef.current = selectedSpecialCare
   }, [selectedSpecialCare])
 
+  useEffect(() => {
+    selectedConcernCareRef.current = selectedConcernCare
+  }, [selectedConcernCare])
+
   // day가 바뀌거나(달력에서 다른 날짜 선택) 마운트될 때, 저장된 loggedSlots[day]로부터
   // 체크 표시와 접힘 상태를 복원한다. 새로고침 시 체크 표시가 사라지던 버그 수정.
   useEffect(() => {
@@ -283,6 +372,9 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
     setCheckedSlots(new Set(ALL_SLOT_IDS.filter((id) => loggedIds.has(id))))
     setSelectedSpecialCare(
       new Set(ALL_SPECIAL_CARE_IDS.filter((id) => loggedIds.has(`special_care_${id}`))),
+    )
+    setSelectedConcernCare(
+      new Set(ALL_CONCERN_CARE_INGREDIENTS.filter((id) => loggedIds.has(`concern_care_${id}`))),
     )
     setCollapsed(diaryRef.current.conditions[day] !== undefined)
     setShowConditionPrompt(false)
@@ -337,6 +429,10 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
             slot: `special_care_${id}`,
             tag: SPECIAL_CARE_TAGS[id],
           })),
+          ...Array.from(selectedConcernCareRef.current).map((id) => ({
+            slot: `concern_care_${id}`,
+            tag: CONCERN_CARE_TAGS[id],
+          })),
         ]
         saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
           console.error("[saveUsageLog] error:", err)
@@ -368,6 +464,10 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
             slot: `special_care_${id}`,
             tag: SPECIAL_CARE_TAGS[id],
           })),
+          ...Array.from(selectedConcernCareRef.current).map((id) => ({
+            slot: `concern_care_${id}`,
+            tag: CONCERN_CARE_TAGS[id],
+          })),
         ]
         saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
           console.error("[saveUsageLog] error:", err)
@@ -376,6 +476,56 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
 
       return newSet
     })
+  }, [day, recommendedSlot])
+
+  /**
+   * 고민케어 성분 선택은 그 자체로 "고민케어(active)" 슬롯 완료를 겸한다 — 토글과 성분선택이
+   * 분리된 두 액션이 아니라 하나의 액션. 성분을 하나라도 골라두면 active 슬롯이 완료 처리되고,
+   * 전부 해제하면 다시 미완료로 돌아간다. active라는 슬롯 id 자체는 그대로 유지되므로 캘린더
+   * 표시/추천배지 등 기존 로직은 손대지 않아도 계속 정상 동작한다.
+   */
+  const toggleConcernCare = useCallback((ingredientId: ConcernCareIngredient) => {
+    const newConcernSet = new Set(selectedConcernCareRef.current)
+    if (newConcernSet.has(ingredientId)) {
+      newConcernSet.delete(ingredientId)
+    } else {
+      newConcernSet.add(ingredientId)
+      // 성분 경고 카드 등에서 참고하는 diary_profiles.active_ingredients에도 누적 반영
+      diaryRef.current.addActiveIngredient(ingredientId)
+    }
+
+    const shouldBeActive = newConcernSet.size > 0
+    const newChecked = new Set(checkedSlotsRef.current)
+    if (shouldBeActive && !newChecked.has("active")) {
+      newChecked.add("active")
+      diaryRef.current.recordLoggedSlot(day, "active", SLOT_TAGS.active)
+    } else if (!shouldBeActive && newChecked.has("active")) {
+      newChecked.delete("active")
+    }
+
+    setSelectedConcernCare(newConcernSet)
+    setCheckedSlots(newChecked)
+
+    if (diaryRef.current.userId) {
+      const recommendedCategory = recommendedSlot || ("active" as SlotType)
+      const slotsPayload = [
+        ...Array.from(newChecked).map((id) => ({
+          slot: id,
+          tag: SLOT_TAGS[id],
+        })),
+        ...Array.from(selectedSpecialCareRef.current).map((id) => ({
+          slot: `special_care_${id}`,
+          tag: SPECIAL_CARE_TAGS[id],
+        })),
+        ...Array.from(newConcernSet).map((id) => ({
+          slot: `concern_care_${id}`,
+          tag: CONCERN_CARE_TAGS[id],
+        })),
+      ]
+      saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
+        console.error("[saveUsageLog] error:", err)
+      })
+    }
   }, [day, recommendedSlot])
 
   const handleSaveFreeInput = useCallback(() => {
@@ -409,7 +559,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
     [checkedSlots, selectedSpecialCare, freeInputText, recommendedSlot, onConditionRecord],
   )
 
-  const totalSelected = checkedSlots.size + selectedSpecialCare.size
+  const totalSelected = checkedSlots.size + selectedSpecialCare.size + selectedConcernCare.size
   const isDone = diary.conditions[day] !== undefined
 
   return (
@@ -485,37 +635,62 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
             )}
 
             {/* 슬롯 선택 */}
-            <div className="space-y-3">
-              {/* 자외선차단: 풀와이드 */}
-              <SlotCard
-                slot={SUN_CARE_SLOT}
-                isChecked={checkedSlots.has(SUN_CARE_SLOT.id)}
-                toggleSlot={toggleSlot}
-                isSunCare
-                isRecommended={recommendedSlot === SUN_CARE_SLOT.id}
-              />
-
-              {/* 나머지 슬롯: 2열 그리드 */}
-              <div className="grid grid-cols-2 gap-3">
-                {OTHER_SLOTS.map((slot) => (
-                  <SlotCard
-                    key={slot.id}
-                    slot={slot}
-                    isChecked={checkedSlots.has(slot.id)}
-                    toggleSlot={toggleSlot}
-                    isRecommended={recommendedSlot === slot.id}
-                  />
-                ))}
+            <div className="space-y-4">
+              {/* 매일 케어: 완료 토글만 있는 단순 슬롯. 각질케어/진정케어와 동일한 2열 카드 스타일 */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  {t("dailySlots.dailyCareLabel", locale)}
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {DAILY_SLOTS.map((slot) => (
+                    <SlotCard
+                      key={slot.id}
+                      slot={slot}
+                      isChecked={checkedSlots.has(slot.id)}
+                      toggleSlot={toggleSlot}
+                      isRecommended={recommendedSlot === slot.id}
+                    />
+                  ))}
+                </div>
               </div>
 
-              {/* 특별관리 아코디언 */}
-              <SpecialCareCard
-                isExpanded={specialCareExpanded}
-                onToggle={() => setSpecialCareExpanded(!specialCareExpanded)}
-                selectedSpecialCare={selectedSpecialCare}
-                onToggleSpecialCare={toggleSpecialCare}
-                locale={locale}
-              />
+              {/* 상황별 케어: 2열 카드 + 아코디언(고민케어 성분, 특별관리) */}
+              <div className="space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  {t("dailySlots.situationalCareLabel", locale)}
+                </p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {SITUATIONAL_SLOTS.map((slot) => (
+                    <SlotCard
+                      key={slot.id}
+                      slot={slot}
+                      isChecked={checkedSlots.has(slot.id)}
+                      toggleSlot={toggleSlot}
+                      isRecommended={recommendedSlot === slot.id}
+                    />
+                  ))}
+                </div>
+
+                {/* 고민케어 성분 아코디언 — 성분 선택이 곧 고민케어(active) 슬롯 완료 처리 */}
+                <ConcernCareCard
+                  isExpanded={concernCareExpanded}
+                  onToggle={() => setConcernCareExpanded(!concernCareExpanded)}
+                  selectedConcernCare={selectedConcernCare}
+                  onToggleConcernCare={toggleConcernCare}
+                  locale={locale}
+                  isRecommended={recommendedSlot === "active"}
+                />
+
+                {/* 특별관리 아코디언 */}
+                <SpecialCareCard
+                  isExpanded={specialCareExpanded}
+                  onToggle={() => setSpecialCareExpanded(!specialCareExpanded)}
+                  selectedSpecialCare={selectedSpecialCare}
+                  onToggleSpecialCare={toggleSpecialCare}
+                  locale={locale}
+                />
+              </div>
 
               {/* 자유입력 — raw text 그대로 저장, 정량 분석 대상 아님 */}
               <FreeInputCard

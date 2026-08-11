@@ -358,14 +358,6 @@
       "skip": "괜찮아요",
       "bridge": "루틴 강도만 하나 더 확인할게요."
     },
-    "ingredientCheck": {
-      "question": "고민케어로 주로 뭘 쓰세요?",
-      "option_vitc": "비타민C",
-      "option_ret": "레티놀",
-      "option_nia": "나이아신아마이드",
-      "option_unknown": "잘 모르겠어요",
-      "next": "다음"
-    },
     "mappingResult": {
       "mapping_with_interval": "{{days}}일마다 쓰신다니,",
       "mapping_never_uses": "잘 안 쓰신다니,",
@@ -389,36 +381,6 @@
       "cica": "시카",
       "nia": "나이아신아마이드",
       "cer": "세라마이드"
-    },
-    "stepQ": {
-      "title": "진단을 위한 기본 정보",
-      "subtitle": "피부 정보를 알려주세요",
-      "q1Label": "Q1. 피부 타입",
-      "q2Label": "Q2. 주요 고민 (복수 선택 가능)",
-      "q3Label": "Q3. 고민케어로 주로 뭘 쓰세요?",
-      "q4Label": "Q4. 오늘 피부 컨디션은 어때요?",
-      "q5Label": "Q5. 성별을 알려주세요",
-      "q6Label": "Q6. 나이대를 알려주세요",
-      "gender": {
-        "female": "여성",
-        "male": "남성",
-        "other": "기타",
-        "unspecified": "응답 안 함"
-      },
-      "concern": {
-        "dry": "속건조·속당김",
-        "tone": "칙칙함·잡티",
-        "texture": "오돌토돌 결·모공",
-        "trouble": "민감 자극·트러블",
-        "aging": "탄력저하·주름",
-        "barrier": "홍조·약해진 피부장벽"
-      },
-      "ingredient": {
-        "vitc": "비타민C",
-        "retinol": "레티놀",
-        "niacinamide": "나이아신아마이드",
-        "unknown": "잘 모르겠어요"
-      }
     }
   },
   "completionFeedback": {
@@ -505,6 +467,12 @@
       "forties": "40대",
       "fifties": "50대",
       "sixtyPlus": "60대 이상"
+    },
+    "genderLabel": {
+      "female": "여성",
+      "male": "남성",
+      "other": "기타",
+      "unspecified": "응답 안 함"
     }
   },
   "recipe_card": {
@@ -532,28 +500,6 @@
     "completion_aria_label": "완주 안내",
     "close": "닫기"
   },
-  "bridgeInterstitial": {
-    "step1": {
-      "label": "2026 SKIN JOURNAL",
-      "title": "방금 본 결과지\n불러오기",
-      "button": "불러오기",
-      "consent_label": "[필수] 개인정보 수집 및 이용 동의",
-      "consent_link": "전문 보기"
-    },
-    "step2": {
-      "title_with_name": "{{name}}님의 성분검사 결과지",
-      "title_without_name": "당신의 성분검사 결과지",
-      "concern_description": "현재 {{nickname}}님의 고민은 {{concern}}예요",
-      "recommended_ingredient": "도움되는 성분은 {{ingredient}}이에요",
-      "record_section_title": "오늘의 기록",
-      "record_hint": "Day {{day}} / 30",
-      "next_button_description": "가볍게 터치 한번만 하시면 나머지는 우리가 알려드릴게요. 혼자 기억하지 마시고 가볍게 눌러주세요.",
-      "next_button": "시작하기"
-    },
-    "head": "결과는 봤어요.\n이제 제가 대신 기억해놓을게요.",
-    "sub": "30일 뒤에, 이 조합이 진짜 맞았는지 같이 확인해요.",
-    "button": "기록 시작하기"
-  },
   "installBanner": {
     "title": "홈 화면에 추가하고 더 빠르게 써보세요",
     "iosInstruction": "공유 버튼을 누른 다음 '홈 화면에 추가'를 선택하세요",
@@ -568,6 +514,8 @@
   "dailySlots": {
     "headline": "피부를 위해 오늘 무엇을 하셨나요?",
     "ariaLabel": "오늘의 슬롯 선택",
+    "dailyCareLabel": "매일 케어",
+    "situationalCareLabel": "상황별 케어",
     "todayBadge": "+ 오늘의 추천",
     "recommendationLabel": "추천 케어예요. 컨디션에 따라 조절하세요",
     "selectPrompt": "오늘 하신 일을 선택해주세요",
@@ -593,6 +541,12 @@
       "subtitle": "마스크팩, 트러블관리 등",
       "option_mask": "마스크팩",
       "option_trouble": "트러블관리"
+    },
+    "concernCare": {
+      "option_vitc": "비타민C",
+      "option_ret": "레티놀",
+      "option_nia": "나이아신아마이드",
+      "option_unknown": "잘 모르겠어요"
     },
     "recordButton": {
       "done": "오늘 기록 완료!",
@@ -673,9 +627,9 @@
     "revisitSettingsButton": "설정 > 내 정보 다시보기에서 언제든 확인하세요",
     "revisitBrandFooter": "내 피부의 기록, Hoppy",
     "emptyStateTitle": "아직 진단 정보가 부족해요",
-    "emptyStateDescLine1": "검사지에서 답변을 추가하면",
+    "emptyStateDescLine1": "검사부터 하고 오시면",
     "emptyStateDescLine2": "더 정확한 정보를 볼 수 있어요",
-    "emptyStateCta": "검사지 다시 보기"
+    "emptyStateCta": "성분 검사하러 가기"
   },
   "metadata": {
     "title": "호빵이 스킨 다이어리 · 장벽 리셋 캘린더",

@@ -52,14 +52,14 @@ export const AGE_LABEL_KEYS: Record<Age, string> = {
 }
 
 /**
- * Gender → i18n locale key 매핑. 온보딩 Step Q5에서 쓰는 라벨을 그대로 재사용.
+ * Gender → i18n locale key 매핑
  * 사용: const label = t(GENDER_LABEL_KEYS[gender], locale)
  */
 export const GENDER_LABEL_KEYS: Record<Gender, string> = {
-  female: "onboarding.stepQ.gender.female",
-  male: "onboarding.stepQ.gender.male",
-  other: "onboarding.stepQ.gender.other",
-  unspecified: "onboarding.stepQ.gender.unspecified",
+  female: "settings.genderLabel.female",
+  male: "settings.genderLabel.male",
+  other: "settings.genderLabel.other",
+  unspecified: "settings.genderLabel.unspecified",
 }
 
 /**

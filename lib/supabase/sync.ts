@@ -253,6 +253,18 @@ export async function saveAge(userId: string, signupDate: string, age: string | 
   if (error) console.warn("[supabase] saveAge failed:", error.message)
 }
 
+/** 데일리슬롯 "고민케어" 드롭다운에서 선택한 성분 누적 목록을 diary_profiles에 반영한다 */
+export async function saveActiveIngredients(userId: string, signupDate: string, activeIngredients: string[]): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), active_ingredients: activeIngredients },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveActiveIngredients failed:", error.message)
+}
+
 /** 체커 Q1(성별)에서 선택한 값을 diary_profiles에 반영한다 */
 export async function saveGender(userId: string, signupDate: string, gender: string | null): Promise<void> {
   const supabase = getSupabaseClient()

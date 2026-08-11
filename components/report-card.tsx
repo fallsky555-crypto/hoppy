@@ -17,6 +17,14 @@ interface ReportCardProps {
   concernTags?: string | null // 쉼표 구분 또는 배열 형태
   activeIngredients?: string[] | null
   onCTAClick?: () => void
+  /** revisit 모드 하단 "설정" 버튼 클릭 시 호출 — 이 카드를 모달로 띄운 쪽에서 닫기 등을 처리 */
+  onClose?: () => void
+}
+
+function getCheckerUrl(locale: Locale): string {
+  return locale === "ko"
+    ? "https://myroutinediet.com/checker.html"
+    : "https://myroutinediet.com/checker-en.html"
 }
 
 export function ReportCard({
@@ -27,6 +35,7 @@ export function ReportCard({
   concernTags,
   activeIngredients,
   onCTAClick,
+  onClose,
 }: ReportCardProps) {
   // concern tags를 배열로 정규화
   const concernTagArray = useMemo(() => {
@@ -91,7 +100,7 @@ export function ReportCard({
             </p>
           </div>
           <a
-            href="/"
+            href={getCheckerUrl(locale)}
             className="inline-block bg-primary text-primary-foreground font-semibold px-8 py-3 rounded-full hover:opacity-90 transition-opacity"
           >
             {t("reportCard.emptyStateCta", locale)}
@@ -321,7 +330,11 @@ export function ReportCard({
             <br />
             {t("reportCard.revisitFooterLine3", locale)}
           </p>
-          <button className="w-full text-center text-sm font-bold text-primary-text bg-card border-1.5 border-line rounded-2xl px-6 py-3.5 hover:bg-secondary transition-colors">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full text-center text-sm font-bold text-primary-text bg-card border-1.5 border-line rounded-2xl px-6 py-3.5 hover:bg-secondary transition-colors"
+          >
             {t("reportCard.revisitSettingsButton", locale)}
           </button>
           <p className="text-xs text-ink-3 text-center mt-3">

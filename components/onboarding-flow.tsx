@@ -5,83 +5,16 @@ import { ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { t, type Locale } from "@/lib/i18n"
-import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS, AGE_LABEL_KEYS } from "@/lib/label-mappings"
-import type { Concern, SupportId } from "@/lib/routine-copy"
 import { useDiary } from "@/lib/diary-context"
 import { ReportCard } from "@/components/report-card"
-import { TOTAL_DAYS } from "@/lib/schedule"
 
 interface OnboardingFlowProps {
   locale: Locale
   diary: ReturnType<typeof useDiary>
-  onComplete: (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => void
+  onComplete: (dataConsent: boolean) => void
 }
 
-type Step = 1 | "Q" | 1.5 | 2
-
-/** KST(Asia/Seoul) 기준 "오늘" day를 계산 */
-function getTodayDayKST(joinISO: string): number {
-  const now = new Date()
-  // UTC timestamp에 KST offset(+9시간) 적용
-  const kstTime = now.getTime() + (9 * 60 * 60 * 1000)
-  const kstNow = new Date(kstTime)
-
-  // 가입일 ISO 문자열을 UTC로 파싱
-  const start = new Date(joinISO)
-
-  // UTC 게터를 사용해서 각각의 자정(00:00:00)을 계산
-  const startMid = new Date(Date.UTC(
-    start.getUTCFullYear(),
-    start.getUTCMonth(),
-    start.getUTCDate(),
-    0, 0, 0, 0
-  ))
-  const kstNowMid = new Date(Date.UTC(
-    kstNow.getUTCFullYear(),
-    kstNow.getUTCMonth(),
-    kstNow.getUTCDate(),
-    0, 0, 0, 0
-  ))
-
-  const diffDays = Math.floor((kstNowMid.getTime() - startMid.getTime()) / 86_400_000)
-  return Math.min(Math.max(diffDays + 1, 1), TOTAL_DAYS)
-}
-
-interface StepQNeeds {
-  needSkinType: boolean
-  needConcernTags: boolean
-  needActiveIngredients: boolean
-  needCondition: boolean
-  needGender: boolean
-  needAge: boolean
-  hasAnyNeeded: boolean
-}
-
-/** 각 필드별로 Step Q에서 필요한 질문을 판단 */
-function checkStepQNeeds(diary: ReturnType<typeof useDiary>): StepQNeeds {
-  const needSkinType = !diary.skinType
-  const needConcernTags = !diary.concernTags
-  const needActiveIngredients = !diary.activeIngredients || diary.activeIngredients.length === 0
-  // 체커를 거치지 않고 앱 온보딩만 완주하는 유저는 gender/age가 URL로 넘어오지 않으므로 여기서도 물어본다
-  const needGender = !diary.gender
-  const needAge = !diary.age
-
-  // Q4: 오늘 condition을 이미 기록했으면 스킵 (KST 기준)
-  const todayDay = getTodayDayKST(diary.joinDate)
-  const needCondition = !(diary.conditions && diary.conditions[todayDay])
-
-  const hasAnyNeeded = needSkinType || needConcernTags || needActiveIngredients || needCondition || needGender || needAge
-
-  return {
-    needSkinType,
-    needConcernTags,
-    needActiveIngredients,
-    needCondition,
-    needGender,
-    needAge,
-    hasAnyNeeded,
-  }
-}
+type Step = 1 | "report"
 
 function getPrivacyPolicyUrl(locale: Locale): string {
   return locale === "ko"
@@ -90,45 +23,29 @@ function getPrivacyPolicyUrl(locale: Locale): string {
 }
 
 function StepIndicator({ step }: { step: Step }) {
-  const stepNum = typeof step === "string" ? 1.5 : step
   return (
     <div className="flex justify-center gap-2">
-      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", stepNum >= 1 ? "bg-primary" : "bg-border")} />
-      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", stepNum >= 1.5 ? "bg-primary" : "bg-border")} />
-      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", stepNum >= 2 ? "bg-primary" : "bg-border")} />
+      <div className="w-2 h-2 rounded-full transition-colors duration-200 bg-primary" />
+      <div className={cn("w-2 h-2 rounded-full transition-colors duration-200", step === "report" ? "bg-primary" : "bg-border")} />
     </div>
   )
 }
 
 export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>(1)
-  const [activeIngredients, setActiveIngredients] = useState<string[]>([])
   const [dataConsent, setDataConsent] = useState(false)
-  const [condition, setCondition] = useState<"good" | "neutral" | "bad" | null>(null)
-  const [checkerChoice, setCheckerChoice] = useState<"pending" | "loaded" | "dismissed" | "not_needed">(
-    diary.pendingCheckerContext ? "pending" : "not_needed"
-  )
-  const [appliedCheckerSummary, setAppliedCheckerSummary] = useState<{ concern: Concern; supportOwned: SupportId[] } | null>(null)
 
-  // 최소 질문 (Step Q)용 상태
-  const [tempSkinType, setTempSkinType] = useState<string | null>(null)
-  const [tempConcernTags, setTempConcernTags] = useState<string[]>([])
-  const [tempActiveIngredients, setTempActiveIngredients] = useState<string[]>([])
-  const [tempCondition, setTempCondition] = useState<"good" | "neutral" | "bad" | null>(null)
-  const [tempGender, setTempGender] = useState<string | null>(null)
-  const [tempAge, setTempAge] = useState<string | null>(null)
+  // 체커 URL 파라미터는 use-diary.ts의 hydration effect에서 마운트 이전에 이미
+  // diary.skinType/concernTags에 반영되어 있다 — 여기서 체커 유입 여부를 판단한다.
+  const hasCheckerData = Boolean(diary.skinType && diary.concernTags)
 
-  const ingredientOptions = [
-    { id: "vitc", label: t("onboarding.ingredientCheck.option_vitc", locale) },
-    { id: "ret", label: t("onboarding.ingredientCheck.option_ret", locale) },
-    { id: "nia", label: t("onboarding.ingredientCheck.option_nia", locale) },
-    { id: "unknown", label: t("onboarding.ingredientCheck.option_unknown", locale) },
-  ]
-
-  function toggleIngredient(id: string) {
-    setActiveIngredients((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    )
+  function handleNext() {
+    if (!dataConsent) return
+    if (hasCheckerData) {
+      setStep("report")
+    } else {
+      onComplete(dataConsent)
+    }
   }
 
   return (
@@ -153,12 +70,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               type="button"
               variant="outline"
               disabled={!dataConsent}
-              onClick={() => {
-                if (dataConsent) {
-                  const needs = checkStepQNeeds(diary)
-                  setStep(needs.hasAnyNeeded ? "Q" : 1.5)
-                }
-              }}
+              onClick={handleNext}
               className={cn(
                 "h-auto w-auto px-6 rounded-full py-2.5 text-[15px] mx-auto",
                 !dataConsent && "opacity-50 cursor-not-allowed"
@@ -192,12 +104,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  if (dataConsent) {
-                    const needs = checkStepQNeeds(diary)
-                    setStep(needs.hasAnyNeeded ? "Q" : 1.5)
-                  }
-                }}
+                onClick={handleNext}
                 disabled={!dataConsent}
                 className={cn(
                   "shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all",
@@ -214,264 +121,19 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
         </section>
       )}
 
-      {step === "Q" && (() => {
-        const needs = checkStepQNeeds(diary)
-        return (
-        <section key="step-Q" className="space-y-4 transition-opacity duration-200 pb-10" aria-label="Minimum Questions">
-          <div className="space-y-6">
-            {/* 헤더 */}
-            <div className="space-y-2">
-              <h2 className="text-lg font-bold text-foreground">
-                {t("onboarding.stepQ.title", locale)}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {t("onboarding.stepQ.subtitle", locale)}
-              </p>
-            </div>
-
-            {/* Q1: 피부 타입 */}
-            {needs.needSkinType && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q1Label", locale)}</p>
-              <div className="grid grid-cols-4 gap-2">
-                {(["sensitive", "dry", "combo", "oily"] as const).map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setTempSkinType(type)}
-                    className={cn(
-                      "rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
-                      tempSkinType === type
-                        ? "border-primary bg-primary/10 text-primary-text"
-                        : "border-border bg-card text-foreground"
-                    )}
-                  >
-                    {t(SKIN_TYPE_LABEL_KEYS[type], locale)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            )}
-
-            {/* Q2: 주요 고민 */}
-            {needs.needConcernTags && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q2Label", locale)}</p>
-              <div className="space-y-2">
-                {[
-                  { id: "DRY", labelKey: "onboarding.stepQ.concern.dry" },
-                  { id: "TONE", labelKey: "onboarding.stepQ.concern.tone" },
-                  { id: "TEXTURE", labelKey: "onboarding.stepQ.concern.texture" },
-                  { id: "TROUBLE", labelKey: "onboarding.stepQ.concern.trouble" },
-                  { id: "AGING", labelKey: "onboarding.stepQ.concern.aging" },
-                  { id: "BARRIER", labelKey: "onboarding.stepQ.concern.barrier" },
-                ].map((concern) => (
-                  <button
-                    key={concern.id}
-                    type="button"
-                    onClick={() => {
-                      setTempConcernTags((prev) =>
-                        prev.includes(concern.id)
-                          ? prev.filter((c) => c !== concern.id)
-                          : [...prev, concern.id]
-                      )
-                    }}
-                    className={cn(
-                      "w-full rounded-xl px-4 py-2.5 text-sm font-semibold border-2 transition-colors text-left",
-                      tempConcernTags.includes(concern.id)
-                        ? "border-primary bg-primary/10 text-primary-text"
-                        : "border-border bg-card text-foreground"
-                    )}
-                  >
-                    {t(concern.labelKey, locale)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            )}
-
-            {/* Q3: 고민케어 성분 */}
-            {needs.needActiveIngredients && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q3Label", locale)}</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: "vitc", labelKey: "onboarding.stepQ.ingredient.vitc" },
-                  { id: "ret", labelKey: "onboarding.stepQ.ingredient.retinol" },
-                  { id: "nia", labelKey: "onboarding.stepQ.ingredient.niacinamide" },
-                  { id: "unknown", labelKey: "onboarding.stepQ.ingredient.unknown" },
-                ].map((ing) => (
-                  <button
-                    key={ing.id}
-                    type="button"
-                    onClick={() => {
-                      setTempActiveIngredients((prev) =>
-                        prev.includes(ing.id)
-                          ? prev.filter((i) => i !== ing.id)
-                          : [...prev, ing.id]
-                      )
-                    }}
-                    className={cn(
-                      "rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
-                      tempActiveIngredients.includes(ing.id)
-                        ? "border-primary bg-primary/10 text-primary-text"
-                        : "border-border bg-card text-foreground"
-                    )}
-                  >
-                    {t(ing.labelKey, locale)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            )}
-
-            {/* Q4: 오늘 컨디션 */}
-            {needs.needCondition && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q4Label", locale)}</p>
-              <div className="flex gap-2">
-                {[
-                  { id: "good", labelKey: "onboarding.hoppiIntro.condition_good" },
-                  { id: "neutral", labelKey: "onboarding.hoppiIntro.condition_neutral" },
-                  { id: "bad", labelKey: "onboarding.hoppiIntro.condition_bad" },
-                ].map((cond) => (
-                  <button
-                    key={cond.id}
-                    type="button"
-                    onClick={() => setTempCondition(cond.id as "good" | "neutral" | "bad")}
-                    className={cn(
-                      "flex-1 rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
-                      tempCondition === cond.id
-                        ? "border-primary bg-primary/10 text-primary-text"
-                        : "border-border bg-card text-foreground"
-                    )}
-                  >
-                    {t(cond.labelKey, locale)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            )}
-
-            {/* Q5: 성별 — 체커를 거치지 않고 앱 온보딩만 완주하는 유저용 사각지대 보완 */}
-            {needs.needGender && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q5Label", locale)}</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { id: "female", labelKey: "onboarding.stepQ.gender.female" },
-                  { id: "male", labelKey: "onboarding.stepQ.gender.male" },
-                  { id: "other", labelKey: "onboarding.stepQ.gender.other" },
-                  { id: "unspecified", labelKey: "onboarding.stepQ.gender.unspecified" },
-                ].map((g) => (
-                  <button
-                    key={g.id}
-                    type="button"
-                    onClick={() => setTempGender(g.id)}
-                    className={cn(
-                      "rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
-                      tempGender === g.id
-                        ? "border-primary bg-primary/10 text-primary-text"
-                        : "border-border bg-card text-foreground"
-                    )}
-                  >
-                    {t(g.labelKey, locale)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            )}
-
-            {/* Q6: 나이대 — gender와 동일한 사각지대 보완 */}
-            {needs.needAge && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">{t("onboarding.stepQ.q6Label", locale)}</p>
-              <div className="grid grid-cols-3 gap-2">
-                {(["teen", "20s", "30s", "40s", "50s", "60s_plus"] as const).map((a) => (
-                  <button
-                    key={a}
-                    type="button"
-                    onClick={() => setTempAge(a)}
-                    className={cn(
-                      "rounded-xl px-3 py-2.5 text-xs font-semibold border-2 transition-colors",
-                      tempAge === a
-                        ? "border-primary bg-primary/10 text-primary-text"
-                        : "border-border bg-card text-foreground"
-                    )}
-                  >
-                    {t(AGE_LABEL_KEYS[a], locale)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            )}
-
-            {/* 완료 버튼 */}
-            <Button
-              type="button"
-              disabled={
-                (needs.needSkinType && !tempSkinType) ||
-                (needs.needConcernTags && tempConcernTags.length === 0) ||
-                (needs.needCondition && !tempCondition) ||
-                (needs.needGender && !tempGender) ||
-                (needs.needAge && !tempAge)
-              }
-              onClick={async () => {
-                if (
-                  (needs.needSkinType && !tempSkinType) ||
-                  (needs.needConcernTags && tempConcernTags.length === 0) ||
-                  (needs.needCondition && !tempCondition) ||
-                  (needs.needGender && !tempGender) ||
-                  (needs.needAge && !tempAge)
-                ) return
-
-                // 로컬 diary state에 반영 — 기존 sync effect(use-diary.ts)가
-                // 이 값을 diary_profiles에 씀. completeOnboarding()이 joinDate를
-                // 바꿔도 이제 state.skinType/concernTags가 실제 값이라 stale null로
-                // 덮어써지지 않는다.
-                if (needs.needSkinType && tempSkinType) {
-                  diary.setSkinType(tempSkinType)
-                }
-                if (needs.needConcernTags && tempConcernTags.length > 0) {
-                  diary.setConcernTags(tempConcernTags.join(","))
-                }
-                if (needs.needCondition && tempCondition) {
-                  diary.recordCondition(0, tempCondition)
-                }
-                if (needs.needGender && tempGender) {
-                  diary.setGender(tempGender)
-                }
-                if (needs.needAge && tempAge) {
-                  diary.setAge(tempAge)
-                }
-
-                // ReportCard로 이동 (저장된 데이터와 함께)
-                setStep(1.5)
-              }}
-              className="h-auto w-full mx-auto rounded-full py-3 text-[15px]"
-            >
-              {t("onboarding.introStep.next", locale)}
-            </Button>
-          </div>
-        </section>
-        )
-      })()}
-
-      {step === 1.5 && (
-        <section key="step-1.5" className="space-y-5 transition-opacity duration-200" aria-label="Report Card">
+      {step === "report" && (
+        <section key="step-report" className="space-y-5 transition-opacity duration-200" aria-label="Report Card">
           <ReportCard
             mode="onboarding"
             locale={locale}
             age={diary.age}
-            skinType={diary.skinType || tempSkinType}
-            concernTags={diary.concernTags || tempConcernTags.join(",")}
-            activeIngredients={diary.activeIngredients || tempActiveIngredients}
-            onCTAClick={() => onComplete(tempActiveIngredients, dataConsent, tempCondition!)}
+            skinType={diary.skinType}
+            concernTags={diary.concernTags}
+            activeIngredients={diary.activeIngredients}
+            onCTAClick={() => onComplete(dataConsent)}
           />
         </section>
       )}
-
-
     </main>
   )
 }

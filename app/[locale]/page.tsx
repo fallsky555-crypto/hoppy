@@ -34,8 +34,8 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   if (!diary.hydrated) return null
 
   if (!diary.onboarded) {
-    const handleOnboardingComplete = (activeIngredients: string[], dataConsent: boolean, condition: "good" | "neutral" | "bad") => {
-      diary.completeOnboarding(activeIngredients, dataConsent, condition)
+    const handleOnboardingComplete = (dataConsent: boolean) => {
+      diary.completeOnboarding(dataConsent)
     }
     return <OnboardingFlow locale={locale} diary={diary} onComplete={handleOnboardingComplete} />
   }
