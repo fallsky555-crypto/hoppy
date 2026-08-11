@@ -28,7 +28,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   const { currentDay, totalDays } = diary
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [coverClosed, setCoverClosed] = useState(false)
+  const [coverConfirmed, setCoverConfirmed] = useState(false)
 
   if (!diary.hydrated) return null
 
@@ -39,6 +39,20 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
     return <OnboardingFlow locale={locale} diary={diary} onComplete={handleOnboardingComplete} />
   }
 
+  // 온보딩 완료 후, 앱을 켤 때마다(당일 첫 방문 여부와 무관하게) 매번 커버를 먼저 보여준다.
+  // 하트 버튼을 눌러야만 아래 홈 화면으로 넘어간다(자동 전환 없음).
+  if (!coverConfirmed) {
+    return (
+      <DailyCover
+        locale={locale}
+        name={diary.name}
+        joinDate={diary.joinDate}
+        onSaveName={diary.setName}
+        onClose={() => setCoverConfirmed(true)}
+      />
+    )
+  }
+
   const activeDay = selectedDay ?? currentDay
 
   const isCourseComplete = currentDay >= totalDays
@@ -46,15 +60,6 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   return (
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
-        {!coverClosed && (
-          <DailyCover
-            locale={locale}
-            name={diary.name}
-            joinDate={diary.joinDate}
-            onSaveName={diary.setName}
-            onClose={() => setCoverClosed(true)}
-          />
-        )}
         <InstallBanner />
 
         {/* <ProgressBar30 loggedDays={diary.loggedDays} /> */}
