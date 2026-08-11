@@ -402,7 +402,8 @@
   },
   "progressHeader": {
     "tagline": "SKIN JOURNAL",
-    "title": "My Skin Journal"
+    "title": "My Skin Journal",
+    "titleWithName": "{{name}}'s Skin Journal"
   },
   "homeStats": {
     "loggedDays": "Days Logged",
@@ -444,7 +445,7 @@
     "restart_button": "Start from day 1 again",
     "reviewTitle": "My info",
     "notSet": "Not set",
-    "reviewReportButton": "Revisit diagnosis report",
+    "reviewReportButton": "Review my results",
     "reviewLabels": {
       "concern": "Concern",
       "supportOwned": "Ingredients on hand",
@@ -455,7 +456,7 @@
       "gender": "Gender",
       "concernTags": "Beauty concern",
       "overlap": "Ingredient overlap",
-      "tier": "Diagnosis tier"
+      "tier": "Result tier"
     },
     "skinTypeLabel": {
       "sensitive": "Sensitive",
@@ -476,6 +477,12 @@
       "male": "Male",
       "other": "Other",
       "unspecified": "Prefer not to say"
+    },
+    "noCheckerData": {
+      "title": "No checkup records yet",
+      "descLine1": "Take the skin checker first",
+      "descLine2": "for more accurate info",
+      "cta": "Go to the skin checker"
     }
   },
   "recipe_card": {
@@ -515,7 +522,7 @@
     "reportReady": "Report ready"
   },
   "dailySlots": {
-    "headline": "What did you do for your skin today?",
+    "headline": "Today's Routine",
     "ariaLabel": "Select today's slots",
     "dailyCareLabel": "Daily Care",
     "situationalCareLabel": "Situational Care",
@@ -600,6 +607,7 @@
   },
   "reportCard": {
     "hoppiAlt": "Hoppy",
+    "badgeLabel": "My Skin Journal",
     "greeting": "We put together your records for you",
     "titleFallback": "Your records, organized",
     "subtitleLine1": "Based on your answers from the checker",
@@ -629,7 +637,7 @@
     "revisitFooterLine3": "to figuring out what actually works for you.",
     "revisitSettingsButton": "Check anytime in Settings > My info",
     "revisitBrandFooter": "Your skin's record, Hoppy",
-    "emptyStateTitle": "Not enough diagnosis info yet",
+    "emptyStateTitle": "No checkup records yet",
     "emptyStateDescLine1": "Take the skin checker first",
     "emptyStateDescLine2": "for more accurate info",
     "emptyStateCta": "Go to the skin checker"

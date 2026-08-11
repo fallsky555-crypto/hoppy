@@ -55,9 +55,16 @@ export function TodayCareCard() {
 
   return (
     <div className="rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border">
-      <div className="flex flex-col gap-3">
-        <h3 className="font-display text-xl font-semibold text-foreground">{copy.title}</h3>
-        <p className="text-sm leading-relaxed text-foreground">{copy.description}</p>
+      <div className="flex flex-row items-start gap-3">
+        <img
+          src="/onboarding/cover-cat-camera.png"
+          alt=""
+          className="h-11 w-11 shrink-0 object-contain"
+        />
+        <div className="flex flex-col gap-3">
+          <h3 className="font-display text-xl font-semibold text-foreground">{copy.title}</h3>
+          <p className="text-sm leading-relaxed text-foreground">{copy.description}</p>
+        </div>
       </div>
     </div>
   )

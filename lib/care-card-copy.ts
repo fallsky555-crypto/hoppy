@@ -180,7 +180,7 @@ interface CareCardCopy {
 export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy {
   const { weather, recommendedSlot, locale, activeIngredients = [] } = params
   const condition = analyzeWeather(weather)
-  const title = locale === "ko" ? "오늘의 케어" : "Today's Care"
+  const title = locale === "ko" ? "오늘의 팁" : "Today's Tip"
 
   const weatherSnippet = buildWeatherSnippet(condition, locale)
   let dayDescription = ""

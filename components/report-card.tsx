@@ -21,7 +21,7 @@ interface ReportCardProps {
   onClose?: () => void
 }
 
-function getCheckerUrl(locale: Locale): string {
+export function getCheckerUrl(locale: Locale): string {
   return locale === "ko"
     ? "https://myroutinediet.com/checker.html"
     : "https://myroutinediet.com/checker-en.html"
@@ -128,7 +128,7 @@ export function ReportCard({
       {/* 타이틀 섹션 */}
       <div className="mb-6">
         <div className="text-xs font-bold uppercase tracking-wider text-primary-text mb-2">
-          My Skin Diagnosis
+          {t("reportCard.badgeLabel", locale)}
         </div>
         <h1 className="text-2xl font-bold leading-tight text-ink mb-2">
           {primaryConcernLabel ? (

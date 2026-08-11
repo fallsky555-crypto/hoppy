@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
 import { CONCERN_LABEL_KEYS, SUPPORT_LABEL_KEYS, SKIN_TYPE_LABEL_KEYS, AGE_LABEL_KEYS, GENDER_LABEL_KEYS, getFirstConcernTagLabel } from "@/lib/label-mappings"
-import { ReportCard } from "@/components/report-card"
+import { ReportCard, getCheckerUrl } from "@/components/report-card"
 
 interface SettingsPanelProps {
   onStartFresh: () => void
@@ -27,6 +27,19 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
     setConfirming(false)
   }
 
+  // 고민케어(usage_log 기반 실측값)는 체커와 무관한 별개 데이터라 이 판정에서 제외한다
+  const hasAnyCheckerData = Boolean(
+    (diary.concern && diary.concern !== "none") ||
+      (diary.supportOwned && diary.supportOwned.length > 0) ||
+      (diary.usedProducts && diary.usedProducts.length > 0) ||
+      diary.skinType ||
+      diary.age ||
+      diary.gender ||
+      diary.concernTags ||
+      (diary.overlap !== null && diary.overlap !== undefined) ||
+      diary.tier,
+  )
+
   return (
     <section className="space-y-3 rounded-4xl bg-card px-5 py-6 ring-1 ring-border" aria-label={t("settings.title", locale)}>
       <h2 className="text-[13px] font-semibold text-foreground">{t("settings.title", locale)}</h2>
@@ -36,69 +49,95 @@ export function SettingsPanel({ onStartFresh }: SettingsPanelProps) {
         <div className="pt-2 border-t border-border">
           <p className="font-semibold text-foreground mb-2">{t("settings.reviewTitle", locale)}</p>
           <div className="space-y-1.5 text-[12px]">
-            <p>
-              <span className="font-medium">{t("settings.reviewLabels.concern", locale)}:</span>{" "}
-              {diary.concern && diary.concern !== "none"
-                ? t(CONCERN_LABEL_KEYS[diary.concern], locale)
-                : t("settings.notSet", locale)}
-            </p>
-            <p>
-              <span className="font-medium">{t("settings.reviewLabels.supportOwned", locale)}:</span>{" "}
-              {diary.supportOwned && diary.supportOwned.length > 0
-                ? diary.supportOwned
-                    .map((id) => t(SUPPORT_LABEL_KEYS[id], locale))
-                    .join(", ")
-                : t("settings.notSet", locale)}
-            </p>
+            {hasAnyCheckerData ? (
+              <>
+                {diary.concern && diary.concern !== "none" && (
+                  <p>
+                    <span className="font-medium">{t("settings.reviewLabels.concern", locale)}:</span>{" "}
+                    {t(CONCERN_LABEL_KEYS[diary.concern], locale)}
+                  </p>
+                )}
+                {diary.supportOwned && diary.supportOwned.length > 0 && (
+                  <p>
+                    <span className="font-medium">{t("settings.reviewLabels.supportOwned", locale)}:</span>{" "}
+                    {diary.supportOwned.map((id) => t(SUPPORT_LABEL_KEYS[id], locale)).join(", ")}
+                  </p>
+                )}
+                {diary.usedProducts && diary.usedProducts.length > 0 && (
+                  <p>
+                    <span className="font-medium">{t("settings.reviewLabels.usedProducts", locale)}:</span>{" "}
+                    {diary.usedProducts.map((p) => `${p.brand} ${p.name}`).join("; ")}
+                  </p>
+                )}
+                {diary.skinType && SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS] && (
+                  <p>
+                    <span className="font-medium">{t("settings.reviewLabels.skinType", locale)}:</span>{" "}
+                    {t(SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS], locale)}
+                  </p>
+                )}
+                {diary.age && AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS] && (
+                  <p>
+                    <span className="font-medium">{t("settings.reviewLabels.age", locale)}:</span>{" "}
+                    {t(AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS], locale)}
+                  </p>
+                )}
+                {diary.gender && GENDER_LABEL_KEYS[diary.gender as keyof typeof GENDER_LABEL_KEYS] && (
+                  <p>
+                    <span className="font-medium">{t("settings.reviewLabels.gender", locale)}:</span>{" "}
+                    {t(GENDER_LABEL_KEYS[diary.gender as keyof typeof GENDER_LABEL_KEYS], locale)}
+                  </p>
+                )}
+                {diary.concernTags && getFirstConcernTagLabel(diary.concernTags) && (
+                  <p>
+                    <span className="font-medium">{t("settings.reviewLabels.concernTags", locale)}:</span>{" "}
+                    {t(getFirstConcernTagLabel(diary.concernTags) as string, locale)}
+                  </p>
+                )}
+                {diary.overlap !== null && diary.overlap !== undefined && (
+                  <p>
+                    <span className="font-medium">{t("settings.reviewLabels.overlap", locale)}:</span>{" "}
+                    {diary.overlap}
+                  </p>
+                )}
+                {diary.tier && (
+                  <p>
+                    <span className="font-medium">{t("settings.reviewLabels.tier", locale)}:</span>{" "}
+                    {diary.tier}
+                  </p>
+                )}
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2.5 py-3 text-center">
+                <img
+                  src="/onboarding/intro-02.jpeg"
+                  alt=""
+                  className="w-11 h-11 rounded-full object-cover"
+                />
+                <p className="text-[13px] font-bold text-foreground">{t("settings.noCheckerData.title", locale)}</p>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">
+                  {t("settings.noCheckerData.descLine1", locale)}
+                  <br />
+                  {t("settings.noCheckerData.descLine2", locale)}
+                </p>
+                <a
+                  href={getCheckerUrl(locale)}
+                  className="inline-block bg-primary text-primary-foreground text-xs font-bold px-6 py-2.5 rounded-full hover:opacity-90 transition-opacity"
+                >
+                  {t("settings.noCheckerData.cta", locale)}
+                </a>
+              </div>
+            )}
+
+            {/* 고민케어(usage_log 기반 실측값) — 체커 데이터 유무와 무관하게 항상 표시 */}
             <p>
               <span className="font-medium">{t("settings.reviewLabels.activeIngredients", locale)}:</span>{" "}
               {diary.activeIngredients && diary.activeIngredients.length > 0
                 ? diary.activeIngredients.join(", ")
                 : t("settings.notSet", locale)}
             </p>
-            <p>
-              <span className="font-medium">{t("settings.reviewLabels.usedProducts", locale)}:</span>{" "}
-              {diary.usedProducts && diary.usedProducts.length > 0
-                ? diary.usedProducts
-                    .map((p) => `${p.brand} ${p.name}`)
-                    .join("; ")
-                : t("settings.notSet", locale)}
-            </p>
-            <p>
-              <span className="font-medium">{t("settings.reviewLabels.skinType", locale)}:</span>{" "}
-              {diary.skinType && SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS]
-                ? t(SKIN_TYPE_LABEL_KEYS[diary.skinType as keyof typeof SKIN_TYPE_LABEL_KEYS], locale)
-                : t("settings.notSet", locale)}
-            </p>
-            <p>
-              <span className="font-medium">{t("settings.reviewLabels.age", locale)}:</span>{" "}
-              {diary.age && AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS]
-                ? t(AGE_LABEL_KEYS[diary.age as keyof typeof AGE_LABEL_KEYS], locale)
-                : t("settings.notSet", locale)}
-            </p>
-            <p>
-              <span className="font-medium">{t("settings.reviewLabels.gender", locale)}:</span>{" "}
-              {diary.gender && GENDER_LABEL_KEYS[diary.gender as keyof typeof GENDER_LABEL_KEYS]
-                ? t(GENDER_LABEL_KEYS[diary.gender as keyof typeof GENDER_LABEL_KEYS], locale)
-                : t("settings.notSet", locale)}
-            </p>
-            <p>
-              <span className="font-medium">{t("settings.reviewLabels.concernTags", locale)}:</span>{" "}
-              {diary.concernTags && getFirstConcernTagLabel(diary.concernTags)
-                ? t(getFirstConcernTagLabel(diary.concernTags) as string, locale)
-                : t("settings.notSet", locale)}
-            </p>
-            <p>
-              <span className="font-medium">{t("settings.reviewLabels.overlap", locale)}:</span>{" "}
-              {diary.overlap !== null && diary.overlap !== undefined ? diary.overlap : t("settings.notSet", locale)}
-            </p>
-            <p>
-              <span className="font-medium">{t("settings.reviewLabels.tier", locale)}:</span>{" "}
-              {diary.tier ? diary.tier : t("settings.notSet", locale)}
-            </p>
           </div>
 
-          {/* 진단표 다시보기 버튼 */}
+          {/* 결과지 다시보기 버튼 */}
           <Button
             type="button"
             variant="outline"

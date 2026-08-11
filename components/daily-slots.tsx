@@ -614,8 +614,8 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
               </h2>
               <p className="text-sm text-muted-foreground">
                 {locale === "ko"
-                  ? "오늘 하신 일을 선택해주세요 (복수 선택 가능)"
-                  : "Select what you did today (multiple selections available)"}
+                  ? "오늘 하신 케어를 골라보세요"
+                  : "Pick the care you did today"}
               </p>
             </div>
           </div>

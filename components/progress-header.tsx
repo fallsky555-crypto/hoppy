@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { t } from "@/lib/i18n"
+import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 
 interface ProgressHeaderProps {
@@ -14,10 +14,16 @@ interface ProgressHeaderProps {
   ageLabel?: string
   /** 사용자 주요 피부고민 i18n 라벨 키 (예: "onboarding.concernLabel.dry") — 없으면 배지 미표시 */
   firstConcernTagLabel?: string
+  /** 다이어리 커버에서 입력한 이름 — 있으면 타이틀에 반영, 없으면 기본 타이틀 */
+  name?: string | null
 }
 
-export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc, ageLabel, firstConcernTagLabel }: ProgressHeaderProps) {
+export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc, ageLabel, firstConcernTagLabel, name }: ProgressHeaderProps) {
   const locale = useLocale()
+
+  const title = name
+    ? interpolate(t("progressHeader.titleWithName", locale), { name })
+    : t("progressHeader.title", locale)
 
   // 기록한 날 수
   const loggedCount = loggedDays.length
@@ -47,7 +53,7 @@ export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc
         <p className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("progressHeader.tagline", locale)}</p>
         <div className="mt-2.5 flex items-center gap-3">
           <h1 className="flex-1 truncate font-display text-lg font-semibold leading-tight text-foreground">
-            {t("progressHeader.title", locale)}
+            {title}
           </h1>
           {(ageLabel || firstConcernTagLabel) && (
             <div className="flex shrink-0 gap-1.5">

@@ -72,6 +72,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
           heroImageSrc={diary.heroImageSrc}
           ageLabel={getAgeLabel(diary.age) ?? undefined}
           firstConcernTagLabel={getFirstConcernTagLabel(diary.concernTags) ?? undefined}
+          name={diary.name}
         />
 
         <TodayCareCard />
