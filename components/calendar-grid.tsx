@@ -15,6 +15,7 @@ interface CalendarGridProps {
   loggedSlots?: Record<number, Array<{ slot: string; tag: string }>>
   conditions?: Record<number, "good" | "neutral" | "bad">
   joinDate: string
+  revealPulse?: boolean
 }
 
 export function CalendarGrid({
@@ -27,6 +28,7 @@ export function CalendarGrid({
   loggedSlots = {},
   conditions = {},
   joinDate,
+  revealPulse = false,
 }: CalendarGridProps) {
   const locale = useLocale()
   const days = Array.from({ length: totalDays }, (_, i) => i + 1)
@@ -99,6 +101,7 @@ export function CalendarGrid({
                   "relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-2xl border bg-card p-0.5 shadow-[0_1px_2px_rgba(30,29,26,0.04)] transition-all",
                   highlighted ? "border-2 border-primary" : "border-[#D8D3C4]",
                   isFuture && "opacity-60",
+                  isToday && revealPulse && "animate-today-pulse",
                 )}
               >
                 <span className={cn("text-xs font-extrabold leading-none", isToday ? "text-primary-text" : "text-foreground")}>

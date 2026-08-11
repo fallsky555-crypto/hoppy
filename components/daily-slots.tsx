@@ -10,9 +10,13 @@ import { useDiary } from "@/lib/diary-context"
 import { saveUsageLog, saveFreeInputLog } from "@/lib/supabase/sync"
 import { getRecommendedSlot } from "@/lib/slot-mapping"
 import { getFirstConcernTagShortLabelKey } from "@/lib/label-mappings"
+import { DailyRewardCard, type RewardCardData } from "@/components/daily-reward-card"
 
 export type SlotType = "exfoliation" | "hydration" | "active" | "barrier" | "sun_care"
 type SpecialCareType = "mask" | "trouble"
+
+const ALL_SLOT_IDS: SlotType[] = ["sun_care", "exfoliation", "hydration", "active", "barrier"]
+const ALL_SPECIAL_CARE_IDS: SpecialCareType[] = ["mask", "trouble"]
 
 interface Slot {
   id: SlotType
@@ -217,9 +221,10 @@ function FreeInputCard({ isExpanded, onToggle, value, onChange, onSave, justSave
 interface DailySlotsProps {
   day?: number
   onConditionRecord?: (condition: "good" | "neutral" | "bad", linkedCategory: SlotType) => void
+  onCollapse?: () => void
 }
 
-export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
+export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlotsProps) {
   const locale = useLocale()
   const diary = useDiary()
   const diaryRef = useRef(diary)
@@ -230,9 +235,19 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   const [freeInputExpanded, setFreeInputExpanded] = useState(false)
   const [freeInputText, setFreeInputText] = useState("")
   const [freeInputJustSaved, setFreeInputJustSaved] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => diary.conditions[day] !== undefined)
+  const [rewardData, setRewardData] = useState<RewardCardData | null>(null)
+  const [collapseMaxHeight, setCollapseMaxHeight] = useState<string>(() =>
+    diary.conditions[day] !== undefined ? "0px" : "none",
+  )
 
   const checkedSlotsRef = useRef<Set<SlotType>>(new Set())
   const selectedSpecialCareRef = useRef<Set<SpecialCareType>>(new Set())
+  const restoredDayRef = useRef<number | null>(null)
+  const collapseContentRef = useRef<HTMLDivElement>(null)
+  // 마지막으로 애니메이션을 재생한 collapsed 값. 초기값을 collapsed의 초기값과 동일하게
+  // 잡아, React StrictMode의 effect 이중 실행에도 "값이 실제로 바뀌었을 때"만 반응한다.
+  const lastAnimatedCollapsedRef = useRef(collapsed)
 
   const todayRecipe = diary.getRecipeForDay(day)
   const recommendedSlot: SlotType | null = getRecommendedSlot(todayRecipe.type) as SlotType | null
@@ -255,6 +270,51 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
   useEffect(() => {
     selectedSpecialCareRef.current = selectedSpecialCare
   }, [selectedSpecialCare])
+
+  // day가 바뀌거나(달력에서 다른 날짜 선택) 마운트될 때, 저장된 loggedSlots[day]로부터
+  // 체크 표시와 접힘 상태를 복원한다. 새로고침 시 체크 표시가 사라지던 버그 수정.
+  useEffect(() => {
+    if (restoredDayRef.current === day) return
+    restoredDayRef.current = day
+
+    const entries = diaryRef.current.loggedSlots[day] ?? []
+    const loggedIds = new Set(entries.map((e) => e.slot))
+
+    setCheckedSlots(new Set(ALL_SLOT_IDS.filter((id) => loggedIds.has(id))))
+    setSelectedSpecialCare(
+      new Set(ALL_SPECIAL_CARE_IDS.filter((id) => loggedIds.has(`special_care_${id}`))),
+    )
+    setCollapsed(diaryRef.current.conditions[day] !== undefined)
+    setShowConditionPrompt(false)
+    setRewardData(null)
+  }, [day])
+
+  // collapsed 전환 시 max-height를 실측해 애니메이션한다. CSS grid-template-rows의
+  // 0fr/1fr 트릭은 부모가 auto-height(고유 높이)일 때 실제로 줄어들지 않는 문제가 있어
+  // (컨테이너 높이가 정해져 있지 않으면 fr 트랙이 content 기준으로 계산됨) 실측 방식으로 대체.
+  // collapsed 값이 실제로 바뀐 경우에만 애니메이션한다 (마운트 시 이미 올바른 초기값으로
+  // 렌더되어 있고, dev 모드 StrictMode의 effect 이중 실행에도 오탐하지 않도록 값 비교 사용).
+  useEffect(() => {
+    if (lastAnimatedCollapsedRef.current === collapsed) return
+    lastAnimatedCollapsedRef.current = collapsed
+
+    const el = collapseContentRef.current
+    if (!el) return
+
+    if (collapsed) {
+      const current = el.scrollHeight
+      setCollapseMaxHeight(`${current}px`)
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setCollapseMaxHeight("0px"))
+      })
+      return () => cancelAnimationFrame(raf)
+    }
+
+    const target = el.scrollHeight
+    setCollapseMaxHeight(`${target}px`)
+    const timer = setTimeout(() => setCollapseMaxHeight("none"), 320)
+    return () => clearTimeout(timer)
+  }, [collapsed])
 
   const toggleSlot = useCallback((slotId: SlotType) => {
     setCheckedSlots((prev) => {
@@ -331,7 +391,26 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
     setTimeout(() => setFreeInputJustSaved(false), 1500)
   }, [day, freeInputText])
 
+  const handleConditionSelect = useCallback(
+    (condition: "good" | "neutral" | "bad") => {
+      const linkedCategory = recommendedSlot && checkedSlots.has(recommendedSlot)
+        ? recommendedSlot
+        : (Array.from(checkedSlots)[0] || ("active" as SlotType))
+
+      onConditionRecord?.(condition, linkedCategory)
+      setShowConditionPrompt(false)
+      setRewardData({
+        specialCare: Array.from(selectedSpecialCare),
+        hasActive: checkedSlots.has("active"),
+        hasBarrier: checkedSlots.has("barrier"),
+        freeInput: freeInputText.trim(),
+      })
+    },
+    [checkedSlots, selectedSpecialCare, freeInputText, recommendedSlot, onConditionRecord],
+  )
+
   const totalSelected = checkedSlots.size + selectedSpecialCare.size
+  const isDone = diary.conditions[day] !== undefined
 
   return (
     <section
@@ -339,167 +418,206 @@ export function DailySlots({ day = 1, onConditionRecord }: DailySlotsProps) {
       aria-label={t("dailySlots.ariaLabel", locale)}
     >
       <div className="flex flex-col gap-4">
-        {/* 헤더 */}
-        <div className="space-y-3">
-          <div className="text-xs font-semibold text-muted-foreground tracking-tight">
-            Day {day} · {t("common.today", locale)}
-          </div>
-          <div className="space-y-2">
-            <h2 className="font-display text-xl font-bold text-foreground">
-              {t("dailySlots.headline", locale)}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {locale === "ko"
-                ? "오늘 하신 일을 선택해주세요 (복수 선택 가능)"
-                : "Select what you did today (multiple selections available)"}
-            </p>
-          </div>
-        </div>
-
-        {/* 슬롯 선택 */}
-        <div className="space-y-3">
-          {/* 자외선차단: 풀와이드 */}
-          <SlotCard
-            slot={SUN_CARE_SLOT}
-            isChecked={checkedSlots.has(SUN_CARE_SLOT.id)}
-            toggleSlot={toggleSlot}
-            isSunCare
-            isRecommended={recommendedSlot === SUN_CARE_SLOT.id}
-          />
-
-          {/* 나머지 슬롯: 2열 그리드 */}
-          <div className="grid grid-cols-2 gap-3">
-            {OTHER_SLOTS.map((slot) => (
-              <SlotCard
-                key={slot.id}
-                slot={slot}
-                isChecked={checkedSlots.has(slot.id)}
-                toggleSlot={toggleSlot}
-                isRecommended={recommendedSlot === slot.id}
-              />
-            ))}
-          </div>
-
-          {/* 특별관리 아코디언 */}
-          <SpecialCareCard
-            isExpanded={specialCareExpanded}
-            onToggle={() => setSpecialCareExpanded(!specialCareExpanded)}
-            selectedSpecialCare={selectedSpecialCare}
-            onToggleSpecialCare={toggleSpecialCare}
-            locale={locale}
-          />
-
-          {/* 자유입력 — raw text 그대로 저장, 정량 분석 대상 아님 */}
-          <FreeInputCard
-            isExpanded={freeInputExpanded}
-            onToggle={() => setFreeInputExpanded(!freeInputExpanded)}
-            value={freeInputText}
-            onChange={setFreeInputText}
-            onSave={handleSaveFreeInput}
-            justSaved={freeInputJustSaved}
-            locale={locale}
-          />
-        </div>
-
-        {/* 안내문구 */}
-        {recommendedSlot && (
-          <div className="border-t border-border pt-2">
-            <p className="text-xs text-center text-muted-foreground mt-1">
-              {t("dailySlots.recommendationNote", locale)}
-            </p>
+        {/* 헤더 — 오늘 기록을 이미 완료했다면 탭으로 접기/펼치기가 가능한 토글로 동작 */}
+        {isDone ? (
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            className="w-full text-left"
+          >
+            {collapsed ? (
+              <div className="flex items-center justify-between rounded-2xl bg-secondary px-4 py-3">
+                <span className="text-sm font-semibold text-foreground">
+                  {t("dailySlots.summaryBar.label", locale)}
+                </span>
+                <ChevronDown className="size-5 text-muted-foreground -rotate-90" aria-hidden />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-muted-foreground tracking-tight">
+                    Day {day} · {t("common.today", locale)}
+                  </span>
+                  <ChevronDown className="size-5 text-muted-foreground" aria-hidden />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="font-display text-xl font-bold text-foreground">
+                    {t("dailySlots.headline", locale)}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {locale === "ko"
+                      ? "오늘 하신 일을 선택해주세요 (복수 선택 가능)"
+                      : "Select what you did today (multiple selections available)"}
+                  </p>
+                </div>
+              </div>
+            )}
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <div className="text-xs font-semibold text-muted-foreground tracking-tight">
+              Day {day} · {t("common.today", locale)}
+            </div>
+            <div className="space-y-2">
+              <h2 className="font-display text-xl font-bold text-foreground">
+                {t("dailySlots.headline", locale)}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {locale === "ko"
+                  ? "오늘 하신 일을 선택해주세요 (복수 선택 가능)"
+                  : "Select what you did today (multiple selections available)"}
+              </p>
+            </div>
           </div>
         )}
 
-        {/* 하단 섹션 */}
-        <div className="space-y-2">
-          <p className="text-sm font-bold text-center text-foreground">
-            {totalSelected > 0
-              ? locale === "ko" ? `${totalSelected}개 선택됨` : `${totalSelected} selected`
-              : t("dailySlots.tapPrompt", locale)}
-          </p>
+        {/* 기록 완료 후: 슬롯 전체 UI를 접어 한 줄 요약 바로 축소 (재탭하면 다시 펼쳐짐) */}
+        <div
+          ref={collapseContentRef}
+          style={{ maxHeight: collapseMaxHeight }}
+          className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+        >
+          <div className="flex flex-col gap-4">
+            {!collapsed && (
+              <p className="text-xs text-center text-muted-foreground">
+                {t("dailySlots.editHint", locale)}
+              </p>
+            )}
 
-          {showConditionPrompt && (
-            <div className="space-y-3 bg-secondary p-4 rounded-lg">
-              <p className="text-sm font-semibold text-foreground">{conditionQuestion}</p>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const linkedCategory = recommendedSlot && checkedSlots.has(recommendedSlot)
-                      ? recommendedSlot
-                      : (Array.from(checkedSlots)[0] || ("active" as SlotType))
-                    onConditionRecord?.("good", linkedCategory)
-                    setShowConditionPrompt(false)
-                    setCheckedSlots(new Set())
-                    setSelectedSpecialCare(new Set())
-                  }}
-                  className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
-                >
-                  <Smile className="size-4" aria-hidden />
-                  {t("onboarding.mappingResult.condition_good", locale)}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const linkedCategory = recommendedSlot && checkedSlots.has(recommendedSlot)
-                      ? recommendedSlot
-                      : (Array.from(checkedSlots)[0] || ("active" as SlotType))
-                    onConditionRecord?.("neutral", linkedCategory)
-                    setShowConditionPrompt(false)
-                    setCheckedSlots(new Set())
-                    setSelectedSpecialCare(new Set())
-                  }}
-                  className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
-                >
-                  <Meh className="size-4" aria-hidden />
-                  {t("onboarding.mappingResult.condition_neutral", locale)}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const linkedCategory = recommendedSlot && checkedSlots.has(recommendedSlot)
-                      ? recommendedSlot
-                      : (Array.from(checkedSlots)[0] || ("active" as SlotType))
-                    onConditionRecord?.("bad", linkedCategory)
-                    setShowConditionPrompt(false)
-                    setCheckedSlots(new Set())
-                    setSelectedSpecialCare(new Set())
-                  }}
-                  className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
-                >
-                  <Frown className="size-4" aria-hidden />
-                  {t("onboarding.mappingResult.condition_bad", locale)}
-                </button>
+            {/* 슬롯 선택 */}
+            <div className="space-y-3">
+              {/* 자외선차단: 풀와이드 */}
+              <SlotCard
+                slot={SUN_CARE_SLOT}
+                isChecked={checkedSlots.has(SUN_CARE_SLOT.id)}
+                toggleSlot={toggleSlot}
+                isSunCare
+                isRecommended={recommendedSlot === SUN_CARE_SLOT.id}
+              />
+
+              {/* 나머지 슬롯: 2열 그리드 */}
+              <div className="grid grid-cols-2 gap-3">
+                {OTHER_SLOTS.map((slot) => (
+                  <SlotCard
+                    key={slot.id}
+                    slot={slot}
+                    isChecked={checkedSlots.has(slot.id)}
+                    toggleSlot={toggleSlot}
+                    isRecommended={recommendedSlot === slot.id}
+                  />
+                ))}
               </div>
+
+              {/* 특별관리 아코디언 */}
+              <SpecialCareCard
+                isExpanded={specialCareExpanded}
+                onToggle={() => setSpecialCareExpanded(!specialCareExpanded)}
+                selectedSpecialCare={selectedSpecialCare}
+                onToggleSpecialCare={toggleSpecialCare}
+                locale={locale}
+              />
+
+              {/* 자유입력 — raw text 그대로 저장, 정량 분석 대상 아님 */}
+              <FreeInputCard
+                isExpanded={freeInputExpanded}
+                onToggle={() => setFreeInputExpanded(!freeInputExpanded)}
+                value={freeInputText}
+                onChange={setFreeInputText}
+                onSave={handleSaveFreeInput}
+                justSaved={freeInputJustSaved}
+                locale={locale}
+              />
+            </div>
+
+            {/* 안내문구 */}
+            {recommendedSlot && (
+              <div className="border-t border-border pt-2">
+                <p className="text-xs text-center text-muted-foreground mt-1">
+                  {t("dailySlots.recommendationNote", locale)}
+                </p>
+              </div>
+            )}
+
+            {/* 하단 섹션 */}
+            <div className="space-y-2">
+              <p className="text-sm font-bold text-center text-foreground">
+                {totalSelected > 0
+                  ? locale === "ko" ? `${totalSelected}개 선택됨` : `${totalSelected} selected`
+                  : t("dailySlots.tapPrompt", locale)}
+              </p>
+
+              {showConditionPrompt && (
+                <div className="space-y-3 bg-secondary p-4 rounded-lg">
+                  <p className="text-sm font-semibold text-foreground">{conditionQuestion}</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleConditionSelect("good")}
+                      className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
+                    >
+                      <Smile className="size-4" aria-hidden />
+                      {t("onboarding.mappingResult.condition_good", locale)}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleConditionSelect("neutral")}
+                      className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
+                    >
+                      <Meh className="size-4" aria-hidden />
+                      {t("onboarding.mappingResult.condition_neutral", locale)}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleConditionSelect("bad")}
+                      className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
+                    >
+                      <Frown className="size-4" aria-hidden />
+                      {t("onboarding.mappingResult.condition_bad", locale)}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowConditionPrompt(false)}
+                    className="w-full text-xs font-medium text-muted-foreground py-2 hover:text-foreground"
+                  >
+                    {t("common.later", locale)}
+                  </button>
+                </div>
+              )}
+
               <button
                 type="button"
-                onClick={() => setShowConditionPrompt(false)}
-                className="w-full text-xs font-medium text-muted-foreground py-2 hover:text-foreground"
+                disabled={isDone}
+                onClick={() => {
+                  if (totalSelected > 0) {
+                    setShowConditionPrompt(true)
+                  }
+                }}
+                className={cn(
+                  "w-full rounded-full font-bold py-3 transition-colors text-sm",
+                  isDone
+                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                    : "bg-primary hover:bg-primary/80 text-primary-foreground"
+                )}
               >
-                {t("common.later", locale)}
+                {isDone ? t("dailySlots.recordButton.done", locale) : t("dailySlots.recordButton.default", locale)}
               </button>
             </div>
-          )}
-
-          <button
-            type="button"
-            disabled={diary.conditions[day] !== undefined}
-            onClick={() => {
-              if (totalSelected > 0) {
-                setShowConditionPrompt(true)
-              }
-            }}
-            className={cn(
-              "w-full rounded-full font-bold py-3 transition-colors text-sm",
-              diary.conditions[day] !== undefined
-                ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
-                : "bg-primary hover:bg-primary/80 text-primary-foreground"
-            )}
-          >
-            {diary.conditions[day] !== undefined ? t("dailySlots.recordButton.done", locale) : t("dailySlots.recordButton.default", locale)}
-          </button>
+          </div>
         </div>
       </div>
+
+      {rewardData && (
+        <DailyRewardCard
+          data={rewardData}
+          locale={locale}
+          onDone={() => {
+            setRewardData(null)
+            setCollapsed(true)
+            onCollapse?.()
+          }}
+        />
+      )}
     </section>
   )
 }

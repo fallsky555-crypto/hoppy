@@ -609,7 +609,14 @@
       "placeholder": "e.g. My skin felt a bit sensitive today...",
       "saveButton": "Save",
       "saved": "Saved"
-    }
+    },
+    "reward": {
+      "title": "Today's log, complete!"
+    },
+    "summaryBar": {
+      "label": "Today's record complete · View details"
+    },
+    "editHint": "Tap a slot to edit"
   },
   "concernShortLabel": {
     "DRY": "hydration",

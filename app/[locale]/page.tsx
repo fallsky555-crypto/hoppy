@@ -29,6 +29,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [coverConfirmed, setCoverConfirmed] = useState(false)
+  const [calendarPulse, setCalendarPulse] = useState(0)
 
   if (!diary.hydrated) return null
 
@@ -78,21 +79,26 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
         <DailySlots
           day={activeDay}
           onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
+          onCollapse={() => setCalendarPulse((p) => p + 1)}
         />
 
         <WeeklyMiniInsight />
 
-        <CalendarGrid
-          totalDays={totalDays}
-          currentDay={currentDay}
-          selectedDay={activeDay}
-          completedDays={diary.loggedDays}
-          justStampedDay={null}
-          onSelect={setSelectedDay}
-          loggedSlots={diary.loggedSlots}
-          conditions={diary.conditions}
-          joinDate={diary.joinDate}
-        />
+        {/* key로 강제 remount하여 calendarPulse 증가 시마다 진입 연출을 재생한다 */}
+        <div key={calendarPulse} className={calendarPulse > 0 ? "animate-calendar-reveal rounded-4xl" : ""}>
+          <CalendarGrid
+            totalDays={totalDays}
+            currentDay={currentDay}
+            selectedDay={activeDay}
+            completedDays={diary.loggedDays}
+            justStampedDay={null}
+            onSelect={setSelectedDay}
+            loggedSlots={diary.loggedSlots}
+            conditions={diary.conditions}
+            joinDate={diary.joinDate}
+            revealPulse={calendarPulse > 0}
+          />
+        </div>
 
         {isCourseComplete && (
           <>

@@ -606,7 +606,14 @@
       "placeholder": "예: 오늘은 피부가 좀 예민했어요...",
       "saveButton": "저장",
       "saved": "저장했어요"
-    }
+    },
+    "reward": {
+      "title": "오늘의 기록, 완수했어요!"
+    },
+    "summaryBar": {
+      "label": "오늘 기록 완료 · 자세히 보기"
+    },
+    "editHint": "슬롯을 눌러 수정하세요"
   },
   "concernShortLabel": {
     "DRY": "속건조",
