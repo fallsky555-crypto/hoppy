@@ -10,15 +10,11 @@ interface ProgressHeaderProps {
   loggedDays: number[]
   /** 상단 여정 카드 히어로 이미지 — "스페셜케어 사이클"마다 바뀐다(lib/hero-image.ts 참고) */
   heroImageSrc: string
-  /** 사용자 나이대 i18n 라벨 키 (예: "settings.ageLabel.thirties") — 없으면 배지 미표시 */
-  ageLabel?: string
-  /** 사용자 주요 피부고민 i18n 라벨 키 (예: "onboarding.concernLabel.dry") — 없으면 배지 미표시 */
-  firstConcernTagLabel?: string
   /** 다이어리 커버에서 입력한 이름 — 있으면 타이틀에 반영, 없으면 기본 타이틀 */
   name?: string | null
 }
 
-export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc, ageLabel, firstConcernTagLabel, name }: ProgressHeaderProps) {
+export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc, name }: ProgressHeaderProps) {
   const locale = useLocale()
 
   const title = name
@@ -55,20 +51,6 @@ export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc
           <h1 className="flex-1 truncate font-display text-lg font-semibold leading-tight text-foreground">
             {title}
           </h1>
-          {(ageLabel || firstConcernTagLabel) && (
-            <div className="flex shrink-0 gap-1.5">
-              {ageLabel && (
-                <span className="rounded-2xl bg-secondary px-2.5 py-1 text-xs font-medium text-foreground whitespace-nowrap">
-                  {t(ageLabel, locale)}
-                </span>
-              )}
-              {firstConcernTagLabel && (
-                <span className="rounded-2xl bg-secondary px-2.5 py-1 text-xs font-medium text-foreground whitespace-nowrap">
-                  {t(firstConcernTagLabel, locale)}
-                </span>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-2">

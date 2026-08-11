@@ -443,21 +443,7 @@
     "cancel": "Cancel",
     "restart": "Start over",
     "restart_button": "Start from day 1 again",
-    "reviewTitle": "My info",
-    "notSet": "Not set",
     "reviewReportButton": "Review my results",
-    "reviewLabels": {
-      "concern": "Concern",
-      "supportOwned": "Ingredients on hand",
-      "activeIngredients": "Concern care",
-      "usedProducts": "Products used",
-      "skinType": "Skin type",
-      "age": "Age group",
-      "gender": "Gender",
-      "concernTags": "Beauty concern",
-      "overlap": "Ingredient overlap",
-      "tier": "Result tier"
-    },
     "skinTypeLabel": {
       "sensitive": "Sensitive",
       "dry": "Dry",
@@ -477,12 +463,6 @@
       "male": "Male",
       "other": "Other",
       "unspecified": "Prefer not to say"
-    },
-    "noCheckerData": {
-      "title": "No checkup records yet",
-      "descLine1": "Take the skin checker first",
-      "descLine2": "for more accurate info",
-      "cta": "Go to the skin checker"
     }
   },
   "recipe_card": {

@@ -440,21 +440,7 @@
     "cancel": "취소",
     "restart": "새로 시작하기",
     "restart_button": "루틴 처음부터 다시 시작하기",
-    "reviewTitle": "내 정보 다시보기",
-    "notSet": "미설정",
     "reviewReportButton": "결과지 다시보기",
-    "reviewLabels": {
-      "concern": "관심사",
-      "supportOwned": "보유 성분",
-      "activeIngredients": "고민케어",
-      "usedProducts": "사용 제품",
-      "skinType": "피부 타입",
-      "age": "나이대",
-      "gender": "성별",
-      "concernTags": "뷰티 고민",
-      "overlap": "성분 겹침",
-      "tier": "결과 등급"
-    },
     "skinTypeLabel": {
       "sensitive": "민감성",
       "dry": "건성",
@@ -474,12 +460,6 @@
       "male": "남성",
       "other": "기타",
       "unspecified": "응답 안 함"
-    },
-    "noCheckerData": {
-      "title": "아직 검사 기록이 없어요",
-      "descLine1": "검사부터 하고 오시면",
-      "descLine2": "더 정확한 정보를 볼 수 있어요",
-      "cta": "성분 검사하러 가기"
     }
   },
   "recipe_card": {
