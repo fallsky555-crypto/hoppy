@@ -460,17 +460,51 @@ export async function saveUsageLog(
 /**
  * 자유입력 카드에 쓴 raw text를 free_input_log에 저장한다. 구조화된 분석 대상이
  * 아니라 그대로 저장만 하는 용도 — 리포트/차트 로직에서 참조하지 않는다.
+ * day당 1건만 유지되며(unique(user_id, day)), 같은 날짜에 다시 저장하면 덮어쓴다.
  */
 export async function saveFreeInputLog(userId: string, day: number, content: string): Promise<void> {
   const supabase = getSupabaseClient()
   if (!supabase) return
 
-  const { error } = await supabase.from("free_input_log").insert({
-    user_id: userId,
-    day,
-    content,
-  })
+  const { error } = await supabase
+    .from("free_input_log")
+    .upsert({ user_id: userId, day, content }, { onConflict: "user_id,day" })
   if (error) console.warn("[supabase] saveFreeInputLog failed:", error.message)
+}
+
+/**
+ * 온보딩 진입 URL의 routine_step 파라미터를, checker_diagnoses에서 이 user_id의 가장
+ * 최근 진단 행(1시간 이내)에 채워 넣는다. checker_diagnoses는 이 앱이 아니라 별도의
+ * 체커(checker.html)가 쓰는 테이블이라 진단 행을 가리키는 ID가 URL에 없다 — 그래서
+ * "가장 최근 행"으로 추정하되, 1시간이 지난 행은 관련 없는 과거 진단일 가능성이 높아
+ * 매칭하지 않고 아무 것도 하지 않는다(2026-08-13 결정).
+ */
+export async function saveRoutineStepToCheckerDiagnoses(userId: string, routineStep: string): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const { data: recent, error: selectError } = await supabase
+    .from("checker_diagnoses")
+    .select("created_at")
+    .eq("user_id", userId)
+    .gte("created_at", oneHourAgo)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (selectError) {
+    console.warn("[supabase] saveRoutineStepToCheckerDiagnoses select failed:", selectError.message)
+    return
+  }
+  if (!recent) return
+
+  const { error: updateError } = await supabase
+    .from("checker_diagnoses")
+    .update({ routine_step: routineStep })
+    .eq("user_id", userId)
+    .eq("created_at", recent.created_at)
+  if (updateError) console.warn("[supabase] saveRoutineStepToCheckerDiagnoses update failed:", updateError.message)
 }
 
 /** 완주 30일 기념 소감을 completion_feedback에 저장한다 */
@@ -492,6 +526,8 @@ export interface RemoteState {
   loggedSlots: Record<number, Array<{ slot: string; tag: string }>>
   /** condition_log로부터 로드한 컨디션 기록 */
   conditions: Record<number, "good" | "neutral" | "bad">
+  /** free_input_log로부터 로드한 자유입력 기록 (day당 1건) */
+  freeInputs: Record<number, string>
 }
 
 /**
@@ -517,10 +553,11 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     }
     if (!profile) return null
 
-    const [{ data: calendarRows }, { data: usageLogRows }, { data: conditionLogRows }] = await Promise.all([
+    const [{ data: calendarRows }, { data: usageLogRows }, { data: conditionLogRows }, { data: freeInputLogRows }] = await Promise.all([
       supabase.from("calendar_entries").select("day, completed").eq("user_id", userId),
       supabase.from("usage_log").select("day, slots").eq("user_id", userId),
       supabase.from("condition_log").select("day, condition").eq("user_id", userId),
+      supabase.from("free_input_log").select("day, content").eq("user_id", userId),
     ])
 
     const completedDays = (calendarRows ?? []).filter((row) => row.completed).map((row) => row.day)
@@ -536,6 +573,13 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     for (const row of conditionLogRows ?? []) {
       if (["good", "neutral", "bad"].includes(row.condition)) {
         conditions[row.day] = row.condition
+      }
+    }
+
+    const freeInputs: Record<number, string> = {}
+    for (const row of freeInputLogRows ?? []) {
+      if (typeof row.content === "string") {
+        freeInputs[row.day] = row.content
       }
     }
 
@@ -560,6 +604,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
       completedDays,
       loggedSlots,
       conditions,
+      freeInputs,
     }
   } catch (err) {
     console.warn("[supabase] loadRemoteState threw:", err)

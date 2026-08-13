@@ -3,10 +3,9 @@
 import { useMemo } from "react"
 import { AlertCircle } from "lucide-react"
 import { getIngredientGuide } from "@/lib/ingredient-guide"
-import { getTrendStat, getDonutChartValues } from "@/lib/trend-stats"
 import { getIngredientWarning } from "@/lib/ingredient-warnings"
 import { getFirstConcernTagLabel, getAgeLabel } from "@/lib/label-mappings"
-import { t, interpolate, type Locale } from "@/lib/i18n"
+import { t, type Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
 interface ReportCardProps {
@@ -49,19 +48,13 @@ export function ReportCard({
   // 첫 번째 concern tag 사용 (시안에서는 하나씩 표시)
   const primaryConcern = concernTagArray[0] ?? null
 
-  // primaryConcern의 한글 라벨 — 화면 표시 전용. getIngredientGuide/getTrendStat에는
+  // primaryConcern의 한글 라벨 — 화면 표시 전용. getIngredientGuide에는
   // 절대 이 값이 아니라 원본 코드값(primaryConcern)을 넘겨야 한다(그쪽은 대문자 코드를
   // 키로 기대하는 설계라 라벨을 넘기면 매칭이 깨진다).
   const primaryConcernLabel = useMemo(() => {
     const key = getFirstConcernTagLabel(concernTags)
     return key ? t(key, locale) : null
   }, [concernTags, locale])
-
-  // 트렌드 통계
-  const trendStat = useMemo(() => {
-    if (!primaryConcern || !age) return null
-    return getTrendStat(primaryConcern, age)
-  }, [primaryConcern, age])
 
   // 성분 가이드
   const ingredients = useMemo(() => {
@@ -146,63 +139,6 @@ export function ReportCard({
           {t("reportCard.subtitleLine2", locale)}
         </p>
       </div>
-
-      {/* 트렌드 통계 도넛 */}
-      {trendStat && (
-        <div className="bg-primary-text text-white rounded-3xl p-8 mb-5 shadow-lg text-center">
-          <svg width="164" height="164" viewBox="0 0 164 164" className="mx-auto mb-4">
-            <circle
-              cx="82"
-              cy="82"
-              r="70"
-              fill="none"
-              stroke="rgba(255,255,255,.12)"
-              strokeWidth="14"
-            />
-            <circle
-              cx="82"
-              cy="82"
-              r="70"
-              fill="none"
-              stroke="var(--primary)"
-              strokeWidth="14"
-              strokeLinecap="round"
-              strokeDasharray={getDonutChartValues(trendStat.percentage).strokeDasharray}
-              strokeDashoffset={getDonutChartValues(trendStat.percentage).strokeDashoffset}
-              transform="rotate(-90 82 82)"
-            />
-            <text
-              x="82"
-              y="76"
-              textAnchor="middle"
-              fontFamily="Pretendard, sans-serif"
-              fontSize="38"
-              fontWeight="800"
-              fill="#fff"
-            >
-              {trendStat.percentage.toFixed(1)}%
-            </text>
-            <text
-              x="82"
-              y="100"
-              textAnchor="middle"
-              fontFamily="Pretendard, sans-serif"
-              fontSize="12"
-              fill="rgba(255,255,255,.65)"
-            >
-              {interpolate(t("reportCard.donutResponseRate", locale), { ageLabel: ageLabel ?? "" })}
-            </text>
-          </svg>
-          <p className="text-sm font-bold leading-relaxed mb-2">
-            {interpolate(t("reportCard.donutLine1", locale), { ageLabel: ageLabel ?? "", count: String(Math.round(trendStat.percentage / 10)) })}
-            <br />
-            {interpolate(t("reportCard.donutLine2", locale), { concern: primaryConcernLabel ?? "" })}
-          </p>
-          <p className="text-xs text-white/55">
-            {t("reportCard.donutSource", locale)}
-          </p>
-        </div>
-      )}
 
       {/* 성분 가이드 섹션 */}
       {ingredients.length > 0 && (
@@ -298,25 +234,13 @@ export function ReportCard({
             </div>
           </div>
 
-          {/* 철학 문구 */}
-          <p className="text-xs text-ink-3 text-center leading-relaxed mb-6">
-            {t("reportCard.philosophyLine1", locale)}
-            <br />
-            {t("reportCard.philosophyLine2", locale)}
-          </p>
-
           {/* CTA 버튼 */}
           <button
             onClick={onCTAClick}
-            className="w-full bg-primary text-primary-foreground font-bold text-base rounded-2xl px-6 py-4.5 shadow-lg hover:opacity-90 transition-opacity mb-3"
+            className="w-full bg-primary text-primary-foreground font-bold text-base rounded-2xl px-6 py-4.5 shadow-lg hover:opacity-90 transition-opacity"
           >
             {t("reportCard.ctaButton", locale)}
           </button>
-          <p className="text-xs text-ink-3 text-center leading-relaxed">
-            {t("reportCard.noAdsLine1", locale)}
-            <br />
-            {t("reportCard.noAdsLine2", locale)}
-          </p>
         </>
       )}
 

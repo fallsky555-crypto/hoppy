@@ -35,17 +35,12 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
   const [step, setStep] = useState<Step>(1)
   const [dataConsent, setDataConsent] = useState(false)
 
-  // 체커 URL 파라미터는 use-diary.ts의 hydration effect에서 마운트 이전에 이미
-  // diary.skinType/concernTags에 반영되어 있다 — 여기서 체커 유입 여부를 판단한다.
-  const hasCheckerData = Boolean(diary.skinType && diary.concernTags)
-
+  // 체커를 항상 거쳐 들어온다는 전제이므로 "체커 데이터 있음/없음"을 가리지 않고
+  // 항상 리포트 카드를 보여준다. 체커 URL 파라미터는 use-diary.ts의 hydration effect에서
+  // 마운트 이전에 이미 diary.skinType/concernTags 등에 반영되어 있다.
   function handleNext() {
     if (!dataConsent) return
-    if (hasCheckerData) {
-      setStep("report")
-    } else {
-      onComplete(dataConsent)
-    }
+    setStep("report")
   }
 
   return (

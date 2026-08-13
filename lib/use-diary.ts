@@ -18,10 +18,12 @@ import {
   saveConditionLog,
   saveContextFlags,
   saveEngineVersion,
+  saveFreeInputLog,
   saveGender,
   saveHabitLog,
   saveName,
   saveOverlap,
+  saveRoutineStepToCheckerDiagnoses,
   saveSkinType,
   saveTier,
   saveSettings,
@@ -48,6 +50,8 @@ interface DiaryState {
   /** 날별 슬롯 기록: { day: [{ slot, tag }, ...] } */
   loggedSlots: Record<number, Array<{ slot: string; tag: string }>>
   conditions: Record<number, "good" | "neutral" | "bad">
+  /** 날별 자유입력 메모 — day당 1건, 재저장 시 덮어쓴다 */
+  freeInputs: Record<number, string>
   /** BHA/레티놀 도입 간격 슬라이더. 아무것도 안 건드리면 워크북 기본값(7/7)을 그대로 쓴다 */
   settings: ScheduleSettings
   /** 루틴 문구에 강조할 관심사. 스케줄 계산과는 무관하고 문구에만 영향을 준다 */
@@ -109,6 +113,7 @@ function freshState(): DiaryState {
     seenMilestones: [],
     loggedSlots: {},
     conditions: {},
+    freeInputs: {},
     settings: {},
     concern: "none",
     supportOwned: [],
@@ -140,6 +145,7 @@ function loadLocalState(): DiaryState | null {
       seenMilestones: parsed.seenMilestones ?? [],
       loggedSlots: parsed.loggedSlots ?? {},
       conditions: parsed.conditions ?? {},
+      freeInputs: parsed.freeInputs ?? {},
       settings: parsed.settings ?? {},
       concern: parsed.concern ?? "none",
       supportOwned: parsed.supportOwned ?? [],
@@ -205,6 +211,8 @@ interface URLContextPayload {
   overlap: number | null
   tier: string | null
   gender: string | null
+  /** diary_profiles가 아니라 checker_diagnoses의 최근 진단 행에 반영된다 (아래 하이드레이션 effect 참고) */
+  routineStep: string | null
 }
 
 const VALID_CONCERNS: Concern[] = ["dry", "flush", "flaky", "trouble", "none"]
@@ -248,6 +256,13 @@ function parseTier(raw: string | null): string | null {
   return raw && VALID_TIERS.includes(raw) ? raw : null
 }
 
+/** routine_step은 값의 종류가 아직 고정되지 않아 화이트리스트 없이 길이만 제한한다 */
+function parseRoutineStep(raw: string | null): string | null {
+  if (!raw) return null
+  const trimmed = raw.trim()
+  return trimmed.length > 0 ? trimmed.slice(0, 100) : null
+}
+
 function parseSupportOwned(raw: string | null): SupportId[] {
   if (!raw) return []
   return raw
@@ -282,10 +297,16 @@ function buildProductDetails(itemIds: string[]): UsedProduct[] {
 
 /**
  * 외부 진단 화면(myroutinediet.com의 checker.html)에서 넘어올 때 쓰는 URL 파라미터를 읽는다.
- * ?type={A/B/C}&skin_type={sensitive/dry/combo/oily}&concern={dry/flush/flaky/trouble/none}
+ * ?skin_type={sensitive/dry/combo/oily}&concern={dry/flush/flaky/trouble/none}
  * &support={hya,cica,nia,cer 콤마 구분}&items={...}&age={teen/20s/30s/40s/50s/60s_plus}
  * &beauty_concerns={DRY,TONE 등 콤마 구분}&overlap={숫자}&tier={0/1/2}
- * &gender={female/male/other/unspecified}
+ * &gender={female/male/other/unspecified}&routine_step={자유 문자열}
+ *
+ * type/preg/rx/compat_score는 의도적으로 파싱하지 않는다: preg/rx는 diary_profiles
+ * 컬럼이 삭제된 이력이 있고(0015 마이그레이션), type/compat_score는 현재 값의 용도가
+ * 불분명해 저장 대상에서 제외했다(2026-08-13 결정). routine_step만 예외적으로 받되,
+ * diary_profiles가 아니라 checker_diagnoses의 최근 진단 행에 반영된다 — applyURLContext가
+ * 아니라 하이드레이션 effect에서 별도로 처리하는 이유가 이 때문이다.
  */
 function contextFromURL(): URLContextPayload | null {
   if (typeof window === "undefined") return null
@@ -300,8 +321,9 @@ function contextFromURL(): URLContextPayload | null {
   const hasOverlap = params.get("overlap") !== null
   const hasTier = params.get("tier") !== null
   const hasGender = params.get("gender") !== null
+  const hasRoutineStep = params.get("routine_step") !== null
 
-  if (!hasSkinType && !hasConcern && !hasSupport && !hasItems && !hasAge && !hasBeautyConcerns && !hasOverlap && !hasTier && !hasGender) return null
+  if (!hasSkinType && !hasConcern && !hasSupport && !hasItems && !hasAge && !hasBeautyConcerns && !hasOverlap && !hasTier && !hasGender && !hasRoutineStep) return null
 
   const itemIds = parseItems(params.get("items"))
 
@@ -315,6 +337,7 @@ function contextFromURL(): URLContextPayload | null {
     overlap: parseOverlap(params.get("overlap")),
     tier: parseTier(params.get("tier")),
     gender: parseGender(params.get("gender")),
+    routineStep: parseRoutineStep(params.get("routine_step")),
   }
 }
 
@@ -322,14 +345,18 @@ function contextFromURL(): URLContextPayload | null {
 function clearContextURLParams() {
   if (typeof window === "undefined") return
   const params = new URLSearchParams(window.location.search)
-  for (const key of ["type", "preg", "rx", "concern", "support", "skin_type", "items", "age", "beauty_concerns", "overlap", "tier", "gender"]) {
+  for (const key of ["type", "preg", "rx", "concern", "support", "skin_type", "items", "age", "beauty_concerns", "overlap", "tier", "gender", "routine_step"]) {
     params.delete(key)
   }
   const query = params.toString()
   window.history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : ""))
 }
 
-/** 진단 결과 정보를 자동 적용 (usedProducts, skinType, age, concernTags, overlap, tier, gender) */
+/**
+ * 진단 결과 정보를 자동 적용 (usedProducts, skinType, age, concernTags, overlap, tier, gender,
+ * concern, supportOwned). 체커를 항상 거쳐 들어온다는 전제이므로 "체커 데이터 있음/없음"을
+ * 가려서 임시 보류했다가 나중에 확인받고 적용하는 단계 없이, 파싱된 값을 곧바로 반영한다.
+ */
 function applyURLContext(base: DiaryState, context: URLContextPayload | null): DiaryState {
   if (!context) return base
   return {
@@ -341,22 +368,8 @@ function applyURLContext(base: DiaryState, context: URLContextPayload | null): D
     overlap: context.overlap,
     tier: context.tier,
     gender: context.gender,
-  }
-}
-
-/** 체커에서 돌아온 진단 데이터를 임시 상태로 보류하는 payload */
-function extractCheckerContext(context: URLContextPayload | null): { concern: Concern; supportOwned: SupportId[]; skinType: string | null; age: string | null; concernTags: string | null; overlap: number | null; tier: string | null; gender: string | null } | null {
-  if (!context) return null
-  if (context.concern === "none" && context.supportOwned.length === 0 && !context.skinType && !context.age && !context.concernTags && !context.overlap && !context.tier && !context.gender) return null
-  return {
     concern: context.concern,
     supportOwned: context.supportOwned,
-    skinType: context.skinType,
-    age: context.age,
-    concernTags: context.concernTags,
-    overlap: context.overlap,
-    tier: context.tier,
-    gender: context.gender,
   }
 }
 
@@ -364,8 +377,6 @@ export function useDiary() {
   // 하이드레이션 불일치를 피하기 위해 초기엔 기본값, 마운트 후 localStorage 로드
   const [state, setState] = useState<DiaryState>(freshState)
   const [hydrated, setHydrated] = useState(false)
-  // 체커에서 돌아온 concern/supportOwned를 임시 보류 (새로고침하면 사라짐, localStorage 저장 X)
-  const [pendingCheckerContext, setPendingCheckerContext] = useState<ReturnType<typeof extractCheckerContext>>(null)
 
   // Supabase 익명 세션 — localStorage가 여전히 1차 캐시이고, 이건 기기 간 복원용 백엔드다.
   // 아래 하이드레이션 effect도 소유자 비교를 위해 독립적으로 ensureAnonSession()을 호출하는데,
@@ -395,6 +406,15 @@ export function useDiary() {
       const userId = await ensureAnonSession()
       if (cancelled) return
 
+      // routine_step은 diary_profiles가 아니라 checker_diagnoses의 최근 진단 행에
+      // 반영된다 — applyURLContext(로컬 state 갱신)와는 별개의 side effect라 여기서
+      // 한 번만 fire-and-forget으로 처리한다. userId를 못 구했으면 매칭할 방법이 없어 건너뛴다.
+      if (userId && urlContext?.routineStep) {
+        saveRoutineStepToCheckerDiagnoses(userId, urlContext.routineStep).catch((err) => {
+          console.warn("[saveRoutineStepToCheckerDiagnoses] error:", err)
+        })
+      }
+
       const localOwner = loadLocalOwner()
       // userId를 못 구했으면(Supabase 미설정 등) 소유자 비교가 불가능하니 기존 동작대로
       // 로컬을 그대로 신뢰한다. 태그가 없는 로컬 데이터(이 수정 이전 유저)도 하위호환으로
@@ -405,9 +425,7 @@ export function useDiary() {
         // 이 기기에 이미 진행 중인 로컬 기록이 있고, 지금 로그인된 계정 소유가 맞다 —
         // joinDate/진행 기록은 그대로 두고, 체커에서 돌아온 경우라면 concern/support 같은
         // 부가 정보만 갱신한다
-        const checkerCtx = extractCheckerContext(urlContext)
         setState(applyURLContext(localState, urlContext))
-        setPendingCheckerContext(checkerCtx)
         if (urlContext) clearContextURLParams()
         setHydrated(true)
         return
@@ -442,13 +460,11 @@ export function useDiary() {
             loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
             loggedSlots: remote.loggedSlots,
             conditions: remote.conditions,
+            freeInputs: remote.freeInputs,
           }
         : freshState()
 
-      // URL 파라미터에서 checkerContext를 먼저 추출 (clearContextURLParams 전에)
-      const checkerCtx = extractCheckerContext(urlContext)
       setState(applyURLContext(base, urlContext))
-      setPendingCheckerContext(checkerCtx)
       if (urlContext) clearContextURLParams()
       setHydrated(true)
     })()
@@ -697,27 +713,14 @@ export function useDiary() {
     [userId, getRecipeForDay],
   )
 
-  /** 임시 보류 중인 checker context를 상태에 반영하고 초기화한다 */
-  const applyCheckerContext = useCallback(() => {
-    if (!pendingCheckerContext) return
-    setState((prev) => ({
-      ...prev,
-      concern: pendingCheckerContext.concern,
-      supportOwned: pendingCheckerContext.supportOwned,
-      skinType: pendingCheckerContext.skinType,
-      age: pendingCheckerContext.age,
-      concernTags: pendingCheckerContext.concernTags,
-      overlap: pendingCheckerContext.overlap,
-      tier: pendingCheckerContext.tier,
-      gender: pendingCheckerContext.gender,
-    }))
-    setPendingCheckerContext(null)
-  }, [pendingCheckerContext])
-
-  /** 임시 보류 중인 checker context를 그냥 버린다 (상태는 변경하지 않음) */
-  const dismissCheckerContext = useCallback(() => {
-    setPendingCheckerContext(null)
-  }, [])
+  /** day당 1건, 재저장 시 덮어쓴다(서버는 upsert, 로컬은 값 교체) */
+  const recordFreeInput = useCallback(
+    (day: number, content: string) => {
+      if (userId) saveFreeInputLog(userId, day, content)
+      setState((prev) => ({ ...prev, freeInputs: { ...prev.freeInputs, [day]: content } }))
+    },
+    [userId],
+  )
 
   /**
    * 설정 화면의 "루틴 처음부터 다시 시작하기" 버튼 전용. 체커 재방문 흐름과는 완전히
@@ -752,6 +755,8 @@ export function useDiary() {
     markMilestoneAsSeen,
     conditions: state.conditions,
     recordCondition,
+    freeInputs: state.freeInputs,
+    recordFreeInput,
     settings: state.settings,
     setSettings,
     getRecipeForDay,
@@ -776,8 +781,5 @@ export function useDiary() {
     joinDate: state.joinDate,
     startFresh,
     submitFeedback,
-    pendingCheckerContext,
-    applyCheckerContext,
-    dismissCheckerContext,
   }
 }

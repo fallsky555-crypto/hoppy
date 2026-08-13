@@ -7,7 +7,7 @@ import { t, interpolate } from "@/lib/i18n"
 import type { Locale } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
-import { saveUsageLog, saveFreeInputLog } from "@/lib/supabase/sync"
+import { saveUsageLog } from "@/lib/supabase/sync"
 import { getRecommendedSlot } from "@/lib/slot-mapping"
 import { getFirstConcernTagShortLabelKey } from "@/lib/label-mappings"
 import { DailyRewardCard, type RewardCardData } from "@/components/daily-reward-card"
@@ -67,7 +67,7 @@ const SITUATIONAL_SLOTS: Slot[] = [
   { id: "barrier", emoji: "🌿", labelKey: "dailySlots.slots.barrier" },
 ]
 
-function SlotCard({ slot, isChecked, toggleSlot, isSunCare, isRecommended }: { slot: Slot; isChecked: boolean; toggleSlot: (id: SlotType) => void; isSunCare?: boolean; isRecommended?: boolean }) {
+function SlotCard({ slot, isChecked, toggleSlot, isSunCare, isRecommended, disabled }: { slot: Slot; isChecked: boolean; toggleSlot: (id: SlotType) => void; isSunCare?: boolean; isRecommended?: boolean; disabled?: boolean }) {
   const locale = useLocale()
   const handleClick = useCallback(() => {
     toggleSlot(slot.id)
@@ -80,6 +80,7 @@ function SlotCard({ slot, isChecked, toggleSlot, isSunCare, isRecommended }: { s
     <button
       type="button"
       onClick={handleClick}
+      disabled={disabled}
       className={cn(
         "relative rounded-2xl p-4 transition-all border-2",
         isSunCare
@@ -88,6 +89,7 @@ function SlotCard({ slot, isChecked, toggleSlot, isSunCare, isRecommended }: { s
         isChecked
           ? "border-primary bg-primary/10"
           : "border-border bg-card",
+        disabled && "opacity-60 cursor-not-allowed",
       )}
     >
       <div className={cn("flex-shrink-0", isSunCare ? "text-2xl" : "text-3xl")}>
@@ -118,9 +120,10 @@ interface SpecialCareCardProps {
   selectedSpecialCare: Set<SpecialCareType>
   onToggleSpecialCare: (id: SpecialCareType) => void
   locale: Locale
+  disabled?: boolean
 }
 
-function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSpecialCare, locale }: SpecialCareCardProps) {
+function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSpecialCare, locale, disabled }: SpecialCareCardProps) {
 
   return (
     <div className="border-2 border-border rounded-2xl overflow-hidden">
@@ -149,11 +152,13 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
           <button
             type="button"
             onClick={() => onToggleSpecialCare("mask")}
+            disabled={disabled}
             className={cn(
               "w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all",
               selectedSpecialCare.has("mask")
                 ? "border-primary bg-primary/10"
                 : "border-border bg-card",
+              disabled && "opacity-60 cursor-not-allowed",
             )}
           >
             <span>🫙</span>
@@ -162,11 +167,13 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
           <button
             type="button"
             onClick={() => onToggleSpecialCare("trouble")}
+            disabled={disabled}
             className={cn(
               "w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all",
               selectedSpecialCare.has("trouble")
                 ? "border-primary bg-primary/10"
                 : "border-border bg-card",
+              disabled && "opacity-60 cursor-not-allowed",
             )}
           >
             <span>🩹</span>
@@ -185,9 +192,10 @@ interface ConcernCareCardProps {
   onToggleConcernCare: (id: ConcernCareIngredient) => void
   locale: Locale
   isRecommended?: boolean
+  disabled?: boolean
 }
 
-function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleConcernCare, locale, isRecommended }: ConcernCareCardProps) {
+function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleConcernCare, locale, isRecommended, disabled }: ConcernCareCardProps) {
   return (
     <div className="relative border-2 border-border rounded-2xl overflow-hidden">
       {isRecommended && (
@@ -222,11 +230,13 @@ function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleCo
               key={id}
               type="button"
               onClick={() => onToggleConcernCare(id)}
+              disabled={disabled}
               className={cn(
                 "flex items-center gap-2 p-3 rounded-lg border-2 transition-all",
                 selectedConcernCare.has(id)
                   ? "border-primary bg-primary/10"
                   : "border-border bg-card",
+                disabled && "opacity-60 cursor-not-allowed",
               )}
             >
               <span>{CONCERN_CARE_EMOJI[id]}</span>
@@ -245,11 +255,13 @@ interface FreeInputCardProps {
   value: string
   onChange: (value: string) => void
   onSave: () => void
-  justSaved: boolean
+  /** 이 날짜에 이미 저장된 자유입력 기록이 있는지 — 서버 값(diary.freeInputs[day]) 기준 */
+  hasSavedContent: boolean
   locale: Locale
+  disabled?: boolean
 }
 
-function FreeInputCard({ isExpanded, onToggle, value, onChange, onSave, justSaved, locale }: FreeInputCardProps) {
+function FreeInputCard({ isExpanded, onToggle, value, onChange, onSave, hasSavedContent, locale, disabled }: FreeInputCardProps) {
   return (
     <div className="rounded-2xl bg-secondary overflow-hidden">
       <button
@@ -279,20 +291,21 @@ function FreeInputCard({ isExpanded, onToggle, value, onChange, onSave, justSave
             onChange={(e) => onChange(e.target.value)}
             placeholder={t("dailySlots.freeInput.placeholder", locale)}
             rows={3}
-            className="w-full rounded-2xl bg-card border border-border p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+            disabled={disabled}
+            className="w-full rounded-2xl bg-card border border-border p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:opacity-60 disabled:cursor-not-allowed"
           />
           <button
             type="button"
             onClick={onSave}
-            disabled={!value.trim()}
+            disabled={disabled || !value.trim()}
             className={cn(
               "w-full rounded-full font-semibold py-2.5 text-sm transition-colors",
-              value.trim()
+              !disabled && value.trim()
                 ? "bg-primary hover:bg-primary/80 text-primary-foreground"
                 : "bg-muted text-muted-foreground cursor-not-allowed opacity-60",
             )}
           >
-            {justSaved ? t("dailySlots.freeInput.saved", locale) : t("dailySlots.freeInput.saveButton", locale)}
+            {hasSavedContent ? t("dailySlots.freeInput.saved", locale) : t("dailySlots.freeInput.saveButton", locale)}
           </button>
         </div>
       )}
@@ -318,7 +331,6 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
   const [freeInputExpanded, setFreeInputExpanded] = useState(false)
   const [freeInputText, setFreeInputText] = useState("")
-  const [freeInputJustSaved, setFreeInputJustSaved] = useState(false)
   const [collapsed, setCollapsed] = useState(() => diary.conditions[day] !== undefined)
   const [rewardData, setRewardData] = useState<RewardCardData | null>(null)
   const [collapseMaxHeight, setCollapseMaxHeight] = useState<string>(() =>
@@ -379,6 +391,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
     setCollapsed(diaryRef.current.conditions[day] !== undefined)
     setShowConditionPrompt(false)
     setRewardData(null)
+    setFreeInputText(diaryRef.current.freeInputs[day] ?? "")
   }, [day])
 
   // collapsed 전환 시 max-height를 실측해 애니메이션한다. CSS grid-template-rows의
@@ -409,6 +422,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   }, [collapsed])
 
   const toggleSlot = useCallback((slotId: SlotType) => {
+    if (diaryRef.current.conditions[day] !== undefined) return
     setCheckedSlots((prev) => {
       const newChecked = new Set(prev)
       if (newChecked.has(slotId)) {
@@ -444,6 +458,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   }, [day, recommendedSlot])
 
   const toggleSpecialCare = useCallback((specialCareId: SpecialCareType) => {
+    if (diaryRef.current.conditions[day] !== undefined) return
     setSelectedSpecialCare((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(specialCareId)) {
@@ -485,6 +500,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
    * 표시/추천배지 등 기존 로직은 손대지 않아도 계속 정상 동작한다.
    */
   const toggleConcernCare = useCallback((ingredientId: ConcernCareIngredient) => {
+    if (diaryRef.current.conditions[day] !== undefined) return
     const newConcernSet = new Set(selectedConcernCareRef.current)
     if (newConcernSet.has(ingredientId)) {
       newConcernSet.delete(ingredientId)
@@ -529,16 +545,10 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   }, [day, recommendedSlot])
 
   const handleSaveFreeInput = useCallback(() => {
+    if (diaryRef.current.conditions[day] !== undefined) return
     const content = freeInputText.trim()
     if (!content) return
-    const userId = diaryRef.current.userId
-    if (userId) {
-      saveFreeInputLog(userId, day, content).catch((err) => {
-        console.error("[saveFreeInputLog] error:", err)
-      })
-    }
-    setFreeInputJustSaved(true)
-    setTimeout(() => setFreeInputJustSaved(false), 1500)
+    diaryRef.current.recordFreeInput(day, content)
   }, [day, freeInputText])
 
   const handleConditionSelect = useCallback(
@@ -561,6 +571,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
 
   const totalSelected = checkedSlots.size + selectedSpecialCare.size + selectedConcernCare.size
   const isDone = diary.conditions[day] !== undefined
+  const hasFreeInput = diary.freeInputs[day] !== undefined
 
   return (
     <section
@@ -649,6 +660,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                       isChecked={checkedSlots.has(slot.id)}
                       toggleSlot={toggleSlot}
                       isRecommended={recommendedSlot === slot.id}
+                      disabled={isDone}
                     />
                   ))}
                 </div>
@@ -668,6 +680,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                       isChecked={checkedSlots.has(slot.id)}
                       toggleSlot={toggleSlot}
                       isRecommended={recommendedSlot === slot.id}
+                      disabled={isDone}
                     />
                   ))}
                 </div>
@@ -680,6 +693,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                   onToggleConcernCare={toggleConcernCare}
                   locale={locale}
                   isRecommended={recommendedSlot === "active"}
+                  disabled={isDone}
                 />
 
                 {/* 특별관리 아코디언 */}
@@ -689,6 +703,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                   selectedSpecialCare={selectedSpecialCare}
                   onToggleSpecialCare={toggleSpecialCare}
                   locale={locale}
+                  disabled={isDone}
                 />
               </div>
 
@@ -699,8 +714,9 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                 value={freeInputText}
                 onChange={setFreeInputText}
                 onSave={handleSaveFreeInput}
-                justSaved={freeInputJustSaved}
+                hasSavedContent={hasFreeInput}
                 locale={locale}
+                disabled={isDone}
               />
             </div>
 
