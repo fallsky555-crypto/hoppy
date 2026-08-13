@@ -161,7 +161,7 @@ export function ReportCard({
           {/* CTA 버튼 */}
           <button
             onClick={onCTAClick}
-            className="w-full bg-primary text-primary-foreground font-bold text-base rounded-2xl px-6 py-4.5 hover:opacity-90 transition-opacity"
+            className="w-full bg-primary text-primary-foreground font-bold text-base rounded-2xl px-6 py-4.5 hover:opacity-90 transition-opacity border-1.5 border-primary-text"
           >
             {t("reportCard.ctaButton", locale)}
           </button>

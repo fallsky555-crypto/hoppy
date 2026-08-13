@@ -72,6 +72,8 @@
   --color-ink-3: var(--ink-3);
   --color-line: var(--line);
   --color-primary-fg: var(--primary-fg);
+  /* border-1.5 유틸 — 리포트카드 얇은 보더 디자인 값(1px보다 살짝 두껍게) */
+  --border-width-1\.5: 1.5px;
   /* 에디토리얼 리디자인 — 큰 섹션 카드 22px, 작은 요소(행·캘린더 셀) 14px. 디자인 핸드오프
      문서(design_handoff_hoppy_home)의 "soft" 프리셋 값 */
   --radius-sm: 8px;
@@ -221,8 +223,8 @@
   --ink-2: #555555;
   --ink-3: #888888;
   --line: #E2D7CD;
-  --primary: #EDE3D2;
-  --primary-foreground: #171512;
+  --primary: #FFFFFF;
+  --primary-foreground: #2A5C43;
   --primary-text: #2A5C43;
   --primary-fg: #1E4532;
   --primary-soft: #F2F7F4;
