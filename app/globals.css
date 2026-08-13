@@ -67,6 +67,11 @@
   --color-primary-soft: var(--primary-soft);
   --color-future-dark: var(--future-dark);
   --color-future-accent: var(--future-accent);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-primary-fg: var(--primary-fg);
   /* 에디토리얼 리디자인 — 큰 섹션 카드 22px, 작은 요소(행·캘린더 셀) 14px. 디자인 핸드오프
      문서(design_handoff_hoppy_home)의 "soft" 프리셋 값 */
   --radius-sm: 8px;
@@ -159,6 +164,11 @@
   --primary-soft: #EAF3FC;
   --future-dark: #2A2219;
   --future-accent: #C9A876;
+  --ink: var(--foreground);
+  --ink-2: var(--muted-foreground);
+  --ink-3: var(--text-caption);
+  --line: var(--border);
+  --primary-fg: var(--primary-text);
 }
 
 .dark {
@@ -200,6 +210,22 @@
   --primary-soft: #1A3B52;
   --future-dark: #2A2219;
   --future-accent: #D4A574;
+}
+
+/* ReportCard 전용 스코프 — 앱 전역 스카이블루 대신 체커의 크림/그린 톤 오버라이드.
+   .dark와 같은 위치(:root 밖)에 둬서 ReportCard를 벗어나면 자동으로 원래 톤으로 복귀한다. */
+.theme-report {
+  --background: #FFFFFF;
+  --card: #FFFFFF;
+  --ink: #171512;
+  --ink-2: #555555;
+  --ink-3: #888888;
+  --line: #E2D7CD;
+  --primary: #EDE3D2;
+  --primary-foreground: #171512;
+  --primary-text: #2A5C43;
+  --primary-fg: #1E4532;
+  --primary-soft: #F2F7F4;
 }
 
 @media (prefers-color-scheme: dark) {
