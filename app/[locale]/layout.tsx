@@ -1,6 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
-import { Playfair_Display, Noto_Serif_KR } from 'next/font/google'
 import LocalFont from 'next/font/local'
 import { t } from '@/lib/i18n'
 import { LocaleProvider } from '@/lib/locale-provider'
@@ -21,15 +20,23 @@ export async function generateMetadata({ params }: LocaleLayoutProps): Promise<M
   }
 }
 
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
+// app/layout.tsx와 동일한 이유(Google Fonts 빌드 캐시 stale 404 사고)로 self-host —
+// 자세한 배경은 app/layout.tsx의 주석 참고
+const playfairDisplay = LocalFont({
+  src: [
+    { path: '../../public/fonts/PlayfairDisplay-500.woff2', weight: '500', style: 'normal' },
+    { path: '../../public/fonts/PlayfairDisplay-600.woff2', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/PlayfairDisplay-700.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-playfair',
   display: 'swap',
 })
 
-const notoSerifKR = Noto_Serif_KR({
-  weight: ['500', '700'],
+const notoSerifKR = LocalFont({
+  src: [
+    { path: '../../public/fonts/NotoSerifKR-500.woff2', weight: '500', style: 'normal' },
+    { path: '../../public/fonts/NotoSerifKR-700.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-noto-serif-kr',
   display: 'swap',
   preload: true,
