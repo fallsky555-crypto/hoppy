@@ -125,6 +125,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
             skinType={diary.skinType}
             concernTags={diary.concernTags}
             activeIngredients={diary.activeIngredients}
+            checkerResultUrl={diary.checkerResultUrl}
             onCTAClick={() => onComplete(dataConsent)}
           />
         </section>

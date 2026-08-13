@@ -12,6 +12,7 @@ import {
   saveActiveIngredients,
   saveAge,
   saveCalendar,
+  saveCheckerResultUrl,
   saveConcern,
   saveConcernTags,
   saveCompletionFeedback,
@@ -85,6 +86,8 @@ interface DiaryState {
   gender: string | null
   /** 다이어리 커버에서 입력한 이름 (선택, 미입력 시 null) */
   name: string | null
+  /** 체커 자신의 결과 화면(성분 리스트, 컨설턴트 코멘트 등)을 재현하는 링크 */
+  checkerResultUrl: string | null
 }
 
 /** 로그아웃 시 로컬 캐시를 지우는 용도로도 쓰인다(login-banner.tsx) */
@@ -129,6 +132,7 @@ function freshState(): DiaryState {
     tier: null,
     gender: null,
     name: null,
+    checkerResultUrl: null,
   }
 }
 
@@ -161,6 +165,7 @@ function loadLocalState(): DiaryState | null {
       tier: parsed.tier ?? null,
       gender: parsed.gender ?? null,
       name: parsed.name ?? null,
+      checkerResultUrl: parsed.checkerResultUrl ?? null,
     }
   } catch {
     return null
@@ -213,6 +218,8 @@ interface URLContextPayload {
   gender: string | null
   /** diary_profiles가 아니라 checker_diagnoses의 최근 진단 행에 반영된다 (아래 하이드레이션 effect 참고) */
   routineStep: string | null
+  /** 체커 자신의 결과 화면을 재현하는 링크. skinType 등과 동일하게 diary_profiles에 반영된다 */
+  checkerResultUrl: string | null
 }
 
 const VALID_CONCERNS: Concern[] = ["dry", "flush", "flaky", "trouble", "none"]
@@ -263,6 +270,22 @@ function parseRoutineStep(raw: string | null): string | null {
   return trimmed.length > 0 ? trimmed.slice(0, 100) : null
 }
 
+/**
+ * 체커 결과 화면 링크. target="_blank"로 그대로 여는 값이라 http/https가 아닌
+ * 스킴(javascript: 등)은 걸러낸다. URLSearchParams가 이미 퍼센트 디코딩을 해준다.
+ */
+function parseCheckerResultUrl(raw: string | null): string | null {
+  if (!raw) return null
+  const trimmed = raw.trim()
+  if (trimmed.length === 0 || trimmed.length > 2000) return null
+  try {
+    const url = new URL(trimmed)
+    return url.protocol === "http:" || url.protocol === "https:" ? trimmed : null
+  } catch {
+    return null
+  }
+}
+
 function parseSupportOwned(raw: string | null): SupportId[] {
   if (!raw) return []
   return raw
@@ -301,12 +324,15 @@ function buildProductDetails(itemIds: string[]): UsedProduct[] {
  * &support={hya,cica,nia,cer 콤마 구분}&items={...}&age={teen/20s/30s/40s/50s/60s_plus}
  * &beauty_concerns={DRY,TONE 등 콤마 구분}&overlap={숫자}&tier={0/1/2}
  * &gender={female/male/other/unspecified}&routine_step={자유 문자열}
+ * &checker_result_url={인코딩된 링크}
  *
  * type/preg/rx/compat_score는 의도적으로 파싱하지 않는다: preg/rx는 diary_profiles
  * 컬럼이 삭제된 이력이 있고(0015 마이그레이션), type/compat_score는 현재 값의 용도가
  * 불분명해 저장 대상에서 제외했다(2026-08-13 결정). routine_step만 예외적으로 받되,
  * diary_profiles가 아니라 checker_diagnoses의 최근 진단 행에 반영된다 — applyURLContext가
- * 아니라 하이드레이션 effect에서 별도로 처리하는 이유가 이 때문이다.
+ * 아니라 하이드레이션 effect에서 별도로 처리하는 이유가 이 때문이다. checker_result_url은
+ * skinType 등과 동일하게 diary_profiles에 반영된다(기기 바뀌어도 ReportCard에서 다시
+ * 보여줘야 해서, routine_step과 달리 checker_diagnoses가 아니다).
  */
 function contextFromURL(): URLContextPayload | null {
   if (typeof window === "undefined") return null
@@ -322,8 +348,9 @@ function contextFromURL(): URLContextPayload | null {
   const hasTier = params.get("tier") !== null
   const hasGender = params.get("gender") !== null
   const hasRoutineStep = params.get("routine_step") !== null
+  const hasCheckerResultUrl = params.get("checker_result_url") !== null
 
-  if (!hasSkinType && !hasConcern && !hasSupport && !hasItems && !hasAge && !hasBeautyConcerns && !hasOverlap && !hasTier && !hasGender && !hasRoutineStep) return null
+  if (!hasSkinType && !hasConcern && !hasSupport && !hasItems && !hasAge && !hasBeautyConcerns && !hasOverlap && !hasTier && !hasGender && !hasRoutineStep && !hasCheckerResultUrl) return null
 
   const itemIds = parseItems(params.get("items"))
 
@@ -338,6 +365,7 @@ function contextFromURL(): URLContextPayload | null {
     tier: parseTier(params.get("tier")),
     gender: parseGender(params.get("gender")),
     routineStep: parseRoutineStep(params.get("routine_step")),
+    checkerResultUrl: parseCheckerResultUrl(params.get("checker_result_url")),
   }
 }
 
@@ -345,7 +373,7 @@ function contextFromURL(): URLContextPayload | null {
 function clearContextURLParams() {
   if (typeof window === "undefined") return
   const params = new URLSearchParams(window.location.search)
-  for (const key of ["type", "preg", "rx", "concern", "support", "skin_type", "items", "age", "beauty_concerns", "overlap", "tier", "gender", "routine_step"]) {
+  for (const key of ["type", "preg", "rx", "concern", "support", "skin_type", "items", "age", "beauty_concerns", "overlap", "tier", "gender", "routine_step", "checker_result_url"]) {
     params.delete(key)
   }
   const query = params.toString()
@@ -370,6 +398,11 @@ function applyURLContext(base: DiaryState, context: URLContextPayload | null): D
     gender: context.gender,
     concern: context.concern,
     supportOwned: context.supportOwned,
+    // 이 값만 예외적으로 "없으면 기존 값 유지"로 병합한다 — ReportCard의 "검사지 보기"
+    // 링크가 이 값 하나에 의존하는데, 다른 필드처럼 매번 덮어쓰면 checker_result_url이
+    // 없는 URL로 재방문할 때(예: 파라미터 일부만 들고 오는 경우) 이미 저장해둔 링크가
+    // null로 지워져버린다.
+    checkerResultUrl: context.checkerResultUrl ?? base.checkerResultUrl,
   }
 }
 
@@ -457,6 +490,7 @@ export function useDiary() {
             overlap: remote.profile.overlap,
             tier: remote.profile.tier,
             gender: remote.profile.gender,
+            checkerResultUrl: remote.profile.checkerResultUrl,
             loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
             loggedSlots: remote.loggedSlots,
             conditions: remote.conditions,
@@ -582,6 +616,12 @@ export function useDiary() {
     if (!userId || !hydrated) return
     saveTier(userId, state.joinDate, state.tier)
   }, [userId, hydrated, state.joinDate, state.tier])
+
+  // 체커 결과 화면 링크 — ReportCard "검사지 보기"가 이 값을 연다
+  useEffect(() => {
+    if (!userId || !hydrated) return
+    saveCheckerResultUrl(userId, state.joinDate, state.checkerResultUrl)
+  }, [userId, hydrated, state.joinDate, state.checkerResultUrl])
 
   // 데일리슬롯 "고민케어" 드롭다운에서 누적된 성분 목록
   useEffect(() => {
@@ -777,6 +817,7 @@ export function useDiary() {
     setGender,
     name: state.name,
     setName,
+    checkerResultUrl: state.checkerResultUrl,
     userId,
     joinDate: state.joinDate,
     startFresh,

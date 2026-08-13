@@ -160,6 +160,8 @@ interface RemoteProfile {
   overlap: number | null
   tier: string | null
   gender: string | null
+  /** 체커 자신의 결과 화면(성분 리스트, 컨설턴트 코멘트 등)을 재현하는 링크 */
+  checkerResultUrl: string | null
 }
 
 /** BHA/레티놀 도입 간격 슬라이더 + 가입일을 diary_profiles에 upsert한다 */
@@ -323,6 +325,18 @@ export async function saveTier(userId: string, signupDate: string, tier: string 
     { onConflict: "user_id" },
   )
   if (error) console.warn("[supabase] saveTier failed:", error.message)
+}
+
+/** 체커 URL 파라미터 checker_result_url을 diary_profiles에 반영한다 — ReportCard "검사지 보기" 링크가 이 값을 연다 */
+export async function saveCheckerResultUrl(userId: string, signupDate: string, checkerResultUrl: string | null): Promise<void> {
+  const supabase = getSupabaseClient()
+  if (!supabase) return
+
+  const { error } = await supabase.from("diary_profiles").upsert(
+    { user_id: userId, signup_date: signupDate.slice(0, 10), checker_result_url: checkerResultUrl },
+    { onConflict: "user_id" },
+  )
+  if (error) console.warn("[supabase] saveCheckerResultUrl failed:", error.message)
 }
 
 /** 13-3(v1.7). 이 유저의 프로필이 확인된 엔진 버전을 diary_profiles에 반영한다 */
@@ -542,7 +556,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
       .select(
-        "signup_date, active_interval_days, bha_interval_days, concern, support_owned, active_ingredients, engine_version, skin_type, age, concern_tags, overlap_count, tier, gender",
+        "signup_date, active_interval_days, bha_interval_days, concern, support_owned, active_ingredients, engine_version, skin_type, age, concern_tags, overlap_count, tier, gender, checker_result_url",
       )
       .eq("user_id", userId)
       .maybeSingle()
@@ -600,6 +614,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
         overlap: (profile.overlap_count as number | null) ?? null,
         tier: (profile.tier as string | null) ?? null,
         gender: (profile.gender as string | null) ?? null,
+        checkerResultUrl: (profile.checker_result_url as string | null) ?? null,
       },
       completedDays,
       loggedSlots,

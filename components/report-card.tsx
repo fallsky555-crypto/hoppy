@@ -15,6 +15,8 @@ interface ReportCardProps {
   skinType?: string | null
   concernTags?: string | null // 쉼표 구분 또는 배열 형태
   activeIngredients?: string[] | null
+  /** 체커 자신의 결과 화면(성분 리스트, 컨설턴트 코멘트 등)을 재현하는 링크. 있을 때만 "검사지 보기" 노출 */
+  checkerResultUrl?: string | null
   onCTAClick?: () => void
   /** revisit 모드 하단 "설정" 버튼 클릭 시 호출 — 이 카드를 모달로 띄운 쪽에서 닫기 등을 처리 */
   onClose?: () => void
@@ -33,6 +35,7 @@ export function ReportCard({
   skinType,
   concernTags,
   activeIngredients,
+  checkerResultUrl,
   onCTAClick,
   onClose,
 }: ReportCardProps) {
@@ -138,6 +141,16 @@ export function ReportCard({
           <br />
           {t("reportCard.subtitleLine2", locale)}
         </p>
+        {checkerResultUrl && (
+          <a
+            href={checkerResultUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-block text-sm font-bold text-primary-text underline underline-offset-2 hover:opacity-80"
+          >
+            {t("reportCard.checkerResultLink", locale)}
+          </a>
+        )}
       </div>
 
       {/* 성분 가이드 섹션 */}
