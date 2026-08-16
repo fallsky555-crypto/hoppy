@@ -20,6 +20,60 @@ function rememberLinkAttempt(provider: LoginProvider) {
 }
 
 /**
+ * OAuth 리다이렉트로 나가기 직전에 남겨두는 표시. useDiary 하이드레이션 effect가 돌아온
+ * 페이지에서 consumeLoginPendingFlag()로 읽어 "방금 로그인 플로우를 마치고 돌아왔는지"를
+ * 판단한다. linkIdentity()로 첫 연결에 성공하는 가장 흔한 경우 익명 세션의 userId가 그대로
+ * 유지되어 소유자 비교(ownerMatches)가 항상 true가 되고, 그러면 원격 fetch 자체가 없어
+ * justRestoredFromRemote가 "원격 데이터를 실제로 복원했는지"만 보고 있으면 절대 true가
+ * 되지 않는다 — 그 결과 로그인 성공 직후에도 커버 화면이 매번 다시 뜬다. 이 플래그로
+ * "원격 fetch 여부"와 무관하게 "로그인 직후"를 직접 판별한다.
+ */
+const LOGIN_PENDING_KEY = "hoppy-oauth-login-pending"
+
+function rememberLoginPending() {
+  try {
+    window.sessionStorage.setItem(LOGIN_PENDING_KEY, "1")
+  } catch {
+    // 저장 실패는 무시
+  }
+}
+
+function clearLoginPending() {
+  try {
+    window.sessionStorage.removeItem(LOGIN_PENDING_KEY)
+  } catch {
+    // 무시
+  }
+}
+
+/** 로그인 플로우에서 돌아온 페이지에서 한 번만 소비한다 — 읽자마자 지워서 이후
+ * 새로고침에는 영향을 주지 않는다. */
+export function consumeLoginPendingFlag(): boolean {
+  if (typeof window === "undefined") return false
+  try {
+    const pending = window.sessionStorage.getItem(LOGIN_PENDING_KEY) === "1"
+    window.sessionStorage.removeItem(LOGIN_PENDING_KEY)
+    return pending
+  } catch {
+    return false
+  }
+}
+
+/**
+ * URL에 OAuth 에러 파라미터가 있는지만 확인한다(소비하지 않고 지우지도 않음 —
+ * consumeOAuthErrorFromURL()이 별도로 그 역할을 한다). consumeLoginPendingFlag()와
+ * 같이 써서 "로그인이 에러로 돌아온 경우"를 "로그인 직후" 판정에서 제외하기 위한 용도다.
+ * LoginBanner는 커버/온보딩을 지나야만 마운트되므로 그 안의 consumeOAuthErrorFromURL()에
+ * 기대지 않고 useDiary 하이드레이션에서 직접 확인해야 순서 문제가 없다.
+ */
+export function hasOAuthErrorInURL(): boolean {
+  if (typeof window === "undefined") return false
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""))
+  const searchParams = new URLSearchParams(window.location.search)
+  return Boolean(searchParams.get("error_code") ?? hashParams.get("error_code"))
+}
+
+/**
  * 13-2. 현재 익명 세션(Supabase Anonymous Auth)을 카카오/구글 영구 계정에 그대로
  * 연결한다(identity linking). user_id가 로그인 전후로 동일하게 유지되므로 별도
  * 데이터 마이그레이션이 필요 없다 — "회원가입"이 아니라 "지금 쓰던 세션에 계정 연결".
@@ -36,6 +90,7 @@ export async function linkIdentity(provider: LoginProvider): Promise<{ error: st
   if (!supabase) return { error: "Supabase가 설정되지 않았습니다." }
 
   if (typeof window !== "undefined") rememberLinkAttempt(provider)
+  if (typeof window !== "undefined") rememberLoginPending()
 
   // origin만 넘긴다(경로·쿼리 제외) — 진단 파라미터가 URL에 남아있으면 매번 다른
   // redirectTo 값이 되어 Supabase의 Redirect URLs 허용 목록과 정확히 일치하지 않을 수
@@ -48,6 +103,7 @@ export async function linkIdentity(provider: LoginProvider): Promise<{ error: st
 
   if (error) {
     console.warn(`[supabase] linkIdentity(${provider}) failed:`, error.message)
+    clearLoginPending()
     return { error: error.message, code: (error as any).code }
   }
   // 성공하면 브라우저가 곧바로 OAuth 제공자로 리다이렉트되므로 이 반환값이 쓰일 일은 거의 없다
@@ -76,6 +132,8 @@ export async function signInExistingIdentity(provider: LoginProvider): Promise<{
     // 실패해도 로그인 시도 자체는 계속 진행 — 최선 노력 수준의 정리 단계일 뿐
   }
 
+  if (typeof window !== "undefined") rememberLoginPending()
+
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: { redirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
@@ -83,6 +141,7 @@ export async function signInExistingIdentity(provider: LoginProvider): Promise<{
 
   if (error) {
     console.warn(`[supabase] signInWithOAuth(${provider}) failed:`, error.message)
+    clearLoginPending()
     return { error: error.message }
   }
   return { error: null }
@@ -107,6 +166,12 @@ export function consumeOAuthErrorFromURL(): OAuthErrorResult | null {
   const searchParams = new URLSearchParams(window.location.search)
   const errorCode = searchParams.get("error_code") ?? hashParams.get("error_code")
   if (!errorCode) return null
+
+  // 로그인이 에러와 함께 돌아온 것 — rememberLoginPending()으로 남겨둔 표시는 여기서
+  // 무효화한다. 안 지우면 (예: identity_already_exists로 대화상자만 뜨고 아직 실제
+  // 로그인은 안 끝난 상태에서) useDiary 하이드레이션이 "로그인 직후"로 잘못 판단해
+  // 커버를 성급히 건너뛴다.
+  clearLoginPending()
 
   let provider: LoginProvider | null = null
   try {

@@ -6,6 +6,7 @@ import {
   CURRENT_ENGINE_VERSION,
   generateCalendar,
 } from "@/lib/scheduling-engine"
+import { consumeLoginPendingFlag, hasOAuthErrorInURL } from "@/lib/supabase/auth"
 import {
   ensureAnonSession,
   loadRemoteState,
@@ -410,9 +411,11 @@ export function useDiary() {
   // 하이드레이션 불일치를 피하기 위해 초기엔 기본값, 마운트 후 localStorage 로드
   const [state, setState] = useState<DiaryState>(freshState)
   const [hydrated, setHydrated] = useState(false)
-  /** 소유자 불일치로 원격 데이터를 실제로 복원한 하이드레이션 사이클이었는지 — 로그인
-   * 직후 등 "다른 세션에서 이어옴"이 확정된 경우에만 true. DailyCover의 "매번 펼치는
-   * 의식" 게이트를 이 경우에만 건너뛰기 위해 존재한다(app/[locale]/page.tsx 참고). */
+  /** 이번 하이드레이션 사이클이 "로그인 직후"였는지 — 소유자 불일치로 원격 데이터를
+   * 실제로 복원했거나(다른 기기에서 이어옴), OAuth 로그인 플로우에서 막 돌아왔지만
+   * 같은 익명 세션이 그대로 유지돼 원격 fetch가 없었던 경우(가장 흔한 최초 로그인) 둘
+   * 다 true. DailyCover의 "매번 펼치는 의식" 게이트를 이 경우에만 건너뛰기 위해
+   * 존재한다(app/[locale]/page.tsx 참고). */
   const [justRestoredFromRemote, setJustRestoredFromRemote] = useState(false)
 
   // Supabase 익명 세션 — localStorage가 여전히 1차 캐시이고, 이건 기기 간 복원용 백엔드다.
@@ -435,6 +438,14 @@ export function useDiary() {
     ;(async () => {
       const localState = loadLocalState()
       const urlContext = contextFromURL()
+
+      // OAuth 로그인 플로우(linkIdentity/signInExistingIdentity)에서 막 돌아왔는지.
+      // linkIdentity()로 처음 연결에 성공하는 가장 흔한 경우 익명 세션의 userId가 그대로
+      // 유지되어 아래 ownerMatches가 항상 true가 되고, 그러면 원격 fetch 자체가 없어
+      // "remote가 있으면 true"만으로는 이 케이스를 못 잡는다 — 로그인은 성공했는데 커버가
+      // 계속 뜨는 버그의 원인. 에러로 돌아온 경우(예: identity_already_exists 대화상자만
+      // 뜨고 실제 로그인은 아직 안 끝남)는 제외한다.
+      const justLoggedIn = consumeLoginPendingFlag() && !hasOAuthErrorInURL()
 
       // [2026-08-09] 로컬 데이터를 신뢰하기 전에 지금 로그인된 userId부터 확인한다 — 이전엔
       // 로컬에 뭐라도 있으면 소유자 확인 없이 무조건 그걸 썼는데, 다른 계정으로 로그인
@@ -464,6 +475,7 @@ export function useDiary() {
         // 부가 정보만 갱신한다
         setState(applyURLContext(localState, urlContext))
         if (urlContext) clearContextURLParams()
+        if (justLoggedIn) setJustRestoredFromRemote(true)
         setHydrated(true)
         return
       }
@@ -479,7 +491,7 @@ export function useDiary() {
       const remote = userId ? await loadRemoteState(userId) : null
       if (cancelled) return
 
-      if (remote) setJustRestoredFromRemote(true)
+      if (remote || justLoggedIn) setJustRestoredFromRemote(true)
 
       const base: DiaryState = remote
         ? {
