@@ -569,7 +569,14 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
     [checkedSlots, selectedSpecialCare, freeInputText, recommendedSlot, onConditionRecord],
   )
 
-  const totalSelected = checkedSlots.size + selectedSpecialCare.size + selectedConcernCare.size
+  // "active" 슬롯은 그리드에 직접 토글 버튼이 없다 — toggleConcernCare()가 성분을
+  // 하나라도 선택하면 부수적으로 checkedSlots에 추가하는 파생 상태일 뿐이다(위 주석
+  // 참고). 그대로 더하면 고민케어 성분을 N개 고를 때마다 "active" 1개가 겹쳐 세어져
+  // 카운트가 항상 실제 선택 개수보다 1 많게 표시된다 — active를 제외하고 센다.
+  const totalSelected =
+    (checkedSlots.has("active") ? checkedSlots.size - 1 : checkedSlots.size) +
+    selectedSpecialCare.size +
+    selectedConcernCare.size
   const isDone = diary.conditions[day] !== undefined
   const hasFreeInput = diary.freeInputs[day] !== undefined
 
