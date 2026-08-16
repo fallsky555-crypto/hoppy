@@ -410,6 +410,10 @@ export function useDiary() {
   // 하이드레이션 불일치를 피하기 위해 초기엔 기본값, 마운트 후 localStorage 로드
   const [state, setState] = useState<DiaryState>(freshState)
   const [hydrated, setHydrated] = useState(false)
+  /** 소유자 불일치로 원격 데이터를 실제로 복원한 하이드레이션 사이클이었는지 — 로그인
+   * 직후 등 "다른 세션에서 이어옴"이 확정된 경우에만 true. DailyCover의 "매번 펼치는
+   * 의식" 게이트를 이 경우에만 건너뛰기 위해 존재한다(app/[locale]/page.tsx 참고). */
+  const [justRestoredFromRemote, setJustRestoredFromRemote] = useState(false)
 
   // Supabase 익명 세션 — localStorage가 여전히 1차 캐시이고, 이건 기기 간 복원용 백엔드다.
   // 아래 하이드레이션 effect도 소유자 비교를 위해 독립적으로 ensureAnonSession()을 호출하는데,
@@ -474,6 +478,8 @@ export function useDiary() {
       // 시퀀스를 새로 시작)
       const remote = userId ? await loadRemoteState(userId) : null
       if (cancelled) return
+
+      if (remote) setJustRestoredFromRemote(true)
 
       const base: DiaryState = remote
         ? {
@@ -782,6 +788,7 @@ export function useDiary() {
 
   return {
     hydrated,
+    justRestoredFromRemote,
     onboarded,
     completeOnboarding,
     currentDay,

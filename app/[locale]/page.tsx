@@ -40,8 +40,10 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   }
 
   // 온보딩 완료 후, 앱을 켤 때마다(당일 첫 방문 여부와 무관하게) 매번 커버를 먼저 보여준다.
-  // 하트 버튼을 눌러야만 아래 홈 화면으로 넘어간다(자동 전환 없음).
-  if (!coverConfirmed) {
+  // 하트 버튼을 눌러야만 아래 홈 화면으로 넘어간다(자동 전환 없음). 단, 소유자 불일치로
+  // 방금 원격 데이터를 복원한 경우(로그인 직후 등)는 예외 — "다이어리를 펼치는 의식"이
+  // 아니라 로그인 성공을 확인하고 싶은 순간이라, 커버 대신 바로 홈으로 넘어간다.
+  if (!coverConfirmed && !diary.justRestoredFromRemote) {
     return (
       <DailyCover
         locale={locale}
