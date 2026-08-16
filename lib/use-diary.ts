@@ -491,6 +491,7 @@ export function useDiary() {
             tier: remote.profile.tier,
             gender: remote.profile.gender,
             checkerResultUrl: remote.profile.checkerResultUrl,
+            name: remote.profile.name,
             loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
             loggedSlots: remote.loggedSlots,
             conditions: remote.conditions,

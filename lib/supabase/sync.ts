@@ -162,6 +162,8 @@ interface RemoteProfile {
   gender: string | null
   /** 체커 자신의 결과 화면(성분 리스트, 컨설턴트 코멘트 등)을 재현하는 링크 */
   checkerResultUrl: string | null
+  /** 다이어리 커버에서 입력한 이름 */
+  name: string | null
 }
 
 /** BHA/레티놀 도입 간격 슬라이더 + 가입일을 diary_profiles에 upsert한다 */
@@ -556,7 +558,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
     const { data: profile, error: profileError } = await supabase
       .from("diary_profiles")
       .select(
-        "signup_date, active_interval_days, bha_interval_days, concern, support_owned, active_ingredients, engine_version, skin_type, age, concern_tags, overlap_count, tier, gender, checker_result_url",
+        "signup_date, active_interval_days, bha_interval_days, concern, support_owned, active_ingredients, engine_version, skin_type, age, concern_tags, overlap_count, tier, gender, checker_result_url, name",
       )
       .eq("user_id", userId)
       .maybeSingle()
@@ -615,6 +617,7 @@ export async function loadRemoteState(userId: string): Promise<RemoteState | nul
         tier: (profile.tier as string | null) ?? null,
         gender: (profile.gender as string | null) ?? null,
         checkerResultUrl: (profile.checker_result_url as string | null) ?? null,
+        name: (profile.name as string | null) ?? null,
       },
       completedDays,
       loggedSlots,
