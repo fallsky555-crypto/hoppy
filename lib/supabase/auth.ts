@@ -64,6 +64,18 @@ export async function signInExistingIdentity(provider: LoginProvider): Promise<{
   const supabase = getSupabaseClient()
   if (!supabase) return { error: "Supabase가 설정되지 않았습니다." }
 
+  // 익명 세션이 남아있는 채로 signInWithOAuth()를 호출하면 GoTrue가 "지금 세션에
+  // 연결 시도"로 취급해 identity_already_exists 충돌이 재발할 수 있다 — Supabase
+  // 권장대로 먼저 로그아웃해 세션을 비운 뒤 독립적인 로그인으로 처리되게 한다.
+  // signOut()은 세션만 종료할 뿐 로컬 다이어리 데이터(hoppy-skin-diary-v1)는
+  // 건드리지 않는다 — 호출 전에 이미 사용자 확인(데이터 유실 다이얼로그)을 받았으므로
+  // 여기서 로컬 데이터를 지울 이유도 없다.
+  const { error: signOutError } = await supabase.auth.signOut()
+  if (signOutError) {
+    console.warn(`[supabase] signOut before signInExistingIdentity(${provider}) failed:`, signOutError.message)
+    // 실패해도 로그인 시도 자체는 계속 진행 — 최선 노력 수준의 정리 단계일 뿐
+  }
+
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: { redirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
