@@ -313,6 +313,7 @@
     "lockedPreviewElasticityDesc": "Once your barrier is strong, you can slowly start renewal care for elasticity.",
     "onboardingExample": "e.g. 7",
     "today": "Today",
+    "pastRecord": "Past record",
     "later": "Later"
   },
   "onboarding": {
@@ -558,7 +559,8 @@
       "title": "Today's log, complete!"
     },
     "summaryBar": {
-      "label": "Today's record complete · View details"
+      "label": "Today's record complete · View details",
+      "labelPast": "Past record complete · View details"
     },
     "editHint": "Tap a slot to edit"
   },

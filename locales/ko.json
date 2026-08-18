@@ -313,6 +313,7 @@
     "lockedPreviewElasticityDesc": "피부장벽이 자리를 잡으면, 탄력을 돕는 재생 케어를 천천히 시작해 볼 수 있어요.",
     "onboardingExample": "예: 7",
     "today": "오늘",
+    "pastRecord": "지난 기록",
     "later": "나중에"
   },
   "onboarding": {
@@ -555,7 +556,8 @@
       "title": "오늘의 기록, 완수했어요!"
     },
     "summaryBar": {
-      "label": "오늘 기록 완료 · 자세히 보기"
+      "label": "오늘 기록 완료 · 자세히 보기",
+      "labelPast": "지난 기록 완료 · 자세히 보기"
     },
     "editHint": "슬롯을 눌러 수정하세요"
   },

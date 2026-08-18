@@ -53,6 +53,24 @@ const CONCERN_CARE_EMOJI: Record<ConcernCareIngredient, string> = {
   unknown: "❓",
 }
 
+/**
+ * 하루 기록이 "완료되어 잠겨야 하는지" 판단한다. 무드(조건) 선택까지 마치면 당연히 잠기고,
+ * 그 전이라도 — 오늘이 아닌 지나간 날짜인데 이미 슬롯이 하나라도 기록돼 있다면(캘린더에
+ * "완료" 도장이 찍힌 상태) 잠근다. 그렇지 않으면 무드 선택 단계에서 "나중에"를 누르고 넘어간
+ * 지난 날짜를 캘린더에서 다시 열었을 때 전체 폼이 그대로 재입력 가능한 상태로 열려버린다
+ * (지나온 날짜에 다시 입력되는 버그). 반면 "오늘"은 무드를 아직 안 골랐어도 계속 열려 있어야
+ * 정상적인 하루 기록 흐름(슬롯 체크 → 나중에 무드 선택)이 끊기지 않는다.
+ */
+function isDayLocked(
+  targetDay: number,
+  conditions: Record<number, "good" | "neutral" | "bad">,
+  loggedDays: number[],
+  currentDay: number,
+): boolean {
+  if (conditions[targetDay] !== undefined) return true
+  return targetDay !== currentDay && loggedDays.includes(targetDay)
+}
+
 const SUN_CARE_SLOT: Slot = { id: "sun_care", emoji: "☀️", labelKey: "dailySlots.slots.sun_care" }
 
 /** 매일 케어 그룹 — 완료 토글만 있는 단순 슬롯 */
@@ -331,10 +349,12 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
   const [freeInputExpanded, setFreeInputExpanded] = useState(false)
   const [freeInputText, setFreeInputText] = useState("")
-  const [collapsed, setCollapsed] = useState(() => diary.conditions[day] !== undefined)
+  const [collapsed, setCollapsed] = useState(() =>
+    isDayLocked(day, diary.conditions, diary.loggedDays, diary.currentDay),
+  )
   const [rewardData, setRewardData] = useState<RewardCardData | null>(null)
   const [collapseMaxHeight, setCollapseMaxHeight] = useState<string>(() =>
-    diary.conditions[day] !== undefined ? "0px" : "none",
+    isDayLocked(day, diary.conditions, diary.loggedDays, diary.currentDay) ? "0px" : "none",
   )
 
   const checkedSlotsRef = useRef<Set<SlotType>>(new Set())
@@ -388,7 +408,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
     setSelectedConcernCare(
       new Set(ALL_CONCERN_CARE_INGREDIENTS.filter((id) => loggedIds.has(`concern_care_${id}`))),
     )
-    setCollapsed(diaryRef.current.conditions[day] !== undefined)
+    setCollapsed(isDayLocked(day, diaryRef.current.conditions, diaryRef.current.loggedDays, diaryRef.current.currentDay))
     setShowConditionPrompt(false)
     setRewardData(null)
     setFreeInputText(diaryRef.current.freeInputs[day] ?? "")
@@ -422,7 +442,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   }, [collapsed])
 
   const toggleSlot = useCallback((slotId: SlotType) => {
-    if (diaryRef.current.conditions[day] !== undefined) return
+    if (isDayLocked(day, diaryRef.current.conditions, diaryRef.current.loggedDays, diaryRef.current.currentDay)) return
     setCheckedSlots((prev) => {
       const newChecked = new Set(prev)
       if (newChecked.has(slotId)) {
@@ -458,7 +478,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   }, [day, recommendedSlot])
 
   const toggleSpecialCare = useCallback((specialCareId: SpecialCareType) => {
-    if (diaryRef.current.conditions[day] !== undefined) return
+    if (isDayLocked(day, diaryRef.current.conditions, diaryRef.current.loggedDays, diaryRef.current.currentDay)) return
     setSelectedSpecialCare((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(specialCareId)) {
@@ -500,7 +520,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
    * 표시/추천배지 등 기존 로직은 손대지 않아도 계속 정상 동작한다.
    */
   const toggleConcernCare = useCallback((ingredientId: ConcernCareIngredient) => {
-    if (diaryRef.current.conditions[day] !== undefined) return
+    if (isDayLocked(day, diaryRef.current.conditions, diaryRef.current.loggedDays, diaryRef.current.currentDay)) return
     const newConcernSet = new Set(selectedConcernCareRef.current)
     if (newConcernSet.has(ingredientId)) {
       newConcernSet.delete(ingredientId)
@@ -545,7 +565,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   }, [day, recommendedSlot])
 
   const handleSaveFreeInput = useCallback(() => {
-    if (diaryRef.current.conditions[day] !== undefined) return
+    if (isDayLocked(day, diaryRef.current.conditions, diaryRef.current.loggedDays, diaryRef.current.currentDay)) return
     const content = freeInputText.trim()
     if (!content) return
     diaryRef.current.recordFreeInput(day, content)
@@ -577,8 +597,9 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
     (checkedSlots.has("active") ? checkedSlots.size - 1 : checkedSlots.size) +
     selectedSpecialCare.size +
     selectedConcernCare.size
-  const isDone = diary.conditions[day] !== undefined
+  const isDone = isDayLocked(day, diary.conditions, diary.loggedDays, diary.currentDay)
   const hasFreeInput = diary.freeInputs[day] !== undefined
+  const dayLabel = day === diary.currentDay ? t("common.today", locale) : t("common.pastRecord", locale)
 
   return (
     <section
@@ -596,7 +617,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
             {collapsed ? (
               <div className="flex items-center justify-between rounded-2xl bg-secondary px-4 py-3">
                 <span className="text-sm font-semibold text-foreground">
-                  {t("dailySlots.summaryBar.label", locale)}
+                  {t(day === diary.currentDay ? "dailySlots.summaryBar.label" : "dailySlots.summaryBar.labelPast", locale)}
                 </span>
                 <ChevronDown className="size-5 text-muted-foreground -rotate-90" aria-hidden />
               </div>
@@ -604,7 +625,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground tracking-tight">
-                    Day {day} · {t("common.today", locale)}
+                    Day {day} · {dayLabel}
                   </span>
                   <ChevronDown className="size-5 text-muted-foreground" aria-hidden />
                 </div>
@@ -624,7 +645,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
         ) : (
           <div className="space-y-3">
             <div className="text-xs font-semibold text-muted-foreground tracking-tight">
-              Day {day} · {t("common.today", locale)}
+              Day {day} · {dayLabel}
             </div>
             <div className="space-y-2">
               <h2 className="font-display text-xl font-bold text-foreground">
