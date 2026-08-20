@@ -19,7 +19,7 @@ import {
 const MIN_LOGGED_DAYS_FOR_FULL_REPORT = 10
 
 const SLOT_TAG_LABELS: Record<string, Record<"ko" | "en", string>> = {
-  "Prep": { ko: "클렌징", en: "Cleansing" },
+  "Exfoliation": { ko: "각질케어", en: "Exfoliation" },
   "Hydration": { ko: "수분케어", en: "Hydration" },
   "Active/Stimulate": { ko: "고민케어", en: "Concern Care" },
   "Defense/Barrier": { ko: "진정케어", en: "Soothing Care" },

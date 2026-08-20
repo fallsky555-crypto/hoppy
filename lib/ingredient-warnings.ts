@@ -27,7 +27,7 @@ const INGREDIENT_ALIASES: Record<string, string> = {
 /**
  * 성분 이름을 정규화된 ID로 변환
  */
-function normalizeIngredient(ingredient: string): string {
+export function normalizeIngredient(ingredient: string): string {
   const lower = ingredient.toLowerCase().trim()
   return INGREDIENT_ALIASES[lower] || lower
 }

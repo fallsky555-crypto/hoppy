@@ -443,74 +443,72 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
 
   const toggleSlot = useCallback((slotId: SlotType) => {
     if (isDayLocked(day, diaryRef.current.conditions, diaryRef.current.loggedDays, diaryRef.current.currentDay)) return
-    setCheckedSlots((prev) => {
-      const newChecked = new Set(prev)
-      if (newChecked.has(slotId)) {
-        newChecked.delete(slotId)
-      } else {
-        newChecked.add(slotId)
-        diaryRef.current.recordLoggedSlot(day, slotId, SLOT_TAGS[slotId])
-      }
 
-      if (diaryRef.current.userId) {
-        const recommendedCategory = recommendedSlot || ("active" as SlotType)
-        const slotsPayload = [
-          ...Array.from(newChecked).map((id) => ({
-            slot: id,
-            tag: SLOT_TAGS[id],
-          })),
-          ...Array.from(selectedSpecialCareRef.current).map((id) => ({
-            slot: `special_care_${id}`,
-            tag: SPECIAL_CARE_TAGS[id],
-          })),
-          ...Array.from(selectedConcernCareRef.current).map((id) => ({
-            slot: `concern_care_${id}`,
-            tag: CONCERN_CARE_TAGS[id],
-          })),
-        ]
-        saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
-          console.error("[saveUsageLog] error:", err)
-        })
-      }
+    const newChecked = new Set(checkedSlotsRef.current)
+    if (newChecked.has(slotId)) {
+      newChecked.delete(slotId)
+    } else {
+      newChecked.add(slotId)
+      diaryRef.current.recordLoggedSlot(day, slotId, SLOT_TAGS[slotId])
+    }
 
-      return newChecked
-    })
+    setCheckedSlots(newChecked)
+
+    if (diaryRef.current.userId) {
+      const recommendedCategory = recommendedSlot || ("active" as SlotType)
+      const slotsPayload = [
+        ...Array.from(newChecked).map((id) => ({
+          slot: id,
+          tag: SLOT_TAGS[id],
+        })),
+        ...Array.from(selectedSpecialCareRef.current).map((id) => ({
+          slot: `special_care_${id}`,
+          tag: SPECIAL_CARE_TAGS[id],
+        })),
+        ...Array.from(selectedConcernCareRef.current).map((id) => ({
+          slot: `concern_care_${id}`,
+          tag: CONCERN_CARE_TAGS[id],
+        })),
+      ]
+      saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
+        console.error("[saveUsageLog] error:", err)
+      })
+    }
   }, [day, recommendedSlot])
 
   const toggleSpecialCare = useCallback((specialCareId: SpecialCareType) => {
     if (isDayLocked(day, diaryRef.current.conditions, diaryRef.current.loggedDays, diaryRef.current.currentDay)) return
-    setSelectedSpecialCare((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(specialCareId)) {
-        newSet.delete(specialCareId)
-      } else {
-        newSet.add(specialCareId)
-        diaryRef.current.recordLoggedSlot(day, `special_care_${specialCareId}` as SlotType, SPECIAL_CARE_TAGS[specialCareId])
-      }
 
-      if (diaryRef.current.userId) {
-        const recommendedCategory = recommendedSlot || ("active" as SlotType)
-        const slotsPayload = [
-          ...Array.from(checkedSlotsRef.current).map((id) => ({
-            slot: id,
-            tag: SLOT_TAGS[id],
-          })),
-          ...Array.from(newSet).map((id) => ({
-            slot: `special_care_${id}`,
-            tag: SPECIAL_CARE_TAGS[id],
-          })),
-          ...Array.from(selectedConcernCareRef.current).map((id) => ({
-            slot: `concern_care_${id}`,
-            tag: CONCERN_CARE_TAGS[id],
-          })),
-        ]
-        saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
-          console.error("[saveUsageLog] error:", err)
-        })
-      }
+    const newSet = new Set(selectedSpecialCareRef.current)
+    if (newSet.has(specialCareId)) {
+      newSet.delete(specialCareId)
+    } else {
+      newSet.add(specialCareId)
+      diaryRef.current.recordLoggedSlot(day, `special_care_${specialCareId}` as SlotType, SPECIAL_CARE_TAGS[specialCareId])
+    }
 
-      return newSet
-    })
+    setSelectedSpecialCare(newSet)
+
+    if (diaryRef.current.userId) {
+      const recommendedCategory = recommendedSlot || ("active" as SlotType)
+      const slotsPayload = [
+        ...Array.from(checkedSlotsRef.current).map((id) => ({
+          slot: id,
+          tag: SLOT_TAGS[id],
+        })),
+        ...Array.from(newSet).map((id) => ({
+          slot: `special_care_${id}`,
+          tag: SPECIAL_CARE_TAGS[id],
+        })),
+        ...Array.from(selectedConcernCareRef.current).map((id) => ({
+          slot: `concern_care_${id}`,
+          tag: CONCERN_CARE_TAGS[id],
+        })),
+      ]
+      saveUsageLog(diaryRef.current.userId, day, slotsPayload, recommendedCategory).catch((err) => {
+        console.error("[saveUsageLog] error:", err)
+      })
+    }
   }, [day, recommendedSlot])
 
   /**
@@ -528,6 +526,9 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
       newConcernSet.add(ingredientId)
       // 성분 경고 카드 등에서 참고하는 diary_profiles.active_ingredients에도 누적 반영
       diaryRef.current.addActiveIngredient(ingredientId)
+      // tag는 CONCERN_CARE_TAGS의 영문 라벨이 아니라 원본 id를 그대로 넣는다 —
+      // daily-tip.ts에서 "vitc"/"ret"/"nia"로 바로 매칭하기 위함
+      diaryRef.current.recordLoggedSlot(day, `concern_care_${ingredientId}`, ingredientId)
     }
 
     const shouldBeActive = newConcernSet.size > 0

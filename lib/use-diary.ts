@@ -737,7 +737,8 @@ export function useDiary() {
   const recordLoggedSlot = useCallback((day: number, slot: string, tag: string) => {
     setState((prev) => {
       const daySlots = prev.loggedSlots[day] ?? []
-      const newSlots = [...daySlots, { slot, tag }]
+      const alreadyLogged = daySlots.some((s) => s.slot === slot && s.tag === tag)
+      const newSlots = alreadyLogged ? daySlots : [...daySlots, { slot, tag }]
 
       const newLoggedDays = prev.loggedDays.includes(day) ? prev.loggedDays : [...prev.loggedDays, day]
 

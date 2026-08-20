@@ -37,12 +37,12 @@ const RECOMMENDED_RATIOS: Record<string, number> = {
   "Active/Stimulate": 0.30,
   "Defense/Barrier": 0.30,
   "Hydration": 0.20,
-  "Prep": 0.15,
+  "Exfoliation": 0.15,
   "Sun": 0.05,
 }
 
 /** 고정된 5개 tag (항상 표시) */
-const ALL_TAGS = ["Prep", "Hydration", "Active/Stimulate", "Defense/Barrier", "Sun"]
+const ALL_TAGS = ["Exfoliation", "Hydration", "Active/Stimulate", "Defense/Barrier", "Sun"]
 
 /**
  * tag별 사용 비율 계산 — 모든 태그를 항상 표시 (0%도 포함)

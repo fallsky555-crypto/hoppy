@@ -12,7 +12,7 @@ interface SlotInfo {
 }
 
 const SLOT_TAG_LABELS: Record<string, Record<"ko" | "en", string>> = {
-  "Prep": { ko: "클렌징", en: "Cleansing" },
+  "Exfoliation": { ko: "각질케어", en: "Exfoliation" },
   "Hydration": { ko: "수분케어", en: "Hydration" },
   "Active/Stimulate": { ko: "고민케어", en: "Active Care" },
   "Defense/Barrier": { ko: "진정케어", en: "Barrier Care" },
@@ -36,7 +36,7 @@ export function WeeklyMiniInsight() {
     for (const m of milestones) {
       if (loggedCount >= m && !seenSet.has(m)) {
         // Dummy: 랜덤 tag 선택 (실제로는 usage_log 데이터 필요)
-        const dummyTags = ["Active/Stimulate", "Hydration", "Defense/Barrier", "Prep", "Sun"]
+        const dummyTags = ["Active/Stimulate", "Hydration", "Defense/Barrier", "Exfoliation", "Sun"]
         const selectedTag = dummyTags[Math.floor(Math.random() * dummyTags.length)]
 
         setTopTag(selectedTag)
