@@ -79,6 +79,9 @@ interface BuildCareCardCopyParams {
   weather: WeatherData
   locale: Locale
   loggedDaysCount: number
+  /** stage1 폴백 문구를 18개 전체에 걸쳐 순환시키는 커서 — loggedDaysCount는 stage1 구간(7~13)에 갇혀
+   * 폴백 풀 전체를 돌 수 없으므로, 매일 바뀌는 currentDay를 커서로 쓴다 */
+  currentDay: number
   todaySlots: { slot: string; tag: string }[]
   todayActiveIngredient: string | null
   recentLoggedSlots: Record<number, { slot: string; tag: string }[]>
@@ -97,6 +100,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
     weather,
     locale,
     loggedDaysCount,
+    currentDay,
     todaySlots,
     todayActiveIngredient,
     recentLoggedSlots,
@@ -124,7 +128,7 @@ export function buildCareCardCopy(params: BuildCareCardCopyParams): CareCardCopy
       if (stage1Tip) {
         mainCopy = stage1Tip
       } else {
-        const fallback = STAGE0_CONTENT[loggedDaysCount % 7]
+        const fallback = STAGE0_CONTENT[currentDay % STAGE0_CONTENT.length]
         mainCopy = locale === "ko" ? fallback.text_ko : fallback.text_en
       }
     } else if (stage === 2) {

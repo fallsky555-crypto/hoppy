@@ -46,51 +46,128 @@ export const STAGE0_CONTENT: Stage0Tip[] = [
   {
     day: 0,
     text_ko:
-      "많은 분들이 성분을 하나씩 모으다가 정작 순서를 놓쳐요. 오늘부터 딱 하나만 기억하세요 — 수분(히알루론산)이 먼저입니다. 나머지는 이 위에 쌓는 거예요.",
-    text_en:
-      "A lot of people collect ingredients one by one and lose track of the order. Just remember one thing today — hydration (hyaluronic acid) comes first. Everything else builds on top of it.",
-  },
-  {
-    day: 1,
-    text_ko:
       "에센스 vs 세럼, 고객분들이 제일 많이 헷갈려 하는 조합이에요. 정답은 '둘 다 필요할 수도 있다'예요 — 역할이 달라서요. 에센스가 먼저 스며들어야 세럼이 일을 해요.",
     text_en:
       "Essence vs serum — the mix-up we hear most. The real answer: you might need both, since they do different jobs. Essence sinks in first so the serum can actually work.",
   },
   {
-    day: 2,
-    text_ko:
-      "각질케어를 매일 하시나요? 사실 매일 하면 오히려 피부가 얇아져요. 주 2~3회가 적당해요 — '더'가 항상 좋은 건 아니에요.",
-    text_en:
-      "Doing exfoliation every day? That can actually thin your skin out. 2-3 times a week is plenty — more isn't always better.",
-  },
-  {
-    day: 3,
+    day: 1,
     text_ko:
       "\"피부는 28일마다 새로 태어난다\"는 말 들어보셨죠? 사실 20대도 28~40일은 걸려요. 그러니 새 제품 효과, 최소 한 달은 기다려주세요 — 조급해하지 않아도 돼요.",
     text_en:
       "Heard that skin renews itself every 28 days? Even in your 20s, it's really 28-40 days. So give a new product at least a month before judging it — no need to rush.",
   },
   {
+    day: 2,
+    text_ko:
+      "제품 하나 바르고 바로 다음 거 바르지 마세요. 30초~1분만 기다려주면 흡수될 시간을 주는 거예요 — 급하게 겹치면 밀리기만 하고 제대로 안 스며들어요.",
+    text_en:
+      "Don't layer the next product on right away. Waiting 30 seconds to a minute gives it time to actually absorb — rush it and you're just pilling product instead of letting it sink in.",
+  },
+  {
+    day: 3,
+    text_ko:
+      "순서 헷갈리시죠? 묽은 것부터 두꺼운 것 순이에요 — 스킨 같은 묽은 것 먼저, 크림처럼 걸쭉한 건 마지막에. 반대로 하면 뒤에 바른 게 앞의 걸 막아버려요.",
+    text_en:
+      "Mixed up on the order? Thinnest to thickest — watery toners first, thick creams last. Do it backwards and the heavier product just blocks the lighter one from getting in.",
+  },
+  {
     day: 4,
     text_ko:
-      "세라마이드, 이름은 어려워도 하는 일은 단순해요 — 벽돌처럼 피부장벽을 쌓아주는 것. 이게 튼튼해야 위에 뭘 발라도 소용이 있어요.",
+      "새 제품 쓰실 때 얼굴 전체에 바로 바르지 마세요. 팔 안쪽에 이틀 정도 발라보고 반응 없으면 그때 얼굴에 쓰세요 — 이게 자극 반응을 미리 걸러내는 제일 확실한 방법이에요.",
     text_en:
-      "Ceramide sounds complicated, but its job is simple — it's like a brick building up your skin barrier. That barrier needs to be solid for anything else you apply to actually work.",
+      "Don't put a new product all over your face right away. Patch test on your inner arm for a couple of days first, and only move to your face once there's no reaction — it's the most reliable way to catch irritation early.",
   },
   {
     day: 5,
     text_ko:
-      "레티놀, 궁금해하는 분 많으시죠. 처음부터 매일 쓰면 오히려 역효과예요. 주 1~2회로 시작해서, 피부가 적응하면 늘려가세요 — 조급함이 제일 큰 적이에요.",
+      "레티놀이랑 비타민C, 각질케어까지 한 밤에 다 몰아넣지 마세요. 활성 성분은 하나씩 밤을 나눠서 쓰는 게 자극도 적고 결과적으로 오래 써요.",
     text_en:
-      "Retinol — the one everyone asks about. Using it daily from day one usually backfires. Start with once or twice a week, and build up as your skin adjusts. Patience matters more than speed here.",
+      "Don't stack retinol, vitamin C, and exfoliation into one night. Spreading active ingredients across different nights means less irritation — and you'll actually keep using them longer.",
   },
   {
     day: 6,
     text_ko:
-      "나이아신아마이드는 이 6가지 성분 중에 제일 '무난한 우등생'이에요. 진정도 되고 보습도 되고, 웬만하면 다 잘 맞아요. 뭘 써야 할지 모르겠으면 이것부터예요.",
+      "문지르지 말고 두드려 발라주세요. 특히 눈가나 얇은 부위는 문지르면 자극만 늘고 흡수는 딱히 안 좋아져요.",
     text_en:
-      "Niacinamide is the reliable all-rounder of these six ingredients. It soothes, it hydrates, and it plays well with almost everything. If you're not sure where to start, start here.",
+      "Pat it in, don't rub. Around the eyes and other thin areas especially, rubbing just adds irritation without actually improving absorption.",
+  },
+  {
+    day: 7,
+    text_ko:
+      "자외선차단제, 동전 크기만큼은 바르셔야 해요. 그보다 적게 바르면 표시된 SPF의 절반도 안 나와요.",
+    text_en:
+      "Use a coin-sized amount of sunscreen. Any less and you're getting under half the SPF listed on the bottle.",
+  },
+  {
+    day: 8,
+    text_ko:
+      "베개커버, 생각보다 자주 안 바꾸시죠? 일주일에 한 번은 바꿔주세요 — 자는 동안 얼굴이 계속 닿는 부분이라 트러블이랑 은근 관련 있어요.",
+    text_en:
+      "Pillowcases don't get changed as often as you'd think. Swap yours out once a week — it's in contact with your face all night, and it's more tied to breakouts than people realize.",
+  },
+  {
+    day: 9,
+    text_ko:
+      "뚜껑 열고 6개월~1년 지난 제품, 특히 비타민C나 레티놀 계열은 효과가 확 떨어져 있을 수 있어요. 향이나 색이 변했으면 그건 버리셔도 돼요.",
+    text_en:
+      "Products open for 6 months to a year — vitamin C and retinol especially — can lose a lot of their effectiveness. If the scent or color has changed, it's fine to just toss it.",
+  },
+  {
+    day: 10,
+    text_ko:
+      "손 씻고 시작하세요. 별거 아닌 것 같아도, 하루종일 만진 손으로 얼굴 만지면 그게 트러블의 절반이에요.",
+    text_en:
+      "Wash your hands before you start. It sounds minor, but touching your face with hands that have been everywhere all day is behind more breakouts than you'd expect.",
+  },
+  {
+    day: 11,
+    text_ko:
+      "히알루론산은 마른 피부에 바르면 오히려 건조해져요. 세안 직후 물기가 살짝 남은 상태에서 발라야 수분을 제대로 붙잡아요.",
+    text_en:
+      "Hyaluronic acid on dry skin can actually backfire and dry you out more. Apply it right after cleansing, while your skin's still a little damp, so it has moisture to actually hold onto.",
+  },
+  {
+    day: 12,
+    text_ko:
+      "목이랑 손, 얼굴 바를 때 같이 챙기세요. 얼굴만 관리하고 목은 그대로 두면 나중에 티가 확 나요.",
+    text_en:
+      "Bring your neck and hands along when you do your face. Take care of just your face and skip the neck, and the difference shows up later.",
+  },
+  {
+    day: 13,
+    text_ko:
+      "세안 브러쉬나 퍼프, 주기적으로 씻어주세요. 안 씻은 도구가 세균 번식시켜서 트러블 원인이 되는 경우, 생각보다 많아요.",
+    text_en:
+      "Wash your cleansing brush or puff regularly. An unwashed tool breeding bacteria is behind more breakouts than people expect.",
+  },
+  {
+    day: 14,
+    text_ko:
+      "운동하고 나서 땀 난 얼굴, 바로 씻어주세요. 땀이 오래 얼굴에 남아있으면 모공 막히는 지름길이에요.",
+    text_en:
+      "Wash your face right after you sweat from exercise. Sweat sitting on your skin too long is a fast track to clogged pores.",
+  },
+  {
+    day: 15,
+    text_ko:
+      "실내에 있어도 창가 자리면 자외선차단 다시 챙기세요. 유리도 자외선을 다 막아주진 않아요.",
+    text_en:
+      "Even indoors, reapply sunscreen if you're near a window. Glass doesn't block all UV rays.",
+  },
+  {
+    day: 16,
+    text_ko:
+      "마사지할 때 아래에서 위로 쓸어올리세요. 중력 반대 방향으로 발라야 처짐 방지에 도움이 돼요.",
+    text_en:
+      "When you massage product in, sweep upward from the bottom. Working against gravity helps fight sagging.",
+  },
+  {
+    day: 17,
+    text_ko:
+      "화장솜으로 토너 쓸 때 너무 세게 문지르지 마세요. 자극만 주고 흡수엔 도움 안 돼요, 손으로 가볍게 두드리는 게 나아요.",
+    text_en:
+      "Don't scrub too hard with a cotton pad when applying toner. It just irritates without helping absorption — a light pat with your hands works better.",
   },
 ]
 

@@ -77,6 +77,7 @@ export function TodayCareCard() {
     weather,
     locale,
     loggedDaysCount,
+    currentDay,
     todaySlots,
     todayActiveIngredient,
     recentLoggedSlots,
