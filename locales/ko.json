@@ -438,6 +438,12 @@
     "course_complete_title": "30일, 끝까지 해냈어요",
     "course_complete_detail": "중간에 쉬어간 날이 있었어도 괜찮아요. 다시 돌아와서 여기까지 온 게 중요해요."
   },
+  "skinBalanceRadar": {
+    "headline": "당신의 피부({{skinType}})가 필요로 하는 균형이에요.",
+    "changeButton": "피부타입 변경",
+    "selectTitle": "피부타입을 선택해주세요",
+    "cancel": "취소"
+  },
   "settings": {
     "title": "설정",
     "restart_confirm": "새로 시작하면 지금까지 기록한 Day와 기록이 모두 사라져요. 정말 처음부터 다시 시작할까요?",

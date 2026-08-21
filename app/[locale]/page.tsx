@@ -7,6 +7,7 @@ import { CalendarGrid } from "@/components/calendar-grid"
 import { DailySlots } from "@/components/daily-slots"
 import { WeeklyMiniInsight } from "@/components/weekly-mini-insight"
 import { TodayCareCard } from "@/components/today-care-card"
+import { SkinBalanceRadar } from "@/components/skin-balance-radar"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
@@ -14,6 +15,7 @@ import { ThirtyDayReport } from "@/components/thirty-day-report"
 import { InstallBanner } from "@/components/install-banner"
 import { DailyCover } from "@/components/daily-cover"
 import { DiaryProvider, useDiary } from "@/lib/diary-context"
+import { todayISO } from "@/lib/use-diary"
 import { t } from "@/lib/i18n"
 
 interface PageProps {
@@ -22,12 +24,37 @@ interface PageProps {
   }>
 }
 
+/** DailyCover를 마지막으로 확인한 날짜(YYYY-MM-DD)를 저장하는 localStorage 키 */
+const COVER_LAST_SEEN_KEY = "hoppy-cover-last-seen"
+
+function todayDateKey(): string {
+  return todayISO().slice(0, 10)
+}
+
+function hasSeenCoverToday(): boolean {
+  if (typeof window === "undefined") return false
+  try {
+    return window.localStorage.getItem(COVER_LAST_SEEN_KEY) === todayDateKey()
+  } catch {
+    return false
+  }
+}
+
+function markCoverSeenToday(): void {
+  if (typeof window === "undefined") return
+  try {
+    window.localStorage.setItem(COVER_LAST_SEEN_KEY, todayDateKey())
+  } catch {
+    // 저장 실패해도 이번 세션은 이미 홈으로 넘어간 상태라 무시
+  }
+}
+
 function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   const diary = useDiary()
   const { currentDay, totalDays } = diary
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [coverConfirmed, setCoverConfirmed] = useState(false)
+  const [coverConfirmed, setCoverConfirmed] = useState(() => hasSeenCoverToday())
   const [calendarPulse, setCalendarPulse] = useState(0)
 
   if (!diary.hydrated) return null
@@ -39,7 +66,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
     return <OnboardingFlow locale={locale} diary={diary} onComplete={handleOnboardingComplete} />
   }
 
-  // 온보딩 완료 후, 앱을 켤 때마다(당일 첫 방문 여부와 무관하게) 매번 커버를 먼저 보여준다.
+  // 온보딩 완료 후, 하루 한 번, 날짜가 바뀌면 다시 보여준다(같은 날 재방문 시엔 건너뛴다).
   // 하트 버튼을 눌러야만 아래 홈 화면으로 넘어간다(자동 전환 없음). 단, 소유자 불일치로
   // 방금 원격 데이터를 복원한 경우(로그인 직후 등)는 예외 — "다이어리를 펼치는 의식"이
   // 아니라 로그인 성공을 확인하고 싶은 순간이라, 커버 대신 바로 홈으로 넘어간다.
@@ -50,7 +77,10 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
         name={diary.name}
         joinDate={diary.joinDate}
         onSaveName={diary.setName}
-        onClose={() => setCoverConfirmed(true)}
+        onClose={() => {
+          markCoverSeenToday()
+          setCoverConfirmed(true)
+        }}
       />
     )
   }
@@ -75,6 +105,8 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
         />
 
         <TodayCareCard />
+
+        <SkinBalanceRadar skinType={diary.skinType} locale={locale} onChangeSkinType={diary.setSkinType} />
 
         <DailySlots
           day={activeDay}

@@ -105,7 +105,7 @@ const OWNER_STORAGE_KEY = "hoppy-skin-diary-v1-owner"
  * 직접 복구할 수 있는 수준의 안전망이다. */
 const ORPHANED_BACKUP_PREFIX = "hoppy-skin-diary-v1-orphaned-"
 
-function todayISO() {
+export function todayISO() {
   return new Date().toISOString()
 }
 
