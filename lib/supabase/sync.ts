@@ -580,8 +580,15 @@ function sameSlotSet(a: MergeBackupSlotEntry[], b: MergeBackupSlotEntry[]): bool
  * 하루라도 저장이 실패하면 MERGE_PENDING_KEY를 지우지 않고 남겨둔다. 다음 호출은 항상
  * "현재 원격 + 백업"을 처음부터 다시 계산하므로(멱등 upsert), 실패한 날짜만 골라
  * 재시도할 필요 없이 그냥 다시 부르면 된다.
+ *
+ * @param preloadedRemote 호출부가 이미 loadRemoteState(userId)를 불러온 상태라면 그 결과를
+ * 그대로 넘긴다 — 내부에서 다시 불러오지 않아 원격 왕복이 중복되지 않는다(2026-08-21,
+ * use-diary.ts 하이드레이션 인라인 병합 도입 시 추가). 생략하면 기존처럼 직접 불러온다.
  */
-export async function mergeAnonymousBackupIfPending(userId: string): Promise<MergedUsageData | null> {
+export async function mergeAnonymousBackupIfPending(
+  userId: string,
+  preloadedRemote?: RemoteState | null,
+): Promise<MergedUsageData | null> {
   if (typeof window === "undefined") return null
 
   const raw = window.localStorage.getItem(MERGE_PENDING_KEY)
@@ -610,7 +617,7 @@ export async function mergeAnonymousBackupIfPending(userId: string): Promise<Mer
   const supabase = getSupabaseClient()
   if (!supabase) return null // 설정 안 됐으면 병합 불가 — 백업은 남겨둔다(재시도 대비)
 
-  const remote = await loadRemoteState(userId)
+  const remote = preloadedRemote !== undefined ? preloadedRemote : await loadRemoteState(userId)
   const remoteLoggedSlots = remote?.loggedSlots ?? {}
 
   const allDays = Array.from(new Set([...Object.keys(remoteLoggedSlots).map(Number), ...localDays])).sort(

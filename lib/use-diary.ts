@@ -9,6 +9,7 @@ import {
 import {
   ensureAnonSession,
   loadRemoteState,
+  MERGE_PENDING_KEY,
   mergeAnonymousBackupIfPending,
   saveActiveIngredients,
   saveAge,
@@ -197,6 +198,22 @@ function backupOrphanedLocalState(localState: DiaryState): void {
     )
   } catch {
     // 백업 실패해도 원격 데이터 로드는 계속 진행 — 백업은 최선 노력 수준의 안전망이다
+  }
+}
+
+/**
+ * 소유자 불일치로 원격 데이터를 우선하기 직전, 이 로컬 기록을 병합 재료로도 남겨둔다.
+ * signInExistingIdentity()의 backupLocalDiaryForMerge()(lib/supabase/auth.ts)와 동일하게
+ * MERGE_PENDING_KEY에 써두면, 아래 하이드레이션 로직이 mergeAnonymousBackupIfPending()으로
+ * 원격 기록과 합쳐준다 — orphaned 백업(ORPHANED_BACKUP_PREFIX)은 그대로 안전망으로 남기고,
+ * 이건 그 위에 "실제로 화면에 반영되는 병합"을 추가하는 것이다.
+ */
+function backupLocalUsageForMerge(localState: DiaryState): void {
+  if (typeof window === "undefined") return
+  try {
+    window.localStorage.setItem(MERGE_PENDING_KEY, JSON.stringify({ loggedSlots: localState.loggedSlots }))
+  } catch {
+    // 저장 실패해도 계속 진행 — 이 경우 병합 없이 원격 데이터만 보여주게 된다(orphaned 백업은 남아있음)
   }
 }
 
@@ -470,8 +487,10 @@ export function useDiary() {
       }
 
       if (localState && !ownerMatches && localState.loggedDays.length > 0) {
-        // 소유자가 다른데 로컬에 실제 기록이 있다 — 조용히 버리지 않고 별도 키로 백업해둔다
+        // 소유자가 다른데 로컬에 실제 기록이 있다 — 조용히 버리지 않고 별도 키로 백업해두고
+        // (안전망), 병합 재료로도 남겨서 아래에서 원격 기록과 합쳐 화면에 그대로 반영되게 한다
         backupOrphanedLocalState(localState)
+        backupLocalUsageForMerge(localState)
       }
 
       // 로컬 기록이 없거나(신규 기기) 소유자가 다르다(계정 전환) — 로그인 계정이면 다른
@@ -481,6 +500,22 @@ export function useDiary() {
       if (cancelled) return
 
       if (remote) setJustRestoredFromRemote(true)
+
+      // MERGE_PENDING_KEY가 있으면(방금 위에서 남겼거나, signInExistingIdentity()가 이전에
+      // 남겨둔 채 아직 처리 못 한 경우) 원격 기록과 합친다. 이미 불러온 remote를 그대로
+      // 넘겨 loadRemoteState()가 중복 호출되지 않게 한다. 병합 중 에러가 나도(네트워크 등)
+      // 하이드레이션 자체는 멈추지 않고 원격 데이터만으로 계속 진행한다 — 빈 화면 방지.
+      // 실패 시 MERGE_PENDING_KEY는 mergeAnonymousBackupIfPending()이 알아서 남겨두므로
+      // 다음 앱 실행(또는 아래의 별도 [hydrated, userId] 재시도 effect)에서 다시 시도된다.
+      let merged: Awaited<ReturnType<typeof mergeAnonymousBackupIfPending>> = null
+      if (userId) {
+        try {
+          merged = await mergeAnonymousBackupIfPending(userId, remote)
+        } catch (err) {
+          console.warn("[useDiary] 하이드레이션 중 병합 실패 — 원격 데이터만 사용:", err)
+        }
+      }
+      if (cancelled) return
 
       const base: DiaryState = remote
         ? {
@@ -499,12 +534,18 @@ export function useDiary() {
             gender: remote.profile.gender,
             checkerResultUrl: remote.profile.checkerResultUrl,
             name: remote.profile.name,
-            loggedDays: Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
-            loggedSlots: remote.loggedSlots,
+            loggedDays: merged?.loggedDays ?? Object.keys(remote.loggedSlots).map(Number).sort((a, b) => a - b),
+            loggedSlots: merged?.loggedSlots ?? remote.loggedSlots,
             conditions: remote.conditions,
             freeInputs: remote.freeInputs,
           }
-        : freshState()
+        : merged
+          // remote 프로필은 없지만(예: 방금 처음 생긴 익명 세션) 병합할 로컬 백업은 있었던
+          // 경우 — merge 자체는 이미 원격 usage_log에 실제로 반영됐으므로, base를 그냥
+          // freshState()로 비워버리면 방금 저장한 기록이 화면에서만 사라져 보이는 불일치가
+          // 생긴다. loggedDays/loggedSlots만이라도 병합 결과로 채워 화면과 원격을 일치시킨다.
+          ? { ...freshState(), loggedDays: merged.loggedDays, loggedSlots: merged.loggedSlots }
+          : freshState()
 
       setState(applyURLContext(base, urlContext))
       if (urlContext) clearContextURLParams()
