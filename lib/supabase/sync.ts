@@ -535,6 +535,120 @@ export async function saveCompletionFeedback(userId: string, feedbackText: strin
   if (error) console.warn("[supabase] saveCompletionFeedback failed:", error.message)
 }
 
+/** signInExistingIdentity() 계정 전환 직전, auth.ts의 backupLocalDiaryForMerge()가 지금
+ * 로컬에 쌓인 익명 세션 기록을 이 키로 백업해둔다. 로그인 완료 후(하이드레이션 이후)
+ * mergeAnonymousBackupIfPending()이 이 값을 읽어 기존 계정 원격 데이터와 합친다. */
+export const MERGE_PENDING_KEY = "hoppy-merge-pending"
+
+interface MergeBackupSlotEntry { slot: string; tag: string }
+
+interface MergeBackupPayload {
+  loggedSlots?: Record<number, MergeBackupSlotEntry[]>
+}
+
+export interface MergedUsageData {
+  loggedDays: number[]
+  loggedSlots: Record<number, MergeBackupSlotEntry[]>
+}
+
+function dedupeSlotEntries(entries: MergeBackupSlotEntry[]): MergeBackupSlotEntry[] {
+  const seen = new Set<string>()
+  const result: MergeBackupSlotEntry[] = []
+  for (const entry of entries) {
+    const key = `${entry.slot}:${entry.tag}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    result.push(entry)
+  }
+  return result
+}
+
+function sameSlotSet(a: MergeBackupSlotEntry[], b: MergeBackupSlotEntry[]): boolean {
+  if (a.length !== b.length) return false
+  const bKeys = new Set(b.map((e) => `${e.slot}:${e.tag}`))
+  return a.every((e) => bKeys.has(`${e.slot}:${e.tag}`))
+}
+
+/**
+ * 13-2 identity_already_exists 폴백 병합. MERGE_PENDING_KEY에 백업된 익명 세션 기록이
+ * 있으면 지금 로그인된 기존 계정의 원격 usage_log와 day별로 합친다 — slot+tag가 완전히
+ * 같은 조합만 중복 제거하고 나머지는 합집합(사용자 확정 정책, 2026-08-21). loggedDays는
+ * 별도로 관리하지 않고 loadRemoteState()와 동일하게 loggedSlots의 key 집합으로부터
+ * 도출한다. diary_profiles의 skinType 등 단일값 필드는 건드리지 않는다 — 하이드레이션이
+ * 이미 원격 값을 그대로 쓰고 로컬로 덮지 않으므로 여기서 손댈 이유가 없다.
+ *
+ * 하루라도 저장이 실패하면 MERGE_PENDING_KEY를 지우지 않고 남겨둔다. 다음 호출은 항상
+ * "현재 원격 + 백업"을 처음부터 다시 계산하므로(멱등 upsert), 실패한 날짜만 골라
+ * 재시도할 필요 없이 그냥 다시 부르면 된다.
+ */
+export async function mergeAnonymousBackupIfPending(userId: string): Promise<MergedUsageData | null> {
+  if (typeof window === "undefined") return null
+
+  const raw = window.localStorage.getItem(MERGE_PENDING_KEY)
+  if (!raw) return null
+
+  let backup: MergeBackupPayload
+  try {
+    backup = JSON.parse(raw)
+  } catch (err) {
+    console.warn("[supabase] merge backup 파싱 실패 — 손상된 백업을 버림:", err)
+    window.localStorage.removeItem(MERGE_PENDING_KEY)
+    return null
+  }
+
+  const localLoggedSlots = backup.loggedSlots ?? {}
+  const localDays = Object.keys(localLoggedSlots)
+    .map(Number)
+    .filter((day) => Array.isArray(localLoggedSlots[day]) && localLoggedSlots[day].length > 0)
+
+  if (localDays.length === 0) {
+    // 실제로 합칠 기록이 없으면(빈 익명 세션이었음) 조용히 정리만 하고 끝낸다
+    window.localStorage.removeItem(MERGE_PENDING_KEY)
+    return null
+  }
+
+  const supabase = getSupabaseClient()
+  if (!supabase) return null // 설정 안 됐으면 병합 불가 — 백업은 남겨둔다(재시도 대비)
+
+  const remote = await loadRemoteState(userId)
+  const remoteLoggedSlots = remote?.loggedSlots ?? {}
+
+  const allDays = Array.from(new Set([...Object.keys(remoteLoggedSlots).map(Number), ...localDays])).sort(
+    (a, b) => a - b,
+  )
+
+  const mergedLoggedSlots: Record<number, MergeBackupSlotEntry[]> = {}
+  let allSucceeded = true
+
+  await Promise.all(
+    allDays.map(async (day) => {
+      const remoteEntries = remoteLoggedSlots[day] ?? []
+      const localEntries = localLoggedSlots[day] ?? []
+      const merged = dedupeSlotEntries([...remoteEntries, ...localEntries])
+      mergedLoggedSlots[day] = merged
+
+      // 로컬이 원격에 새로 더한 게 없으면(이미 같은 조합) 다시 쓸 필요 없음
+      if (localEntries.length === 0 || sameSlotSet(merged, remoteEntries)) return
+
+      const { error } = await supabase
+        .from("usage_log")
+        .upsert({ user_id: userId, day, slots: merged }, { onConflict: "user_id,day" })
+      if (error) {
+        console.warn(`[supabase] merge usage_log(day=${day}) 저장 실패:`, error.message)
+        allSucceeded = false
+      }
+    }),
+  )
+
+  if (!allSucceeded) {
+    console.warn("[supabase] 병합 일부 실패 — hoppy-merge-pending을 남겨두고 다음 기회에 재시도")
+    return { loggedDays: allDays, loggedSlots: mergedLoggedSlots }
+  }
+
+  window.localStorage.removeItem(MERGE_PENDING_KEY)
+  return { loggedDays: allDays, loggedSlots: mergedLoggedSlots }
+}
+
 export interface RemoteState {
   profile: RemoteProfile
   completedDays: number[]

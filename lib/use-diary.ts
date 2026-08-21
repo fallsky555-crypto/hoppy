@@ -9,6 +9,7 @@ import {
 import {
   ensureAnonSession,
   loadRemoteState,
+  mergeAnonymousBackupIfPending,
   saveActiveIngredients,
   saveAge,
   saveCalendar,
@@ -514,6 +515,25 @@ export function useDiary() {
       cancelled = true
     }
   }, [])
+
+  /**
+   * 13-2 익명→기존 계정 폴백 병합. signInExistingIdentity()가 계정 전환 직전 남겨둔
+   * 로컬 백업(hoppy-merge-pending)이 있으면, 하이드레이션이 끝난 뒤(=하이드레이션
+   * effect가 이미 원격 프로필/기록으로 setState를 마친 뒤) 그 위에 병합 결과를 얹는다.
+   * hydrated를 먼저 기다리는 이유: 두 effect가 동시에 setState하면 나중에 커밋되는
+   * 쪽이 먼저 것을 통째로 덮어쓰는 레이스가 생길 수 있어서다.
+   */
+  useEffect(() => {
+    if (!hydrated || !userId) return
+    let cancelled = false
+    mergeAnonymousBackupIfPending(userId).then((merged) => {
+      if (cancelled || !merged) return
+      setState((prev) => ({ ...prev, loggedDays: merged.loggedDays, loggedSlots: merged.loggedSlots }))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [hydrated, userId])
 
   useEffect(() => {
     if (!hydrated) return

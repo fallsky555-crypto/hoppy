@@ -509,7 +509,7 @@
     "reportReady": "리포트 준비 완료"
   },
   "dailySlots": {
-    "headline": "오늘의 루틴",
+    "headline": "오늘 뭐 바르셨어요?",
     "ariaLabel": "오늘의 슬롯 선택",
     "dailyCareLabel": "매일 케어",
     "situationalCareLabel": "상황별 케어",
@@ -521,17 +521,16 @@
     "conditionQuestion": "오늘 하신 케어, 피부 어땠어요?",
     "conditionQuestionDynamic": "오늘 하신 케어, {{concern}}엔 어땠어요?",
     "slots": {
-      "exfoliation": "각질케어",
-      "hydration": "수분케어",
-      "active": "고민케어",
-      "barrier": "진정케어",
-      "sun_care": "자외선차단"
+      "exfoliation": "필링제품",
+      "hydration": "스킨 · 로션",
+      "active": "기능성제품",
+      "barrier": "재생크림",
+      "sun_care": "선크림"
     },
     "slotDescriptions": {
-      "exfoliation": "AHA, BHA 등",
-      "hydration": "히알루론산 등",
+      "exfoliation": "필링젤, 필링패드",
       "active": "레티놀, 비타민C 등",
-      "barrier": "시카, 세라마이드 등"
+      "barrier": "시카 등"
     },
     "specialCare": {
       "title": "특별관리",
@@ -554,7 +553,7 @@
     "freeInput": {
       "title": "자유입력",
       "subtitle": "오늘 하고 싶은 말을 자유롭게 적어보세요",
-      "placeholder": "예: 오늘은 피부가 좀 예민했어요...",
+      "placeholder": "예: 턱 주변 트러블, 피부 당김 등 특이사항",
       "saveButton": "저장",
       "saved": "저장했어요"
     },

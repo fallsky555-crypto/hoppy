@@ -512,7 +512,7 @@
     "reportReady": "Report ready"
   },
   "dailySlots": {
-    "headline": "Today's Routine",
+    "headline": "What did you put on today?",
     "ariaLabel": "Select today's slots",
     "dailyCareLabel": "Daily Care",
     "situationalCareLabel": "Situational Care",
@@ -524,17 +524,16 @@
     "conditionQuestion": "How did your skin feel after today's care?",
     "conditionQuestionDynamic": "How did your {{concern}} feel after today's care?",
     "slots": {
-      "exfoliation": "Exfoliation",
-      "hydration": "Hydration",
-      "active": "Concern Care",
-      "barrier": "Soothing Care",
-      "sun_care": "Sun Care"
+      "exfoliation": "Exfoliant",
+      "hydration": "Toner · Lotion",
+      "active": "Targeted care",
+      "barrier": "Recovery cream",
+      "sun_care": "Sunscreen"
     },
     "slotDescriptions": {
-      "exfoliation": "AHA, BHA, etc.",
-      "hydration": "Hyaluronic acid, etc.",
-      "active": "Retinol, Vitamin C, etc.",
-      "barrier": "Cica, ceramide, etc."
+      "exfoliation": "Peeling gel, pads",
+      "active": "Retinol, vitamin C, etc.",
+      "barrier": "Cica, etc."
     },
     "specialCare": {
       "title": "Special Care",
@@ -557,7 +556,7 @@
     "freeInput": {
       "title": "Free Input",
       "subtitle": "Write anything you'd like about today",
-      "placeholder": "e.g. My skin felt a bit sensitive today...",
+      "placeholder": "e.g. breakouts near jawline, tightness",
       "saveButton": "Save",
       "saved": "Saved"
     },

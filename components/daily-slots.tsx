@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Check, Smile, Meh, Frown, ChevronDown } from "lucide-react"
+import { Check, Smile, Meh, Frown, ChevronDown, Pencil } from "lucide-react"
 import { t, interpolate } from "@/lib/i18n"
 import type { Locale } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
@@ -73,26 +73,20 @@ function isDayLocked(
 
 const SUN_CARE_SLOT: Slot = { id: "sun_care", emoji: "☀️", labelKey: "dailySlots.slots.sun_care" }
 
-/** 매일 케어 그룹 — 완료 토글만 있는 단순 슬롯 */
-const DAILY_SLOTS: Slot[] = [
+/** 세로 리스트로 나열되는 기본 슬롯 5개 중 4개. "기능성제품(active)"은 성분 아코디언이라 별도 컴포넌트(ConcernCareCard)로 렌더링되지만 같은 리스트의 마지막 아이템으로 이어붙는다 */
+const PRIMARY_SLOTS: Slot[] = [
   SUN_CARE_SLOT,
   { id: "hydration", emoji: "💧", labelKey: "dailySlots.slots.hydration" },
-]
-
-/** 상황별 케어 그룹 — 2열 카드. "고민케어"는 그리드가 아니라 아래 아코디언으로 대체됨 */
-const SITUATIONAL_SLOTS: Slot[] = [
   { id: "exfoliation", emoji: "✨", labelKey: "dailySlots.slots.exfoliation" },
   { id: "barrier", emoji: "🌿", labelKey: "dailySlots.slots.barrier" },
 ]
 
-function SlotCard({ slot, isChecked, toggleSlot, isSunCare, isRecommended, disabled }: { slot: Slot; isChecked: boolean; toggleSlot: (id: SlotType) => void; isSunCare?: boolean; isRecommended?: boolean; disabled?: boolean }) {
+/** 상단 2x2 그리드 아이템 — 아이콘, 라벨, 오른쪽 체크마크(선택 시에만) 순으로 가로 배치. 설명 텍스트는 표시하지 않음 */
+function SlotCard({ slot, isChecked, toggleSlot, disabled }: { slot: Slot; isChecked: boolean; toggleSlot: (id: SlotType) => void; disabled?: boolean }) {
   const locale = useLocale()
   const handleClick = useCallback(() => {
     toggleSlot(slot.id)
   }, [slot.id, toggleSlot])
-
-  const descriptionKey = slot.id !== "sun_care" ? `dailySlots.slotDescriptions.${slot.id}` : null
-  const description = descriptionKey ? t(descriptionKey, locale) : null
 
   return (
     <button
@@ -100,34 +94,20 @@ function SlotCard({ slot, isChecked, toggleSlot, isSunCare, isRecommended, disab
       onClick={handleClick}
       disabled={disabled}
       className={cn(
-        "relative rounded-2xl p-4 transition-all border-2",
-        isSunCare
-          ? "flex flex-row items-center gap-3 w-full"
-          : "flex flex-col items-center gap-2",
+        "flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 transition-all",
         isChecked
           ? "border-primary bg-primary/10"
           : "border-border bg-card",
         disabled && "opacity-60 cursor-not-allowed",
       )}
     >
-      <div className={cn("flex-shrink-0", isSunCare ? "text-2xl" : "text-3xl")}>
+      <div className="flex-shrink-0 text-2xl">
         {slot.emoji}
       </div>
-      <div className={isSunCare ? "text-left" : "text-center"}>
-        <span className={cn("font-semibold text-foreground", isSunCare ? "text-sm" : "text-sm")}>
-          {t(slot.labelKey, locale)}
-        </span>
-        {description && (
-          <div className="text-xs text-muted-foreground">
-            {description}
-          </div>
-        )}
+      <div className="flex-1 text-left text-sm font-semibold text-foreground">
+        {t(slot.labelKey, locale)}
       </div>
-      {isRecommended && (
-        <span className="absolute -top-1.5 -left-1.5 flex size-[22px] items-center justify-center rounded-full bg-white shadow-sm text-[10px]">
-          ⭐
-        </span>
-      )}
+      {isChecked && <Check className="size-5 flex-shrink-0 text-primary" aria-hidden />}
     </button>
   )
 }
@@ -148,7 +128,7 @@ function SpecialCareCard({ isExpanded, onToggle, selectedSpecialCare, onToggleSp
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 bg-card hover:bg-secondary transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-secondary transition-colors"
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">💎</span>
@@ -209,22 +189,24 @@ interface ConcernCareCardProps {
   selectedConcernCare: Set<ConcernCareIngredient>
   onToggleConcernCare: (id: ConcernCareIngredient) => void
   locale: Locale
-  isRecommended?: boolean
   disabled?: boolean
 }
 
-function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleConcernCare, locale, isRecommended, disabled }: ConcernCareCardProps) {
+/** 다른 슬롯 리스트 아이템과 동일한 모양(아이콘·라벨·체크마크)이지만, 탭하면 토글이 아니라 성분 선택지 아코디언을 펼친다 */
+function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleConcernCare, locale, disabled }: ConcernCareCardProps) {
+  const isChecked = selectedConcernCare.size > 0
+
   return (
-    <div className="relative border-2 border-border rounded-2xl overflow-hidden">
-      {isRecommended && (
-        <span className="absolute -top-1.5 -left-1.5 z-10 flex size-[22px] items-center justify-center rounded-full bg-white shadow-sm text-[10px]">
-          ⭐
-        </span>
+    <div
+      className={cn(
+        "overflow-hidden rounded-2xl border-2 transition-colors",
+        isChecked ? "border-primary bg-primary/10" : "border-border bg-card",
       )}
+    >
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 bg-card hover:bg-secondary transition-colors"
+        className="flex w-full items-center justify-between px-4 py-3"
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">🎯</span>
@@ -233,12 +215,15 @@ function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleCo
             <div className="text-xs text-muted-foreground">{t("dailySlots.slotDescriptions.active", locale)}</div>
           </div>
         </div>
-        <ChevronDown
-          className={cn(
-            "size-5 text-muted-foreground transition-transform",
-            isExpanded ? "rotate-180" : "",
-          )}
-        />
+        <div className="flex items-center gap-2">
+          {isChecked && <Check className="size-5 text-primary" aria-hidden />}
+          <ChevronDown
+            className={cn(
+              "size-5 text-muted-foreground transition-transform",
+              isExpanded ? "rotate-180" : "",
+            )}
+          />
+        </div>
       </button>
 
       {isExpanded && (
@@ -268,65 +253,27 @@ function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleCo
 }
 
 interface FreeInputCardProps {
-  isExpanded: boolean
-  onToggle: () => void
   value: string
   onChange: (value: string) => void
   onSave: () => void
-  /** 이 날짜에 이미 저장된 자유입력 기록이 있는지 — 서버 값(diary.freeInputs[day]) 기준 */
-  hasSavedContent: boolean
   locale: Locale
   disabled?: boolean
 }
 
-function FreeInputCard({ isExpanded, onToggle, value, onChange, onSave, hasSavedContent, locale, disabled }: FreeInputCardProps) {
+/** 항상 펼쳐진 한 줄 입력 — 다른 카드처럼 탭해서 펼치는 아코디언이 아니라 인풋에서 포커스가 빠질 때(blur) 저장한다 */
+function FreeInputCard({ value, onChange, onSave, locale, disabled }: FreeInputCardProps) {
   return (
-    <div className="rounded-2xl bg-secondary overflow-hidden">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-center justify-between p-4"
-      >
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">✏️</span>
-          <div className="text-left">
-            <div className="text-sm font-semibold text-foreground">{t("dailySlots.freeInput.title", locale)}</div>
-            <div className="text-xs text-muted-foreground">{t("dailySlots.freeInput.subtitle", locale)}</div>
-          </div>
-        </div>
-        <ChevronDown
-          className={cn(
-            "size-5 text-muted-foreground transition-transform",
-            isExpanded ? "rotate-180" : "",
-          )}
-        />
-      </button>
-
-      {isExpanded && (
-        <div className="border-t border-border p-4 space-y-2 animate-in slide-in-from-top-2 duration-200">
-          <textarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={t("dailySlots.freeInput.placeholder", locale)}
-            rows={3}
-            disabled={disabled}
-            className="w-full rounded-2xl bg-card border border-border p-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:opacity-60 disabled:cursor-not-allowed"
-          />
-          <button
-            type="button"
-            onClick={onSave}
-            disabled={disabled || !value.trim()}
-            className={cn(
-              "w-full rounded-full font-semibold py-2.5 text-sm transition-colors",
-              !disabled && value.trim()
-                ? "bg-primary hover:bg-primary/80 text-primary-foreground"
-                : "bg-muted text-muted-foreground cursor-not-allowed opacity-60",
-            )}
-          >
-            {hasSavedContent ? t("dailySlots.freeInput.saved", locale) : t("dailySlots.freeInput.saveButton", locale)}
-          </button>
-        </div>
-      )}
+    <div className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3">
+      <Pencil className="size-4 flex-shrink-0 text-muted-foreground" aria-hidden />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onSave}
+        placeholder={t("dailySlots.freeInput.placeholder", locale)}
+        disabled={disabled}
+        className="w-full flex-1 bg-transparent text-sm font-semibold text-foreground placeholder:font-semibold placeholder:text-foreground focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+      />
     </div>
   )
 }
@@ -347,7 +294,6 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   const [selectedConcernCare, setSelectedConcernCare] = useState<Set<ConcernCareIngredient>>(new Set())
   const [concernCareExpanded, setConcernCareExpanded] = useState(false)
   const [showConditionPrompt, setShowConditionPrompt] = useState(false)
-  const [freeInputExpanded, setFreeInputExpanded] = useState(false)
   const [freeInputText, setFreeInputText] = useState("")
   const [collapsed, setCollapsed] = useState(() =>
     isDayLocked(day, diary.conditions, diary.loggedDays, diary.currentDay),
@@ -599,8 +545,6 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
     selectedSpecialCare.size +
     selectedConcernCare.size
   const isDone = isDayLocked(day, diary.conditions, diary.loggedDays, diary.currentDay)
-  const hasFreeInput = diary.freeInputs[day] !== undefined
-  const dayLabel = day === diary.currentDay ? t("common.today", locale) : t("common.pastRecord", locale)
 
   return (
     <section
@@ -623,42 +567,18 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                 <ChevronDown className="size-5 text-muted-foreground -rotate-90" aria-hidden />
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground tracking-tight">
-                    Day {day} · {dayLabel}
-                  </span>
-                  <ChevronDown className="size-5 text-muted-foreground" aria-hidden />
-                </div>
-                <div className="space-y-2">
-                  <h2 className="font-display text-xl font-bold text-foreground">
-                    {t("dailySlots.headline", locale)}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {locale === "ko"
-                      ? "오늘 하신 일을 선택해주세요 (복수 선택 가능)"
-                      : "Select what you did today (multiple selections available)"}
-                  </p>
-                </div>
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  {t("dailySlots.headline", locale)}
+                </h2>
+                <ChevronDown className="size-5 text-muted-foreground" aria-hidden />
               </div>
             )}
           </button>
         ) : (
-          <div className="space-y-3">
-            <div className="text-xs font-semibold text-muted-foreground tracking-tight">
-              Day {day} · {dayLabel}
-            </div>
-            <div className="space-y-2">
-              <h2 className="font-display text-xl font-bold text-foreground">
-                {t("dailySlots.headline", locale)}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {locale === "ko"
-                  ? "오늘 하신 케어를 골라보세요"
-                  : "Pick the care you did today"}
-              </p>
-            </div>
-          </div>
+          <h2 className="font-display text-xl font-bold text-foreground">
+            {t("dailySlots.headline", locale)}
+          </h2>
         )}
 
         {/* 기록 완료 후: 슬롯 전체 UI를 접어 한 줄 요약 바로 축소 (재탭하면 다시 펼쳐짐) */}
@@ -668,52 +588,27 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
           className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
         >
           <div className="flex flex-col gap-4">
-            {!collapsed && (
+            {isDone && !collapsed && (
               <p className="text-xs text-center text-muted-foreground">
                 {t("dailySlots.editHint", locale)}
               </p>
             )}
 
-            {/* 슬롯 선택 */}
+            {/* 슬롯 선택 — 상단 2x2 그리드(선크림/스킨·로션/필링제품/재생크림) + 하단 세로 리스트(기능성제품/특별관리/자유입력) */}
             <div className="space-y-4">
-              {/* 매일 케어: 완료 토글만 있는 단순 슬롯. 각질케어/진정케어와 동일한 2열 카드 스타일 */}
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground">
-                  {t("dailySlots.dailyCareLabel", locale)}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {DAILY_SLOTS.map((slot) => (
-                    <SlotCard
-                      key={slot.id}
-                      slot={slot}
-                      isChecked={checkedSlots.has(slot.id)}
-                      toggleSlot={toggleSlot}
-                      isRecommended={recommendedSlot === slot.id}
-                      disabled={isDone}
-                    />
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 gap-3">
+                {PRIMARY_SLOTS.map((slot) => (
+                  <SlotCard
+                    key={slot.id}
+                    slot={slot}
+                    isChecked={checkedSlots.has(slot.id)}
+                    toggleSlot={toggleSlot}
+                    disabled={isDone}
+                  />
+                ))}
               </div>
 
-              {/* 상황별 케어: 2열 카드 + 아코디언(고민케어 성분, 특별관리) */}
-              <div className="space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground">
-                  {t("dailySlots.situationalCareLabel", locale)}
-                </p>
-
-                <div className="grid grid-cols-2 gap-3">
-                  {SITUATIONAL_SLOTS.map((slot) => (
-                    <SlotCard
-                      key={slot.id}
-                      slot={slot}
-                      isChecked={checkedSlots.has(slot.id)}
-                      toggleSlot={toggleSlot}
-                      isRecommended={recommendedSlot === slot.id}
-                      disabled={isDone}
-                    />
-                  ))}
-                </div>
-
+              <div className="space-y-2">
                 {/* 고민케어 성분 아코디언 — 성분 선택이 곧 고민케어(active) 슬롯 완료 처리 */}
                 <ConcernCareCard
                   isExpanded={concernCareExpanded}
@@ -721,7 +616,6 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                   selectedConcernCare={selectedConcernCare}
                   onToggleConcernCare={toggleConcernCare}
                   locale={locale}
-                  isRecommended={recommendedSlot === "active"}
                   disabled={isDone}
                 />
 
@@ -734,37 +628,25 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                   locale={locale}
                   disabled={isDone}
                 />
-              </div>
 
-              {/* 자유입력 — raw text 그대로 저장, 정량 분석 대상 아님 */}
-              <FreeInputCard
-                isExpanded={freeInputExpanded}
-                onToggle={() => setFreeInputExpanded(!freeInputExpanded)}
-                value={freeInputText}
-                onChange={setFreeInputText}
-                onSave={handleSaveFreeInput}
-                hasSavedContent={hasFreeInput}
-                locale={locale}
-                disabled={isDone}
-              />
+                {/* 자유입력 — raw text 그대로 저장, 정량 분석 대상 아님 */}
+                <FreeInputCard
+                  value={freeInputText}
+                  onChange={setFreeInputText}
+                  onSave={handleSaveFreeInput}
+                  locale={locale}
+                  disabled={isDone}
+                />
+              </div>
             </div>
-
-            {/* 안내문구 */}
-            {recommendedSlot && (
-              <div className="border-t border-border pt-2">
-                <p className="text-xs text-center text-muted-foreground mt-1">
-                  {t("dailySlots.recommendationNote", locale)}
-                </p>
-              </div>
-            )}
 
             {/* 하단 섹션 */}
             <div className="space-y-2">
-              <p className="text-sm font-bold text-center text-foreground">
-                {totalSelected > 0
-                  ? locale === "ko" ? `${totalSelected}개 선택됨` : `${totalSelected} selected`
-                  : t("dailySlots.tapPrompt", locale)}
-              </p>
+              {totalSelected > 0 && (
+                <p className="text-sm font-bold text-center text-foreground">
+                  {locale === "ko" ? `${totalSelected}개 선택됨` : `${totalSelected} selected`}
+                </p>
+              )}
 
               {showConditionPrompt && (
                 <div className="space-y-3 bg-secondary p-4 rounded-lg">

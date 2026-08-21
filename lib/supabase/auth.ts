@@ -1,4 +1,6 @@
 import { getSupabaseClient } from "@/lib/supabase/client"
+import { MERGE_PENDING_KEY } from "@/lib/supabase/sync"
+import { STORAGE_KEY as DIARY_STORAGE_KEY } from "@/lib/use-diary"
 
 /** 13-1. 이메일+비밀번호는 도입하지 않는다 — 카카오·구글 OAuth만 지원한다 */
 export type LoginProvider = "kakao" | "google"
@@ -16,6 +18,25 @@ function rememberLinkAttempt(provider: LoginProvider) {
     window.sessionStorage.setItem(LINK_ATTEMPT_KEY, provider)
   } catch {
     // 저장 실패는 무시
+  }
+}
+
+/**
+ * signInExistingIdentity()가 기존 계정으로 전환하기(signOut) 직전, 지금까지 쌓인 익명
+ * 세션의 로컬 기록을 별도 키(MERGE_PENDING_KEY)로 백업해둔다. signOut() 이후에는 이
+ * 익명 계정 소유의 원격 usage_log 등을 RLS 때문에 더는 읽을 수 없으므로, 병합 재료는
+ * 반드시 이 시점에 localStorage 미러(DIARY_STORAGE_KEY)에서 그대로 떠가야 한다. 병합은
+ * 로그인 완료 후 use-diary.ts의 하이드레이션이 끝난 뒤 mergeAnonymousBackupIfPending()이
+ * 처리한다. 실패(파싱 불가 등)에 대비해 원본 DIARY_STORAGE_KEY는 건드리지 않는다.
+ */
+function backupLocalDiaryForMerge(): void {
+  if (typeof window === "undefined") return
+  try {
+    const raw = window.localStorage.getItem(DIARY_STORAGE_KEY)
+    if (!raw) return
+    window.localStorage.setItem(MERGE_PENDING_KEY, raw)
+  } catch (err) {
+    console.warn("[supabase] backupLocalDiaryForMerge failed:", err)
   }
 }
 
@@ -57,13 +78,20 @@ export async function linkIdentity(provider: LoginProvider): Promise<{ error: st
 
 /**
  * identity_already_exists 폴백. 이 소셜 계정이 이미 다른(영구) 유저에 연결돼 있을 때,
- * 지금 세션에 "연결"하는 대신 그 기존 계정으로 그냥 "로그인"한다. 익명 세션에 로컬로
- * 쌓인 기록은 그 계정으로 옮겨지지 않는다 — 이건 데이터 병합이 아니라 "이미 있는
- * 계정으로 갈아타기"이므로, 호출하는 쪽에서 그 사실을 먼저 안내해야 한다.
+ * 지금 세션에 "연결"하는 대신 그 기존 계정으로 로그인하고 익명 세션에 로컬로 쌓인
+ * 기록을 그 계정의 원격 기록과 합친다(2026-08-21부터 — 이전엔 로컬 기록을 버리고
+ * "갈아타기"만 했다). 병합 자체는 여기서 하지 않는다: signOut() 이후에는 이 익명
+ * 계정 소유의 원격 데이터를 RLS 때문에 더 이상 읽을 수 없으므로, signOut() 직전에
+ * backupLocalDiaryForMerge()로 로컬 미러를 떠가두고, 실제 병합은 로그인 완료 후
+ * use-diary.ts 하이드레이션이 끝난 뒤 mergeAnonymousBackupIfPending()이 처리한다.
  */
 export async function signInExistingIdentity(provider: LoginProvider): Promise<{ error: string | null }> {
   const supabase = getSupabaseClient()
   if (!supabase) return { error: "Supabase가 설정되지 않았습니다." }
+
+  // 계정 전환 전 로컬 기록을 병합용으로 백업 — 아래 signOut()이 지나면 이 익명 계정
+  // 소유 원격 데이터는 RLS로 더 이상 못 읽으므로 반드시 signOut() 이전에 떠가야 한다.
+  backupLocalDiaryForMerge()
 
   // 익명 세션이 남아있는 채로 signInWithOAuth()를 호출하면 GoTrue가 "지금 세션에
   // 연결 시도"로 취급해 identity_already_exists 충돌이 재발할 수 있다 — Supabase
