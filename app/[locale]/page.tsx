@@ -106,13 +106,13 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
         <TodayCareCard />
 
-        <SkinBalanceRadar skinType={diary.skinType} locale={locale} onChangeSkinType={diary.setSkinType} />
-
         <DailySlots
           day={activeDay}
           onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
           onCollapse={() => setCalendarPulse((p) => p + 1)}
         />
+
+        <SkinBalanceRadar skinType={diary.skinType} locale={locale} onChangeSkinType={diary.setSkinType} />
 
         <WeeklyMiniInsight />
 
