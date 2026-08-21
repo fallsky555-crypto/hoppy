@@ -263,7 +263,7 @@ interface FreeInputCardProps {
 /** 항상 펼쳐진 한 줄 입력 — 다른 카드처럼 탭해서 펼치는 아코디언이 아니라 인풋에서 포커스가 빠질 때(blur) 저장한다 */
 function FreeInputCard({ value, onChange, onSave, locale, disabled }: FreeInputCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3">
+    <div className="flex items-center gap-3 rounded-2xl border-2 border-border bg-card px-4 py-3">
       <Pencil className="size-4 flex-shrink-0 text-muted-foreground" aria-hidden />
       <input
         type="text"
