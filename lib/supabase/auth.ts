@@ -37,13 +37,14 @@ export async function linkIdentity(provider: LoginProvider): Promise<{ error: st
 
   if (typeof window !== "undefined") rememberLinkAttempt(provider)
 
-  // origin만 넘긴다(경로·쿼리 제외) — 진단 파라미터가 URL에 남아있으면 매번 다른
-  // redirectTo 값이 되어 Supabase의 Redirect URLs 허용 목록과 정확히 일치하지 않을 수
-  // 있고, 그러면 Supabase가 조용히 Site URL(기본값 localhost)로 대체해버린다. 진단은
-  // 이 시점에 이미 로컬/원격에 저장돼 있으므로 origin만으로도 복귀 후 상태 복원에 문제없다.
+  // 현재 URL 전체(href)를 넘긴다 — origin만 넘기면 로케일 경로(/ko, /en)가 빠져서
+  // middleware.ts가 복귀 후 URL을 기본 로케일(ko)로 처리해버린다. 단, href에는 쿼리·해시가
+  // 그대로 포함되므로 Supabase Redirect URLs 허용 목록과 정확히 일치하지 않으면(와일드카드
+  // 미등록 시) Supabase가 조용히 Site URL(기본값 localhost)로 대체해버릴 수 있다 —
+  // 대시보드에 https://<domain>/** 형태의 와일드카드가 등록돼 있는지 확인해야 한다.
   const { error } = await supabase.auth.linkIdentity({
     provider,
-    options: { redirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
+    options: { redirectTo: typeof window !== "undefined" ? window.location.href : undefined },
   })
 
   if (error) {
@@ -78,7 +79,7 @@ export async function signInExistingIdentity(provider: LoginProvider): Promise<{
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
+    options: { redirectTo: typeof window !== "undefined" ? window.location.href : undefined },
   })
 
   if (error) {
