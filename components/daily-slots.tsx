@@ -591,8 +591,10 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
               </p>
             )}
 
-            {/* 슬롯 선택 — 상단 2x2 그리드(선크림/스킨·로션/필링제품/재생크림) + 하단 세로 리스트(기능성제품/특별관리/자유입력) */}
-            <div className="space-y-4">
+            {/* 슬롯 선택 — 상단 2x2 그리드(선크림/스킨·로션/필링제품/재생크림) + 하단 세로 리스트(기능성제품/특별관리/자유입력).
+                모든 요소 간 세로 간격을 gap-3(12px)로 통일 — 2x2 그리드의 행 간격과 동일한 값을
+                부모 컨테이너 하나에만 적용해 개별 margin 없이 리듬을 맞춘다. */}
+            <div className="flex flex-col gap-3">
               <div className="grid grid-cols-2 gap-3">
                 {PRIMARY_SLOTS.map((slot) => (
                   <SlotCard
@@ -605,102 +607,100 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                 ))}
               </div>
 
+              {/* 고민케어 성분 아코디언 — 성분 선택이 곧 고민케어(active) 슬롯 완료 처리 */}
+              <ConcernCareCard
+                isExpanded={concernCareExpanded}
+                onToggle={() => setConcernCareExpanded(!concernCareExpanded)}
+                selectedConcernCare={selectedConcernCare}
+                onToggleConcernCare={toggleConcernCare}
+                locale={locale}
+                disabled={isDone}
+              />
+
+              {/* 특별관리 아코디언 */}
+              <SpecialCareCard
+                isExpanded={specialCareExpanded}
+                onToggle={() => setSpecialCareExpanded(!specialCareExpanded)}
+                selectedSpecialCare={selectedSpecialCare}
+                onToggleSpecialCare={toggleSpecialCare}
+                locale={locale}
+                disabled={isDone}
+              />
+
+              {/* 자유입력 — raw text 그대로 저장, 정량 분석 대상 아님 */}
+              <FreeInputCard
+                value={freeInputText}
+                onChange={setFreeInputText}
+                onSave={handleSaveFreeInput}
+                locale={locale}
+                disabled={isDone}
+              />
+
+              {/* 하단 섹션 */}
               <div className="space-y-2">
-                {/* 고민케어 성분 아코디언 — 성분 선택이 곧 고민케어(active) 슬롯 완료 처리 */}
-                <ConcernCareCard
-                  isExpanded={concernCareExpanded}
-                  onToggle={() => setConcernCareExpanded(!concernCareExpanded)}
-                  selectedConcernCare={selectedConcernCare}
-                  onToggleConcernCare={toggleConcernCare}
-                  locale={locale}
-                  disabled={isDone}
-                />
+                {totalSelected > 0 && (
+                  <p className="text-sm font-bold text-center text-foreground">
+                    {locale === "ko" ? `${totalSelected}개 선택됨` : `${totalSelected} selected`}
+                  </p>
+                )}
 
-                {/* 특별관리 아코디언 */}
-                <SpecialCareCard
-                  isExpanded={specialCareExpanded}
-                  onToggle={() => setSpecialCareExpanded(!specialCareExpanded)}
-                  selectedSpecialCare={selectedSpecialCare}
-                  onToggleSpecialCare={toggleSpecialCare}
-                  locale={locale}
-                  disabled={isDone}
-                />
-
-                {/* 자유입력 — raw text 그대로 저장, 정량 분석 대상 아님 */}
-                <FreeInputCard
-                  value={freeInputText}
-                  onChange={setFreeInputText}
-                  onSave={handleSaveFreeInput}
-                  locale={locale}
-                  disabled={isDone}
-                />
-              </div>
-            </div>
-
-            {/* 하단 섹션 */}
-            <div className="space-y-2">
-              {totalSelected > 0 && (
-                <p className="text-sm font-bold text-center text-foreground">
-                  {locale === "ko" ? `${totalSelected}개 선택됨` : `${totalSelected} selected`}
-                </p>
-              )}
-
-              {showConditionPrompt && (
-                <div className="space-y-3 bg-secondary p-4 rounded-lg">
-                  <p className="text-sm font-semibold text-foreground">{conditionQuestion}</p>
-                  <div className="flex gap-2">
+                {showConditionPrompt && (
+                  <div className="space-y-3 bg-secondary p-4 rounded-lg">
+                    <p className="text-sm font-semibold text-foreground">{conditionQuestion}</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleConditionSelect("good")}
+                        className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
+                      >
+                        <Smile className="size-4" aria-hidden />
+                        {t("onboarding.mappingResult.condition_good", locale)}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleConditionSelect("neutral")}
+                        className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
+                      >
+                        <Meh className="size-4" aria-hidden />
+                        {t("onboarding.mappingResult.condition_neutral", locale)}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleConditionSelect("bad")}
+                        className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
+                      >
+                        <Frown className="size-4" aria-hidden />
+                        {t("onboarding.mappingResult.condition_bad", locale)}
+                      </button>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => handleConditionSelect("good")}
-                      className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
+                      onClick={() => setShowConditionPrompt(false)}
+                      className="w-full text-xs font-medium text-muted-foreground py-2 hover:text-foreground"
                     >
-                      <Smile className="size-4" aria-hidden />
-                      {t("onboarding.mappingResult.condition_good", locale)}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleConditionSelect("neutral")}
-                      className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
-                    >
-                      <Meh className="size-4" aria-hidden />
-                      {t("onboarding.mappingResult.condition_neutral", locale)}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleConditionSelect("bad")}
-                      className="flex-1 rounded-xl border border-border bg-card text-foreground px-3 py-2 text-xs font-semibold transition-colors flex flex-col items-center gap-1 hover:bg-secondary"
-                    >
-                      <Frown className="size-4" aria-hidden />
-                      {t("onboarding.mappingResult.condition_bad", locale)}
+                      {t("common.later", locale)}
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowConditionPrompt(false)}
-                    className="w-full text-xs font-medium text-muted-foreground py-2 hover:text-foreground"
-                  >
-                    {t("common.later", locale)}
-                  </button>
-                </div>
-              )}
-
-              <button
-                type="button"
-                disabled={isDone}
-                onClick={() => {
-                  if (totalSelected > 0) {
-                    setShowConditionPrompt(true)
-                  }
-                }}
-                className={cn(
-                  "w-full rounded-full font-bold py-3 transition-colors text-sm",
-                  isDone
-                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
-                    : "bg-primary hover:bg-primary/80 text-primary-foreground"
                 )}
-              >
-                {isDone ? t("dailySlots.recordButton.done", locale) : t("dailySlots.recordButton.default", locale)}
-              </button>
+
+                <button
+                  type="button"
+                  disabled={isDone}
+                  onClick={() => {
+                    if (totalSelected > 0) {
+                      setShowConditionPrompt(true)
+                    }
+                  }}
+                  className={cn(
+                    "w-full rounded-full font-bold py-3 transition-colors text-sm",
+                    isDone
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                      : "bg-primary hover:bg-primary/80 text-primary-foreground"
+                  )}
+                >
+                  {isDone ? t("dailySlots.recordButton.done", locale) : t("dailySlots.recordButton.default", locale)}
+                </button>
+              </div>
             </div>
           </div>
         </div>
