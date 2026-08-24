@@ -119,11 +119,26 @@ export const DEFAULT_BHA_INTERVAL_DAYS = 5
 export const MIN_INTERVAL_DAYS = 5
 export const MAX_INTERVAL_DAYS = 7
 
-/** 가입일(Day 1) 기준으로 오늘이 며칠 차인지 계산 (1 ~ TOTAL_DAYS 로 clamp) */
+/**
+ * 가입일(Day 1) 기준으로 오늘이 며칠 차인지 계산 — 하한 1일 뿐, TOTAL_DAYS 상한 clamp는
+ * 없다. 30일이 지나도 day가 31, 32...로 계속 늘어나야 loggedSlots가 day 30 슬롯에
+ * 계속 덮어써지지 않고(무제한 로깅), 리포트도 30일 단위로 반복해서 새로 열린다.
+ * "이번 사이클의 며칠째"가 필요하면 cycleDayFromElapsed()를 같이 쓴다.
+ */
 export function dayFromJoinDate(joinISO: string, now: Date = new Date()): number {
   const start = new Date(joinISO)
   const startMid = new Date(start.getFullYear(), start.getMonth(), start.getDate())
   const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const diffDays = Math.floor((nowMid.getTime() - startMid.getTime()) / 86_400_000)
-  return Math.min(Math.max(diffDays + 1, 1), TOTAL_DAYS)
+  return Math.max(diffDays + 1, 1)
+}
+
+/** 경과일(1, 2, ... 무제한)을 30일 사이클 내 상대 day(1~30)로 환산한다 */
+export function cycleDayFromElapsed(elapsedDay: number): number {
+  return ((elapsedDay - 1) % TOTAL_DAYS) + 1
+}
+
+/** 경과일이 몇 번째 30일 사이클인지(0-based: 첫 사이클이 0) */
+export function cycleIndexFromElapsed(elapsedDay: number): number {
+  return Math.floor((elapsedDay - 1) / TOTAL_DAYS)
 }

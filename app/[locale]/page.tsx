@@ -6,6 +6,7 @@ import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
 import { DailySlots } from "@/components/daily-slots"
 import { WeeklyMiniInsight } from "@/components/weekly-mini-insight"
+import { PreviewInsightCard } from "@/components/preview-insight-card"
 import { TodayCareCard } from "@/components/today-care-card"
 import { SkinBalanceRadar } from "@/components/skin-balance-radar"
 import { LoginBanner } from "@/components/login-banner"
@@ -98,7 +99,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
         <ProgressHeader
           currentDay={currentDay}
-          totalDays={totalDays}
+          cycleIndex={diary.cycleIndex}
           loggedDays={diary.loggedDays}
           heroImageSrc={diary.heroImageSrc}
           name={diary.name}
@@ -106,15 +107,19 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
         <TodayCareCard />
 
-        <DailySlots
-          day={activeDay}
-          onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
-          onCollapse={() => setCalendarPulse((p) => p + 1)}
-        />
+        <WeeklyMiniInsight />
+
+        <div id="daily-slots-anchor">
+          <DailySlots
+            day={activeDay}
+            onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
+            onCollapse={() => setCalendarPulse((p) => p + 1)}
+          />
+        </div>
+
+        <PreviewInsightCard />
 
         <SkinBalanceRadar skinType={diary.skinType} locale={locale} onChangeSkinType={diary.setSkinType} />
-
-        <WeeklyMiniInsight />
 
         {/* key로 강제 remount하여 calendarPulse 증가 시마다 진입 연출을 재생한다 */}
         <div key={calendarPulse} className={calendarPulse > 0 ? "animate-calendar-reveal rounded-4xl" : ""}>

@@ -1,9 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Check, TriangleAlert } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
+import { countLoggedSlotsByTag } from "@/components/skin-balance-radar"
 import {
   calculateUsagePattern,
   calculateBalanceRatio,
@@ -17,6 +20,26 @@ import {
 } from "@/lib/report-analytics"
 
 const MIN_LOGGED_DAYS_FOR_FULL_REPORT = 10
+
+type DayType = "attack" | "device" | "mask" | "nightReset"
+
+/** calendar.weekdays 인덱스(일=0~토=6) 기준 요일별 데이 타입 — 일:나이트리셋, 월/수/토:공격일, 화/금:기기케어, 목:리셋마스크 */
+const DAY_TYPE_BY_WEEKDAY: Record<number, DayType> = {
+  0: "nightReset",
+  1: "attack",
+  2: "device",
+  3: "attack",
+  4: "mask",
+  5: "device",
+  6: "attack",
+}
+
+const DAY_TYPE_LOCALE_KEYS: Record<DayType, { title: string; steps: string }> = {
+  attack: { title: "report30day.compact.attackDayTitle", steps: "report30day.compact.attackDaySteps" },
+  device: { title: "report30day.compact.deviceDayTitle", steps: "report30day.compact.deviceDaySteps" },
+  mask: { title: "report30day.compact.maskDayTitle", steps: "report30day.compact.maskDaySteps" },
+  nightReset: { title: "report30day.compact.nightResetDayTitle", steps: "report30day.compact.nightResetDaySteps" },
+}
 
 const SLOT_TAG_LABELS: Record<string, Record<"ko" | "en", string>> = {
   "Exfoliation": { ko: "각질케어", en: "Exfoliation" },
@@ -33,6 +56,8 @@ interface Report30DayProps {
 export function ThirtyDayReport({ isReady }: Report30DayProps) {
   const locale = useLocale()
   const diary = useDiary()
+  const [activeWeekdayTab, setActiveWeekdayTab] = useState(0)
+  const [showFullText, setShowFullText] = useState(false)
   const [data, setData] = useState<{
     patterns: UsagePattern[]
     balance: BalanceRatio
@@ -60,6 +85,29 @@ export function ThirtyDayReport({ isReady }: Report30DayProps) {
 
   const getTagLabel = (tag: string): string => SLOT_TAG_LABELS[tag]?.[locale] || tag
   const isLowDataMode = diary.loggedDays.length < MIN_LOGGED_DAYS_FOR_FULL_REPORT
+
+  /**
+   * 4장 요약 카드 전용 Active:Defense — 2장 "밸런스" 섹션의 calculateBalanceRatio(Active/Stimulate
+   * vs Defense/Barrier 태그만 봄)와는 다른, skin-balance-radar.tsx의 원시 카운트 로직을
+   * 재사용한 별도 정의: Active = ret+vitc+Exfoliation, Defense = Hydration+Defense/Barrier+nia.
+   */
+  const summaryActiveCount =
+    countLoggedSlotsByTag(diary.loggedSlots, "ret") +
+    countLoggedSlotsByTag(diary.loggedSlots, "vitc") +
+    countLoggedSlotsByTag(diary.loggedSlots, "Exfoliation")
+  const summaryDefenseCount =
+    countLoggedSlotsByTag(diary.loggedSlots, "Hydration") +
+    countLoggedSlotsByTag(diary.loggedSlots, "Defense/Barrier") +
+    countLoggedSlotsByTag(diary.loggedSlots, "nia")
+  const summaryTotalCount = summaryActiveCount + summaryDefenseCount
+  const summaryActivePercentage = summaryTotalCount > 0 ? Math.round((summaryActiveCount / summaryTotalCount) * 100) : 50
+  const summaryDefensePercentage = summaryTotalCount > 0 ? 100 - summaryActivePercentage : 50
+  const summaryCommentKey =
+    summaryActivePercentage >= 65
+      ? "report30day.compact.summaryCommentHigh"
+      : summaryActivePercentage < 35
+        ? "report30day.compact.summaryCommentLow"
+        : "report30day.compact.summaryCommentBalanced"
 
   return (
     <div className="bg-card rounded-3xl ring-1 ring-border overflow-hidden">
@@ -227,22 +275,141 @@ export function ThirtyDayReport({ isReady }: Report30DayProps) {
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">{t("report30day.next_intro", locale)}</p>
               </div>
+              {/*
+                압축 리포트 스켈레톤 — 실제 카피/개인화 데이터(calculateBalanceRatio 등) 연결과
+                결제 로직은 이번 스코프 아님. 아래 텍스트는 전부 report30day.compact.* placeholder이며
+                나중에 실제 콘텐츠로 교체 예정. opacity-50 pointer-events-none로 계속 잠금 유지.
+              */}
               <div className="space-y-4 opacity-50 pointer-events-none">
+                {/* 1장 — 체크리스트 카드 */}
                 <div className="rounded-2xl bg-secondary/50 p-4 space-y-2">
-                  <p className="text-sm font-semibold text-foreground">{t("report30day.products_used", locale)}</p>
-                  {diary.usedProducts && diary.usedProducts.length > 0 ? (
-                    <ul className="text-xs space-y-1">
-                      {diary.usedProducts.map((product) => (
-                        <li key={product.id} className="text-muted-foreground">
-                          {product.brand} {product.name}
+                  <p className="text-[11px] font-semibold text-muted-foreground">
+                    {t("report30day.compact.chapterLabel1", locale)}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {t("report30day.compact.checklistTitle", locale)}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {(t("report30day.compact.checklistSteps", locale) as { name: string; detail: string }[]).map(
+                      (step, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs">
+                          <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-border">
+                            <Check className="size-2.5" aria-hidden />
+                          </span>
+                          <span className="text-muted-foreground">
+                            <span className="font-medium text-foreground">{step.name}</span>
+                            {step.detail && <span> — {step.detail}</span>}
+                          </span>
                         </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">{t("report30day.products_none", locale)}</p>
-                  )}
+                      ),
+                    )}
+                  </ul>
                 </div>
-                <p className="text-sm text-muted-foreground">{t("report30day.next_routine_suggest", locale)}</p>
+
+                {/* 2장 — 요일 탭: 각 탭 안에 그날 루틴(DAY_TYPE_BY_WEEKDAY로 요일별 분기) */}
+                <div className="rounded-2xl bg-secondary/50 p-4 space-y-3">
+                  <p className="text-[11px] font-semibold text-muted-foreground">
+                    {t("report30day.compact.chapterLabel2", locale)}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {t("report30day.compact.scheduleTitle", locale)}
+                  </p>
+                  <div className="flex gap-1">
+                    {(t("calendar.weekdays", locale) as string[]).map((label, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setActiveWeekdayTab(i)}
+                        className={cn(
+                          "flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors",
+                          i === activeWeekdayTab
+                            ? "bg-card text-foreground ring-1 ring-border"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="space-y-1.5 rounded-xl bg-card p-3 ring-1 ring-border">
+                    {(() => {
+                      const dayType = DAY_TYPE_BY_WEEKDAY[activeWeekdayTab]
+                      const dayTypeKeys = DAY_TYPE_LOCALE_KEYS[dayType]
+                      return (
+                        <>
+                          <p className="text-xs font-semibold text-foreground">{t(dayTypeKeys.title, locale)}</p>
+                          <ul className="space-y-1.5">
+                            {(t(dayTypeKeys.steps, locale) as { name: string; detail: string }[]).map((step, i) => (
+                              <li key={i} className="flex items-start gap-2 text-xs">
+                                <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-border">
+                                  <Check className="size-2.5" aria-hidden />
+                                </span>
+                                <span className="text-muted-foreground">
+                                  <span className="font-medium text-foreground">{step.name}</span>
+                                  {step.detail && <span> — {step.detail}</span>}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )
+                    })()}
+                  </div>
+                </div>
+
+                {/* 3장 — 경고 박스: 병행 금지 원칙 강조 */}
+                <div className="space-y-1.5 rounded-2xl bg-destructive/10 p-4 ring-1 ring-destructive/20">
+                  <p className="text-[11px] font-semibold text-destructive/70">
+                    {t("report30day.compact.chapterLabel3", locale)}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <TriangleAlert className="size-3.5 shrink-0 text-destructive" aria-hidden />
+                    <p className="text-xs font-semibold text-destructive">
+                      {t("report30day.compact.warningTitle", locale)}
+                    </p>
+                  </div>
+                  <ul className="space-y-0.5">
+                    {(t("report30day.compact.warningLines", locale) as string[]).map((line, i) => (
+                      <li key={i} className="text-xs leading-relaxed text-destructive/80">
+                        {line}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* 4장 — 요약 카드: Active:Defense 비율(ret+vitc+Exfoliation : Hydration+Defense/Barrier+nia) */}
+                <div className="space-y-1.5 rounded-2xl bg-secondary/50 p-4">
+                  <p className="text-[11px] font-semibold text-muted-foreground">
+                    {t("report30day.compact.chapterLabel4", locale)}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {t("report30day.compact.summaryTitle", locale)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t("report30day.compact.summaryBridge", locale)}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {interpolate(t("report30day.balance_ratio_template", locale), {
+                      active: String(summaryActivePercentage),
+                      defense: String(summaryDefensePercentage),
+                    })}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t(summaryCommentKey, locale)}</p>
+                </div>
+
+                {/* 전체 텍스트 보기 토글 — 지금은 빈 자리만, 컴팩트 리포트 전체 텍스트는 추후 연결 */}
+                <button
+                  type="button"
+                  onClick={() => setShowFullText((v) => !v)}
+                  className="w-full rounded-full border border-border py-2 text-xs font-semibold text-foreground"
+                >
+                  {t(showFullText ? "report30day.compact.toggleHide" : "report30day.compact.toggleShow", locale)}
+                </button>
+                {showFullText && (
+                  <div className="rounded-2xl bg-secondary/50 p-4">
+                    <p className="text-xs text-muted-foreground">
+                      {t("report30day.compact.fullTextPlaceholder", locale)}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-center py-6">
                 <p className="text-xs font-semibold text-muted-foreground text-center">

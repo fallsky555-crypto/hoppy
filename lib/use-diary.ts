@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { dayFromJoinDate, DEFAULT_ACTIVE_INTERVAL_DAYS, DEFAULT_BHA_INTERVAL_DAYS, RECIPES, TOTAL_DAYS, type Recipe, type ScheduleSettings } from "@/lib/schedule"
+import { cycleDayFromElapsed, cycleIndexFromElapsed, dayFromJoinDate, DEFAULT_ACTIVE_INTERVAL_DAYS, DEFAULT_BHA_INTERVAL_DAYS, RECIPES, TOTAL_DAYS, type Recipe, type ScheduleSettings } from "@/lib/schedule"
 import {
   CURRENT_ENGINE_VERSION,
   generateCalendar,
@@ -608,12 +608,28 @@ export function useDiary() {
    */
   const onboarded = state.settings.activeIntervalDays !== undefined && state.settings.bhaIntervalDays !== undefined
 
+  /**
+   * totalDays(=calendar.length)를 currentDay에 맞춰 계속 늘려서, 30일이 지나도
+   * getRecipeForDay/heroImageSrcForDay가 그날의 항목을 계속 찾을 수 있게 한다.
+   * generateCalendar()의 하루 단위 시뮬레이션(액티브 간격 카운터, 방어 로테이션)은
+   * day 상한이 없어 그대로 이어서 돌려도 안전하다 — 30일차 레시피를 반복하는 게
+   * 아니라 엔진이 계속 다음 날을 자연스럽게 이어서 계산한다.
+   */
   const calendar = useMemo(
-    () => generateCalendar({ signupDate: state.joinDate, settings: state.settings }),
-    [state.joinDate, state.settings],
+    () =>
+      generateCalendar({
+        signupDate: state.joinDate,
+        settings: state.settings,
+        totalDays: Math.max(TOTAL_DAYS, currentDay),
+      }),
+    [state.joinDate, state.settings, currentDay],
   )
 
   const totalDays = calendar.length
+  /** 30일 사이클 내 상대 day(1~30) — 진행률 배지/캘린더처럼 사이클마다 리셋되는 표시용 */
+  const cycleDay = cycleDayFromElapsed(currentDay)
+  /** 0-based 사이클 회차 — 2회차부터 잠금 해제되는 문구 등에서 사용 */
+  const cycleIndex = cycleIndexFromElapsed(currentDay)
 
   // 상단 여정 카드 히어로 이미지 — BHA가 새로 들어가는 날마다 다음 사이클 이미지로 바뀐다
   const heroImageSrc = useMemo(() => heroImageSrcForDay(calendar, currentDay), [calendar, currentDay])
@@ -855,6 +871,8 @@ export function useDiary() {
     completeOnboarding,
     currentDay,
     totalDays,
+    cycleDay,
+    cycleIndex,
     heroImageSrc,
     calendar,
     loggedDays: state.loggedDays,

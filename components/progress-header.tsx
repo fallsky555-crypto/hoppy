@@ -3,10 +3,12 @@
 import Image from "next/image"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
+import { TOTAL_DAYS } from "@/lib/schedule"
 
 interface ProgressHeaderProps {
   currentDay: number
-  totalDays: number
+  /** 0-based 사이클 회차 — 30일 사이클마다 "기록한 날"/"리포트까지" 배지를 리셋하는 데 쓴다 */
+  cycleIndex: number
   loggedDays: number[]
   /** 상단 여정 카드 히어로 이미지 — "스페셜케어 사이클"마다 바뀐다(lib/hero-image.ts 참고) */
   heroImageSrc: string
@@ -14,22 +16,24 @@ interface ProgressHeaderProps {
   name?: string | null
 }
 
-export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc, name }: ProgressHeaderProps) {
+export function ProgressHeader({ currentDay, cycleIndex, loggedDays, heroImageSrc, name }: ProgressHeaderProps) {
   const locale = useLocale()
 
   const title = name
     ? interpolate(t("progressHeader.titleWithName", locale), { name })
     : t("progressHeader.title", locale)
 
-  // 기록한 날 수
-  const loggedCount = loggedDays.length
+  // 기록한 날 수 — 30일이 지나도 누적이 아니라 "이번 사이클" 기준으로 리셋해서 보여준다
+  const cycleStartDay = cycleIndex * TOTAL_DAYS + 1
+  const cycleEndDay = cycleStartDay + TOTAL_DAYS - 1
+  const loggedCount = loggedDays.filter((day) => day >= cycleStartDay && day <= cycleEndDay).length
 
   // 이번 주 기록 (최근 7일: currentDay-6 ~ currentDay)
   const thisWeekCount = loggedDays.filter(day => day >= currentDay - 6 && day <= currentDay).length
 
-  // 리포트까지 남은 날
-  const daysUntilReport = Math.max(0, 30 - loggedCount)
-  const isReportReady = loggedCount >= 30
+  // 리포트까지 남은 날 — 이번 사이클 기준
+  const daysUntilReport = Math.max(0, TOTAL_DAYS - loggedCount)
+  const isReportReady = loggedCount >= TOTAL_DAYS
 
   return (
     <header className="overflow-hidden rounded-4xl bg-card ring-1 ring-border">
@@ -57,7 +61,7 @@ export function ProgressHeader({ currentDay, totalDays, loggedDays, heroImageSrc
           <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary py-3">
             <span className="font-display text-2xl font-semibold text-foreground">
               {loggedCount}
-              <span className="font-sans text-xs font-medium text-muted-foreground">/{totalDays}</span>
+              <span className="font-sans text-xs font-medium text-muted-foreground">/{TOTAL_DAYS}</span>
             </span>
             <span className="text-[11px] font-semibold text-muted-foreground">{t("homeStats.loggedDays", locale)}</span>
           </div>

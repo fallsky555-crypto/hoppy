@@ -413,8 +413,8 @@
     "reportReady": "리포트 준비 완료"
   },
   "weeklyInsight": {
-    "message": "{{days}}일 완주! 이번 주는 {{topTag}}에 집중한 한 주였네요 👏 (다음 리포트까지 D-{{remaining}})",
-    "close": "닫기",
+    "banner": "이번 주는 {{topTag}} 중심으로 기록했어요 · 다음 리포트까지 D-{{remaining}}",
+    "bannerNoTag": "다음 리포트까지 D-{{remaining}}",
     "ariaLabel": "주간 인사이트"
   },
   "routineBanner": {
@@ -442,7 +442,20 @@
     "headline": "당신의 피부({{skinType}})가 필요로 하는 균형이에요.",
     "changeButton": "피부타입 변경",
     "selectTitle": "피부타입을 선택해주세요",
-    "cancel": "취소"
+    "cancel": "취소",
+    "promise": "일주일 후부터 실제 비율이 겹쳐서 보여요",
+    "actualLegend": "점선 = 지금까지의 실제 사용 비율"
+  },
+  "previewInsightCard": {
+    "label": "30일 후 알게 될 것들",
+    "body1": "시간이 지날수록 피부는 더 다양한 기능이 필요해요.",
+    "body2": "6성분은 그중 가장 기초 성분이에요.",
+    "body3": "지금부터 한 달 후 밸런스를 그래프로 보여드려요.",
+    "example1": "진정케어가 유독 적은 편이에요",
+    "example2": "레티놀을 2~3일 간격으로 쓰고 있어요",
+    "example3": "컨디션 안 좋은 주는 수분케어가 빠졌어요",
+    "progress": "지금까지 {{count}}일 기록했어요 · 이런 발견은 보통 7일부터 시작돼요",
+    "cta": "오늘 기록하러 가기"
   },
   "settings": {
     "title": "설정",
@@ -658,10 +671,61 @@
     "condition_note": "자주 나타나는 패턴을 관찰하는 정보일 뿐, 원인 관계를 뜻하지 않습니다",
     "section_next": "다음 30일 제안",
     "next_intro": "당신의 제품과 반응을 바탕으로 맞춤 제안을 준비했어요.",
-    "products_used": "현재 화장대 구성",
-    "products_none": "기록된 제품이 없어요",
-    "next_routine_suggest": "다음 단계는 지금 루틴과 유사하게 진행하되, 필요에 따라 한 가지 추가 성분을 도입할 수 있어요.",
     "paywall_locked": "이 섹션은 프리미엄 콘텐츠예요. 2회차부터는 이 시점에 맞춤 루틴 캘린더가 제공됩니다.",
+    "compact": {
+      "chapterLabel1": "1장",
+      "chapterLabel2": "2장",
+      "chapterLabel3": "3장",
+      "chapterLabel4": "4장",
+      "checklistTitle": "아침 루틴 체크리스트",
+      "checklistSteps": [
+        { "name": "세안", "detail": "" },
+        { "name": "퍼스트에센스", "detail": "pH 정돈, 다음 단계 흡수율을 위한 준비 단계" },
+        { "name": "비타민C(10~20%)", "detail": "항산화, 톤 개선" },
+        { "name": "미백세럼", "detail": "색소 개선" },
+        { "name": "세콜지크림", "detail": "장벽 마감" },
+        { "name": "선크림", "detail": "앞 단계 효과 유지 필수" }
+      ],
+      "scheduleTitle": "요일별 루틴",
+      "attackDayTitle": "공격일 — 레티놀 나이트",
+      "attackDaySteps": [
+        { "name": "나이아신아마이드", "detail": "장벽 강화, 레티놀 자극 완충" },
+        { "name": "레티놀(0.1~0.3%)", "detail": "턴오버 촉진, 밤에만" },
+        { "name": "세콜지크림", "detail": "밤새 장벽 복구" }
+      ],
+      "deviceDayTitle": "기기 케어 데이",
+      "deviceDaySteps": [
+        { "name": "미백세럼", "detail": "색소 개선" },
+        { "name": "기기(마이크로니들)", "detail": "레티놀 절대 금지일" },
+        { "name": "진정크림", "detail": "즉각 장벽 보호" }
+      ],
+      "maskDayTitle": "리셋 마스크 데이",
+      "maskDaySteps": [
+        { "name": "각질정리", "detail": "주 1회 한정, 레티놀과 같은 밤 금지" },
+        { "name": "나이아신아마이드", "detail": "진정 준비" },
+        { "name": "시트마스크(15~20분)", "detail": "시간 꼭 지키기" },
+        { "name": "세콜지크림", "detail": "장벽 마감" }
+      ],
+      "nightResetDayTitle": "나이트 리셋 데이",
+      "nightResetDaySteps": [
+        { "name": "나이아신아마이드", "detail": "장벽 강화, 레티놀 자극 완충" },
+        { "name": "레티놀(0.1~0.3%)", "detail": "턴오버 촉진, 밤에만" },
+        { "name": "수면팩", "detail": "밤새 지속되는 가벼운 마감" }
+      ],
+      "warningTitle": "병행 금지 원칙",
+      "warningLines": [
+        "레티놀 + 기기 같은 날 금지 (최소 5일 간격)",
+        "레티놀 + 각질정리(밀폐 마스크 포함) 같은 밤 금지"
+      ],
+      "summaryTitle": "이번 주기 밸런스",
+      "summaryBridge": "지금까지 본 6성분을 두 그룹으로 나눠볼게요",
+      "summaryCommentHigh": "공격이 방어보다 많아요. 다음 30일은 방어일 비중을 조금 늘려보세요",
+      "summaryCommentBalanced": "지금 이 밸런스, 잘 유지하고 계세요",
+      "summaryCommentLow": "방어 위주로 흘러가고 있어요. 공격일을 조금 더 챙겨보세요",
+      "toggleShow": "전체 텍스트 보기",
+      "toggleHide": "접기",
+      "fullTextPlaceholder": "전체 텍스트 리포트가 여기에 표시될 예정이에요"
+    },
     "lowData": {
       "title": "지금까지의 기록",
       "subtitle": "{{days}}일 기록하셨어요",

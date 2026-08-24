@@ -416,8 +416,8 @@
     "reportReady": "Report Ready"
   },
   "weeklyInsight": {
-    "message": "{{days}}-day milestone! You've been focused on {{topTag}} this week 👏 ({{remaining}} days until report)",
-    "close": "Close",
+    "banner": "Mostly {{topTag}} this week · D-{{remaining}} to next report",
+    "bannerNoTag": "D-{{remaining}} to next report",
     "ariaLabel": "Weekly insight"
   },
   "routineBanner": {
@@ -445,7 +445,20 @@
     "headline": "The balance your skin ({{skinType}}) needs.",
     "changeButton": "Change skin type",
     "selectTitle": "Select your skin type",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "promise": "After a week of logging, your actual ratio will overlay here",
+    "actualLegend": "Dashed = your actual usage so far"
+  },
+  "previewInsightCard": {
+    "label": "What you'll learn after 30 days",
+    "body1": "The longer you track, the more your skin's needs come into focus.",
+    "body2": "These six ingredients are just the foundation.",
+    "body3": "A month from now, we'll turn your balance into a graph.",
+    "example1": "Your barrier care has been running low",
+    "example2": "You've been spacing retinol every 2-3 days",
+    "example3": "Hydration tends to slip on rough weeks",
+    "progress": "{{count}} days logged so far · patterns like these usually start showing up around day 7",
+    "cta": "Log today's routine"
   },
   "settings": {
     "title": "Settings",
@@ -661,10 +674,61 @@
     "condition_note": "This is observational data, not a cause-and-effect relationship.",
     "section_next": "Next 30-Day Recommendations",
     "next_intro": "Based on your products and response patterns, we've prepared personalized suggestions.",
-    "products_used": "Current Product Collection",
-    "products_none": "No products recorded",
-    "next_routine_suggest": "For the next phase, you can follow a similar routine with the option to introduce one additional ingredient as needed.",
     "paywall_locked": "This section is premium content. Starting from the 2nd cycle, a personalized routine calendar will be provided at this point.",
+    "compact": {
+      "chapterLabel1": "Chapter 1",
+      "chapterLabel2": "Chapter 2",
+      "chapterLabel3": "Chapter 3",
+      "chapterLabel4": "Chapter 4",
+      "checklistTitle": "Morning routine checklist",
+      "checklistSteps": [
+        { "name": "Cleanser", "detail": "" },
+        { "name": "First Essence", "detail": "Balances pH, preps skin to absorb what comes next" },
+        { "name": "Vitamin C (10–20%)", "detail": "Antioxidant, evens out tone" },
+        { "name": "Brightening Serum", "detail": "Fades pigmentation" },
+        { "name": "Sekolji Cream", "detail": "Seals the barrier" },
+        { "name": "Sunscreen", "detail": "Locks in everything before it — non-negotiable" }
+      ],
+      "scheduleTitle": "Routine by day",
+      "attackDayTitle": "Attack Day — Retinol Night",
+      "attackDaySteps": [
+        { "name": "Niacinamide", "detail": "Strengthens the barrier, buffers retinol irritation" },
+        { "name": "Retinol (0.1–0.3%)", "detail": "Speeds up turnover, PM only" },
+        { "name": "Sekolji Cream", "detail": "Repairs the barrier overnight" }
+      ],
+      "deviceDayTitle": "Device Care Day",
+      "deviceDaySteps": [
+        { "name": "Brightening Serum", "detail": "Fades pigmentation" },
+        { "name": "Device (microneedling)", "detail": "Absolutely no retinol today" },
+        { "name": "Soothing Cream", "detail": "Immediate barrier protection" }
+      ],
+      "maskDayTitle": "Reset Mask Day",
+      "maskDaySteps": [
+        { "name": "Exfoliation", "detail": "Once a week max, never the same night as retinol" },
+        { "name": "Niacinamide", "detail": "Preps skin to calm down" },
+        { "name": "Sheet Mask (15–20 min)", "detail": "Stick to the time — don't overdo it" },
+        { "name": "Sekolji Cream", "detail": "Seals the barrier" }
+      ],
+      "nightResetDayTitle": "Night Reset Day",
+      "nightResetDaySteps": [
+        { "name": "Niacinamide", "detail": "Strengthens the barrier, buffers retinol irritation" },
+        { "name": "Retinol (0.1–0.3%)", "detail": "Speeds up turnover, PM only" },
+        { "name": "Sleeping Pack", "detail": "A light finish that lasts through the night" }
+      ],
+      "warningTitle": "Don't combine these",
+      "warningLines": [
+        "Retinol + device on the same day — never (leave at least 5 days between)",
+        "Retinol + exfoliation (including occlusive masks) on the same night — never"
+      ],
+      "summaryTitle": "This cycle's balance",
+      "summaryBridge": "Let's split the six ingredients you've seen so far into two groups",
+      "summaryCommentHigh": "You're leaning more attack than defense. Try making more room for defense days over the next 30.",
+      "summaryCommentBalanced": "This balance is working well for you — keep it up.",
+      "summaryCommentLow": "You've been leaning heavily on defense. Try fitting in a few more attack days.",
+      "toggleShow": "Show full report",
+      "toggleHide": "Collapse",
+      "fullTextPlaceholder": "The full text report will appear here"
+    },
     "lowData": {
       "title": "Your 30 Days So Far",
       "subtitle": "You've logged {{days}} days",
