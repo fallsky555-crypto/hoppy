@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Check, TriangleAlert } from "lucide-react"
+import { Check, Lock, TriangleAlert } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
@@ -311,49 +311,54 @@ export function ThirtyDayReport({ isReady }: Report30DayProps) {
                   <p className="text-[11px] font-semibold text-muted-foreground">
                     {t("report30day.compact.chapterLabel2", locale)}
                   </p>
-                  <p className="text-sm font-semibold text-foreground">
-                    {t("report30day.compact.scheduleTitle", locale)}
-                  </p>
-                  <div className="flex gap-1">
-                    {(t("calendar.weekdays", locale) as string[]).map((label, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setActiveWeekdayTab(i)}
-                        className={cn(
-                          "flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors",
-                          i === activeWeekdayTab
-                            ? "bg-card text-foreground ring-1 ring-border"
-                            : "text-muted-foreground",
-                        )}
-                      >
-                        {label}
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold text-foreground">
+                      {t("report30day.compact.scheduleTitle", locale)}
+                    </p>
+                    <Lock className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
                   </div>
-                  <div className="space-y-1.5 rounded-xl bg-card p-3 ring-1 ring-border">
-                    {(() => {
-                      const dayType = DAY_TYPE_BY_WEEKDAY[activeWeekdayTab]
-                      const dayTypeKeys = DAY_TYPE_LOCALE_KEYS[dayType]
-                      return (
-                        <>
-                          <p className="text-xs font-semibold text-foreground">{t(dayTypeKeys.title, locale)}</p>
-                          <ul className="space-y-1.5">
-                            {(t(dayTypeKeys.steps, locale) as { name: string; detail: string }[]).map((step, i) => (
-                              <li key={i} className="flex items-start gap-2 text-xs">
-                                <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-border">
-                                  <Check className="size-2.5" aria-hidden />
-                                </span>
-                                <span className="text-muted-foreground">
-                                  <span className="font-medium text-foreground">{step.name}</span>
-                                  {step.detail && <span> — {step.detail}</span>}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      )
-                    })()}
+                  <div className="space-y-3 blur-[3px] select-none">
+                    <div className="flex gap-1">
+                      {(t("calendar.weekdays", locale) as string[]).map((label, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setActiveWeekdayTab(i)}
+                          className={cn(
+                            "flex-1 rounded-lg py-1.5 text-xs font-medium transition-colors",
+                            i === activeWeekdayTab
+                              ? "bg-card text-foreground ring-1 ring-border"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="space-y-1.5 rounded-xl bg-card p-3 ring-1 ring-border">
+                      {(() => {
+                        const dayType = DAY_TYPE_BY_WEEKDAY[activeWeekdayTab]
+                        const dayTypeKeys = DAY_TYPE_LOCALE_KEYS[dayType]
+                        return (
+                          <>
+                            <p className="text-xs font-semibold text-foreground">{t(dayTypeKeys.title, locale)}</p>
+                            <ul className="space-y-1.5">
+                              {(t(dayTypeKeys.steps, locale) as { name: string; detail: string }[]).map((step, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs">
+                                  <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-border">
+                                    <Check className="size-2.5" aria-hidden />
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    <span className="font-medium text-foreground">{step.name}</span>
+                                    {step.detail && <span> — {step.detail}</span>}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )
+                      })()}
+                    </div>
                   </div>
                 </div>
 
@@ -367,8 +372,9 @@ export function ThirtyDayReport({ isReady }: Report30DayProps) {
                     <p className="text-xs font-semibold text-destructive">
                       {t("report30day.compact.warningTitle", locale)}
                     </p>
+                    <Lock className="size-3.5 shrink-0 text-destructive/70" aria-hidden />
                   </div>
-                  <ul className="space-y-0.5">
+                  <ul className="space-y-0.5 blur-[3px] select-none">
                     {(t("report30day.compact.warningLines", locale) as string[]).map((line, i) => (
                       <li key={i} className="text-xs leading-relaxed text-destructive/80">
                         {line}
@@ -382,17 +388,22 @@ export function ThirtyDayReport({ isReady }: Report30DayProps) {
                   <p className="text-[11px] font-semibold text-muted-foreground">
                     {t("report30day.compact.chapterLabel4", locale)}
                   </p>
-                  <p className="text-sm font-semibold text-foreground">
-                    {t("report30day.compact.summaryTitle", locale)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t("report30day.compact.summaryBridge", locale)}</p>
-                  <p className="text-sm font-semibold text-foreground">
-                    {interpolate(t("report30day.balance_ratio_template", locale), {
-                      active: String(summaryActivePercentage),
-                      defense: String(summaryDefensePercentage),
-                    })}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t(summaryCommentKey, locale)}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold text-foreground">
+                      {t("report30day.compact.summaryTitle", locale)}
+                    </p>
+                    <Lock className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                  </div>
+                  <div className="space-y-1.5 blur-[3px] select-none">
+                    <p className="text-xs text-muted-foreground">{t("report30day.compact.summaryBridge", locale)}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {interpolate(t("report30day.balance_ratio_template", locale), {
+                        active: String(summaryActivePercentage),
+                        defense: String(summaryDefensePercentage),
+                      })}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{t(summaryCommentKey, locale)}</p>
+                  </div>
                 </div>
 
                 {/* 전체 텍스트 보기 토글 — 지금은 빈 자리만, 컴팩트 리포트 전체 텍스트는 추후 연결 */}
