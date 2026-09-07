@@ -412,6 +412,84 @@
     "untilReport": "리포트까지",
     "reportReady": "리포트 준비 완료"
   },
+  "skinWeather": {
+    "title": "오늘의 스킨 웨더",
+    "subtitle": "피부 스트레스 지수",
+    "locationDefault": "현재 위치 기준",
+    "loading": "오늘 날씨를 확인하고 있어요…",
+    "unavailable": "날씨 정보를 불러오지 못했어요. 오늘은 기본 루틴으로 안내할게요.",
+    "allClear": "피부에 부담이 적은 날이에요. 평소 루틴을 편하게 이어가세요.",
+    "metric": {
+      "humidity": "습도",
+      "uv": "자외선",
+      "pm25": "초미세먼지"
+    },
+    "level": {
+      "low": "낮음",
+      "moderate": "보통",
+      "high": "높음",
+      "severe": "매우 높음"
+    },
+    "driver": {
+      "dry": "공기가 건조해요. 수분·장벽 케어를 한 겹 더 올려주세요.",
+      "uv": "자외선이 강해요. 자외선 차단을 꼼꼼히 하고, 각질·기능성 제품은 밤에만 쓰세요.",
+      "uvNight": "낮 동안 자외선이 강했어요. 오늘 밤은 진정·수분 위주로 피부를 달래주세요.",
+      "pm": "미세먼지가 많아요. 저녁 세안을 꼼꼼히 하고 장벽 케어에 집중하세요.",
+      "cold": "기온이 낮아요. 장벽이 약해지기 쉬우니 보습을 두껍게 발라주세요.",
+      "heat": "기온이 높아요. 가벼운 수분 위주로, 자극이 되는 제품은 최소화하세요."
+    },
+    "slotShort": {
+      "sun_care": "선크림",
+      "hydration": "수분",
+      "exfoliation": "각질",
+      "active": "기능성",
+      "barrier": "장벽"
+    }
+  },
+  "slotHint": {
+    "boost": "오늘 추천",
+    "caution": "오늘 주의"
+  },
+  "doSkip": {
+    "doTitle": "오늘 필수",
+    "skipTitle": "오늘 생략",
+    "skipNone": "오늘은 특별히 피할 케어가 없어요. 평소 루틴 그대로 편하게.",
+    "unavailable": "날씨 정보를 불러오지 못해 기본 안내만 보여드려요.",
+    "pickLabel": "호빵이 추천 픽",
+    "layerBadge": "+레이어",
+    "age": {
+      "2030": "2030",
+      "4050": "4050",
+      "60plus": "60+"
+    },
+    "checkin": {
+      "cta": "오늘 스킨 웨더 루틴 완료 ✨",
+      "done": "오늘 루틴 완료됨 ✓",
+      "toast": "오늘도 날씨에 딱 맞게 챙겼어요! 🎉"
+    },
+    "item": {
+      "sunscreen": { "label": "선크림 꼼꼼히", "desc": "자외선 차단이 오늘 피부 방어의 1순위예요." },
+      "panthenol": { "label": "판테놀·수분 진정", "desc": "건조하고 자극받기 쉬운 날, 수분막을 한 겹 더." },
+      "barrier_cream": { "label": "장벽 크림", "desc": "미세먼지·찬 공기로부터 피부장벽을 지켜줘요." },
+      "soothing_pack": { "label": "수분 진정팩", "desc": "낮 동안 자외선에 지친 피부를 밤에 진정시켜요." },
+      "gentle_hydration": { "label": "가벼운 수분 케어", "desc": "부담 적은 날, 토너·로션으로 수분만 채워도 충분해요." },
+      "exfoliant": { "label": "각질제거 (스크럽·AHA/BHA)", "desc": "장벽이 예민한 날엔 물리·화학 각질제거를 쉬어가세요." },
+      "retinoid": { "label": "레티놀·고농도 액티브", "desc": "자극이 겹치는 날은 액티브를 하루 건너뛰는 게 나아요." },
+      "heavy_oil": { "label": "무거운 오일·리치 밤", "desc": "습하거나 미세먼지 많은 날엔 답답하고 트러블 유발될 수 있어요." },
+      "ceramide_seal": { "label": "세라마이드·판테놀 보습 밀폐", "desc": "속건조·환절기엔 수분막을 한 겹 더 덮어 잡아줘요." },
+      "antioxidant_serum": { "label": "항산화 앰플 (비타민C 등)", "desc": "낮 동안 받은 산화 스트레스를 줄이고 톤을 지켜줘요." },
+      "peptide_eye": { "label": "펩타이드·아이크림 케어", "desc": "탄력이 신경 쓰이는 밤, 눈가·표정 주름부터 챙겨요." },
+      "rich_nutrition_cream": { "label": "고영양 리치 크림", "desc": "얇아진 피부의 수분 손실을 막는 영양 밀폐 단계예요." },
+      "face_oil_seal": { "label": "페이스 오일 1방울 밀폐", "desc": "크림 위에 오일 한 방울로 밤사이 건조함을 눌러줘요." }
+    }
+  },
+  "recordsPanel": {
+    "title": "내 피부 기록 살펴보기",
+    "tab": {
+      "balance": "피부 밸런스",
+      "calendar": "기록 캘린더"
+    }
+  },
   "weeklyInsight": {
     "banner": "이번 주는 {{topTag}} 중심으로 기록했어요 · 다음 리포트까지 D-{{remaining}}",
     "bannerNoTag": "다음 리포트까지 D-{{remaining}}",

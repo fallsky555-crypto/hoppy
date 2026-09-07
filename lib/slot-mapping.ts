@@ -1,6 +1,7 @@
 import type { RecipeType } from "@/lib/schedule"
 
-type SlotType = "exfoliation" | "hydration" | "active" | "barrier" | "sun_care"
+/** 데일리 슬롯 5종. daily-slots.tsx가 이 타입을 재노출한다(하위호환). */
+export type SlotType = "exfoliation" | "hydration" | "active" | "barrier" | "sun_care"
 
 /**
  * RecipeType → SlotType 매핑

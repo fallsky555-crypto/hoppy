@@ -415,6 +415,84 @@
     "untilReport": "Until Report",
     "reportReady": "Report Ready"
   },
+  "skinWeather": {
+    "title": "Today's Skin Weather",
+    "subtitle": "Skin stress index",
+    "locationDefault": "Based on your location",
+    "loading": "Checking today's weather…",
+    "unavailable": "Couldn't load weather data. We'll show your default routine today.",
+    "allClear": "Low-stress day for your skin. Keep your usual routine going.",
+    "metric": {
+      "humidity": "Humidity",
+      "uv": "UV",
+      "pm25": "PM2.5"
+    },
+    "level": {
+      "low": "Low",
+      "moderate": "Moderate",
+      "high": "High",
+      "severe": "Very high"
+    },
+    "driver": {
+      "dry": "The air is dry. Add an extra layer of hydration and barrier care.",
+      "uv": "UV is strong. Apply sunscreen thoroughly and save exfoliants and actives for the evening.",
+      "uvNight": "UV ran high during the day. Tonight, calm your skin with soothing and hydrating care.",
+      "pm": "Particulate levels are high. Cleanse thoroughly tonight and focus on barrier care.",
+      "cold": "It's cold out. Your barrier weakens easily today, so moisturize generously.",
+      "heat": "It's hot out. Keep it light and hydrating, and minimize irritating products."
+    },
+    "slotShort": {
+      "sun_care": "Sunscreen",
+      "hydration": "Hydration",
+      "exfoliation": "Exfoliation",
+      "active": "Actives",
+      "barrier": "Barrier"
+    }
+  },
+  "slotHint": {
+    "boost": "Recommended",
+    "caution": "Go easy"
+  },
+  "doSkip": {
+    "doTitle": "Do today",
+    "skipTitle": "Skip today",
+    "skipNone": "Nothing to avoid today. Keep your usual routine.",
+    "unavailable": "Couldn't load weather, showing default guidance only.",
+    "pickLabel": "Hoppy's pick",
+    "layerBadge": "+layer",
+    "age": {
+      "2030": "20-30s",
+      "4050": "40-50s",
+      "60plus": "60+"
+    },
+    "checkin": {
+      "cta": "Done with today's Skin Weather routine ✨",
+      "done": "Today's routine done ✓",
+      "toast": "Matched your skin to today's weather! 🎉"
+    },
+    "item": {
+      "sunscreen": { "label": "Sunscreen, thoroughly", "desc": "Sun protection is today's top priority for your skin." },
+      "panthenol": { "label": "Panthenol / soothing hydration", "desc": "Add a layer of moisture on a dry, easily irritated day." },
+      "barrier_cream": { "label": "Barrier cream", "desc": "Shields your skin barrier from particulates and cold air." },
+      "soothing_pack": { "label": "Hydrating soothing mask", "desc": "Calm skin at night after a day of strong UV." },
+      "gentle_hydration": { "label": "Light hydration", "desc": "On an easy day, toner and lotion for moisture is enough." },
+      "exfoliant": { "label": "Exfoliants (scrubs, AHA/BHA)", "desc": "Skip physical and chemical exfoliation when the barrier is sensitive." },
+      "retinoid": { "label": "Retinol / strong actives", "desc": "When stressors stack up, skipping actives for a day is better." },
+      "heavy_oil": { "label": "Heavy oils / rich balms", "desc": "Can feel suffocating and trigger breakouts on humid or hazy days." },
+      "ceramide_seal": { "label": "Ceramide / panthenol moisture seal", "desc": "For deep dryness and season changes, lock in one more layer of moisture." },
+      "antioxidant_serum": { "label": "Antioxidant serum (vitamin C, etc.)", "desc": "Reduces daytime oxidative stress and protects your tone." },
+      "peptide_eye": { "label": "Peptide / eye cream care", "desc": "At night, start with the eye area and expression lines for firmness." },
+      "rich_nutrition_cream": { "label": "Rich nourishing cream", "desc": "A nutrient seal that prevents moisture loss from thinning skin." },
+      "face_oil_seal": { "label": "A drop of face oil to seal", "desc": "One drop of oil over cream holds back overnight dryness." }
+    }
+  },
+  "recordsPanel": {
+    "title": "Browse my skin records",
+    "tab": {
+      "balance": "Skin balance",
+      "calendar": "Record calendar"
+    }
+  },
   "weeklyInsight": {
     "banner": "Mostly {{topTag}} this week · D-{{remaining}} to next report",
     "bannerNoTag": "D-{{remaining}} to next report",

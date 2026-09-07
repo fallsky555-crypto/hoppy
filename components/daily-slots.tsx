@@ -9,6 +9,8 @@ import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
 import { saveUsageLog } from "@/lib/supabase/sync"
 import { getRecommendedSlot } from "@/lib/slot-mapping"
+import { useSkinWeather } from "@/lib/use-skin-weather"
+import { getWeatherRecommendedSlot, getWeatherSlotHints } from "@/lib/skin-weather"
 import { getFirstConcernTagShortLabelKey } from "@/lib/label-mappings"
 import { DailyRewardCard, type RewardCardData } from "@/components/daily-reward-card"
 
@@ -25,6 +27,9 @@ interface Slot {
   emoji: string
   labelKey: string
 }
+
+/** 오늘 날씨 기준 슬롯 상태 — 데일리 슬롯 뱃지에 표시 */
+export type SlotHint = "boost" | "caution" | null
 
 const SLOT_TAGS: Record<SlotType, string> = {
   exfoliation: "Exfoliation",
@@ -78,8 +83,25 @@ const PRIMARY_SLOTS: Slot[] = [
   { id: "barrier", emoji: "🌿", labelKey: "dailySlots.slots.barrier" },
 ]
 
+/** 날씨 뱃지 — boost(추천)/caution(주의) */
+function HintBadge({ hint }: { hint: Exclude<SlotHint, null> }) {
+  const locale = useLocale()
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold leading-none",
+        hint === "boost"
+          ? "bg-primary/15 text-primary-text"
+          : "bg-[#FBE7DA] text-[#B0561F]",
+      )}
+    >
+      {t(hint === "boost" ? "slotHint.boost" : "slotHint.caution", locale)}
+    </span>
+  )
+}
+
 /** 상단 2x2 그리드 아이템 — 아이콘, 라벨, 오른쪽 체크마크(선택 시에만) 순으로 가로 배치. 설명 텍스트는 표시하지 않음 */
-function SlotCard({ slot, isChecked, toggleSlot, disabled }: { slot: Slot; isChecked: boolean; toggleSlot: (id: SlotType) => void; disabled?: boolean }) {
+function SlotCard({ slot, isChecked, toggleSlot, disabled, hint }: { slot: Slot; isChecked: boolean; toggleSlot: (id: SlotType) => void; disabled?: boolean; hint?: SlotHint }) {
   const locale = useLocale()
   const handleClick = useCallback(() => {
     toggleSlot(slot.id)
@@ -91,10 +113,12 @@ function SlotCard({ slot, isChecked, toggleSlot, disabled }: { slot: Slot; isChe
       onClick={handleClick}
       disabled={disabled}
       className={cn(
-        "flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 transition-all",
+        "flex w-full items-center gap-2 rounded-2xl border-2 px-4 py-3 transition-all",
         isChecked
           ? "border-primary bg-primary/10"
-          : "border-border bg-card",
+          : hint === "boost"
+            ? "border-primary/50 bg-card"
+            : "border-border bg-card",
         disabled && "opacity-60 cursor-not-allowed",
       )}
     >
@@ -104,6 +128,7 @@ function SlotCard({ slot, isChecked, toggleSlot, disabled }: { slot: Slot; isChe
       <div className="flex-1 text-left text-sm font-semibold text-foreground">
         {t(slot.labelKey, locale)}
       </div>
+      {hint && !isChecked && <HintBadge hint={hint} />}
       {isChecked && <Check className="size-5 flex-shrink-0 text-primary" aria-hidden />}
     </button>
   )
@@ -187,10 +212,11 @@ interface ConcernCareCardProps {
   onToggleConcernCare: (id: ConcernCareIngredient) => void
   locale: Locale
   disabled?: boolean
+  hint?: SlotHint
 }
 
 /** 다른 슬롯 리스트 아이템과 동일한 모양(아이콘·라벨·체크마크)이지만, 탭하면 토글이 아니라 성분 선택지 아코디언을 펼친다 */
-function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleConcernCare, locale, disabled }: ConcernCareCardProps) {
+function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleConcernCare, locale, disabled, hint }: ConcernCareCardProps) {
   const isChecked = selectedConcernCare.size > 0
 
   return (
@@ -213,6 +239,7 @@ function ConcernCareCard({ isExpanded, onToggle, selectedConcernCare, onToggleCo
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {hint && !isChecked && <HintBadge hint={hint} />}
           {isChecked && <Check className="size-5 text-primary" aria-hidden />}
           <ChevronDown
             className={cn(
@@ -309,8 +336,27 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
   // 잡아, React StrictMode의 effect 이중 실행에도 "값이 실제로 바뀌었을 때"만 반응한다.
   const lastAnimatedCollapsedRef = useRef(collapsed)
 
+  const { weather } = useSkinWeather()
+
   const todayRecipe = diary.getRecipeForDay(day)
-  const recommendedSlot: SlotType | null = getRecommendedSlot(todayRecipe.type) as SlotType | null
+  const recipeRecommendedSlot = getRecommendedSlot(todayRecipe.type) as SlotType | null
+
+  // 오늘(currentDay) 슬롯에만 날씨 힌트를 반영한다 — 과거/미래 날짜는 recipe 기준 그대로.
+  const isToday = day === diary.currentDay
+  const weatherHints = isToday && weather ? getWeatherSlotHints(weather) : { boost: [], caution: [] }
+
+  const slotHint = useCallback(
+    (id: SlotType): SlotHint => {
+      if (weatherHints.caution.includes(id)) return "caution"
+      if (weatherHints.boost.includes(id)) return "boost"
+      return null
+    },
+    [weatherHints],
+  )
+
+  // 조건 기록 시 "추천 카테고리"로 로깅되는 값 — 날씨 추천이 있으면 그쪽을 우선.
+  const recommendedSlot: SlotType | null =
+    (isToday && weather ? getWeatherRecommendedSlot(weather) : null) ?? recipeRecommendedSlot
 
   const concernShortLabelKey = getFirstConcernTagShortLabelKey(diary.concernTags)
   const conditionQuestion = concernShortLabelKey
@@ -603,6 +649,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                     isChecked={checkedSlots.has(slot.id)}
                     toggleSlot={toggleSlot}
                     disabled={isDone}
+                    hint={slotHint(slot.id)}
                   />
                 ))}
               </div>
@@ -615,6 +662,7 @@ export function DailySlots({ day = 1, onConditionRecord, onCollapse }: DailySlot
                 onToggleConcernCare={toggleConcernCare}
                 locale={locale}
                 disabled={isDone}
+                hint={slotHint("active")}
               />
 
               {/* 특별관리 아코디언 */}

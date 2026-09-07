@@ -3,12 +3,14 @@
 import { use, useState } from "react"
 import { ProgressBar30 } from "@/components/progress-bar-30"
 import { ProgressHeader } from "@/components/progress-header"
-import { CalendarGrid } from "@/components/calendar-grid"
-import { DailySlots } from "@/components/daily-slots"
+// [스킨 웨더 개편] DailySlots는 메인에서 내렸다 — 컴포넌트/로직은 보존, 필요 시 복구.
+// import { DailySlots } from "@/components/daily-slots"
+// 밸런스 레이더 / 캘린더는 RecordsPanel(접이식)로 묶어 하단 무게를 줄였다.
 import { WeeklyMiniInsight } from "@/components/weekly-mini-insight"
 import { PreviewInsightCard } from "@/components/preview-insight-card"
-import { TodayCareCard } from "@/components/today-care-card"
-import { SkinBalanceRadar } from "@/components/skin-balance-radar"
+import { SkinWeatherCard } from "@/components/skin-weather-card"
+import { DoSkipCard } from "@/components/do-skip-card"
+import { RecordsPanel } from "@/components/records-panel"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
@@ -54,9 +56,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   const diary = useDiary()
   const { currentDay, totalDays } = diary
 
-  const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [coverConfirmed, setCoverConfirmed] = useState(() => hasSeenCoverToday())
-  const [calendarPulse, setCalendarPulse] = useState(0)
 
   if (!diary.hydrated) return null
 
@@ -86,8 +86,6 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
     )
   }
 
-  const activeDay = selectedDay ?? currentDay
-
   const isCourseComplete = currentDay >= totalDays
 
   return (
@@ -105,37 +103,25 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
           name={diary.name}
         />
 
-        <TodayCareCard />
+        <SkinWeatherCard />
+
+        <DoSkipCard />
 
         <WeeklyMiniInsight />
 
-        <div id="daily-slots-anchor">
-          <DailySlots
-            day={activeDay}
-            onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
-            onCollapse={() => setCalendarPulse((p) => p + 1)}
-          />
-        </div>
+        {/* [스킨 웨더 개편] 4개 슬롯 상세 입력 UI는 메인에서 제거. DO & SKIP + 원탭 체크인으로 대체.
+            <div id="daily-slots-anchor">
+              <DailySlots
+                day={activeDay}
+                onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
+                onCollapse={() => setCalendarPulse((p) => p + 1)}
+              />
+            </div>
+        */}
 
         <PreviewInsightCard />
 
-        <SkinBalanceRadar skinType={diary.skinType} locale={locale} onChangeSkinType={diary.setSkinType} />
-
-        {/* key로 강제 remount하여 calendarPulse 증가 시마다 진입 연출을 재생한다 */}
-        <div key={calendarPulse} className={calendarPulse > 0 ? "animate-calendar-reveal rounded-4xl" : ""}>
-          <CalendarGrid
-            totalDays={totalDays}
-            currentDay={currentDay}
-            selectedDay={activeDay}
-            completedDays={diary.loggedDays}
-            justStampedDay={null}
-            onSelect={setSelectedDay}
-            loggedSlots={diary.loggedSlots}
-            conditions={diary.conditions}
-            joinDate={diary.joinDate}
-            revealPulse={calendarPulse > 0}
-          />
-        </div>
+        <RecordsPanel locale={locale} />
 
         {isCourseComplete && (
           <>
