@@ -6,7 +6,13 @@ export const metadata: Metadata = {
   title: 'Hoppy Skin Diary',
   description: 'Gentle skincare routine',
   generator: 'v0.app',
+  // 브라우저 탭 파비콘 + iOS 홈 아이콘. 실제 파일은 public/ 에 있다:
+  //   public/favicon.ico          — 탭 파비콘 (16/32/48 멀티 사이즈 .ico 권장)
+  //   public/apple-touch-icon.png — iOS 홈 화면 (180×180, 불투명 배경)
+  // PWA(Android) 아이콘은 /api/{locale}/manifest.json 이 담당한다.
   icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
   appleWebApp: {
