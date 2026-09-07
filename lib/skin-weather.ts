@@ -205,6 +205,76 @@ export function getWeatherRecommendedSlot(w: SkinWeather, now: Date = new Date()
   return null
 }
 
+/**
+ * DO / SKIP 케어 아이템. key는 i18n 문구(doSkip.item.<key>)와
+ * 어필리에이트 픽 매핑(slot)에 함께 쓰인다.
+ */
+export interface CarePlanItem {
+  key: string
+  /** 연관 슬롯 — 아이콘·추천 제품 매핑용 */
+  slot: SlotType
+}
+
+export interface DoSkipPlan {
+  /** 오늘 꼭 챙길 것 (최대 2) */
+  doItems: CarePlanItem[]
+  /** 오늘 생략할 것 (최대 2) */
+  skipItems: CarePlanItem[]
+}
+
+/**
+ * 오늘 날씨 + 시간대 → [오늘 필수(DO) / 오늘 생략(SKIP)] 처방.
+ *
+ *  DO
+ *   - 낮: 선크림은 항상. 건조/자외선이면 판테놀·수분 진정. 미세먼지/저온이면 장벽 크림.
+ *   - 밤: 낮 UV가 강했으면 수분 진정팩. 건조/저온/미세먼지면 장벽 크림.
+ *         해당 없으면 가벼운 수분.
+ *
+ *  SKIP
+ *   - 미세먼지·강한 자외선·폭염·스트레스 '매우 높음' → 각질제거
+ *   - 폭염·고습도(70%+)·미세먼지 → 무거운 오일·리치 밤
+ *   - 낮에 자외선/폭염 → 레티놀·고농도 액티브
+ *   - 밤엔 스트레스 '매우 높음' 또는 UV 8+ 일 때만 레티놀 생략(밤은 원래 액티브 타임)
+ */
+export function getDoSkipPlan(w: SkinWeather, now: Date = new Date()): DoSkipPlan {
+  const { drivers, level } = computeSkinStress(w)
+  const has = (k: StressDriverKey) => drivers.some((d) => d.key === k)
+  const time = getTimeOfDay(now)
+
+  const doItems: CarePlanItem[] = []
+  const skipItems: CarePlanItem[] = []
+  const addDo = (key: string, slot: SlotType) => {
+    if (!doItems.some((i) => i.key === key)) doItems.push({ key, slot })
+  }
+  const addSkip = (key: string, slot: SlotType) => {
+    if (!skipItems.some((i) => i.key === key)) skipItems.push({ key, slot })
+  }
+
+  if (time === "day") {
+    addDo("sunscreen", "sun_care")
+    if (has("dry") || has("uv")) addDo("panthenol", "hydration")
+    if (has("pm") || has("cold")) addDo("barrier_cream", "barrier")
+  } else {
+    if (has("uv")) addDo("soothing_pack", "hydration")
+    if (has("dry") || has("cold") || has("pm")) addDo("barrier_cream", "barrier")
+    if (doItems.length === 0) addDo("gentle_hydration", "hydration")
+  }
+
+  if (has("pm") || has("uv") || has("heat") || level === "severe") {
+    addSkip("exfoliant", "exfoliation")
+  }
+  if (has("heat") || has("pm") || (w.humidity !== null && w.humidity >= 70)) {
+    addSkip("heavy_oil", "barrier")
+  }
+  if (time === "day") {
+    if (has("uv") || has("heat")) addSkip("retinoid", "active")
+  } else if (level === "severe" || (w.uvIndex !== null && w.uvIndex >= 8)) {
+    addSkip("retinoid", "active")
+  }
+
+  return { doItems: doItems.slice(0, 2), skipItems: skipItems.slice(0, 2) }
+}
+
 /** WMO 날씨코드 → 비/눈 여부 (문구 보조용) */
 export function precipFromWeatherCode(code: number | null): { isRain: boolean; isSnow: boolean } {
   if (code === null) return { isRain: false, isSnow: false }

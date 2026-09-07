@@ -4,10 +4,12 @@ import { use, useState } from "react"
 import { ProgressBar30 } from "@/components/progress-bar-30"
 import { ProgressHeader } from "@/components/progress-header"
 import { CalendarGrid } from "@/components/calendar-grid"
-import { DailySlots } from "@/components/daily-slots"
+// [스킨 웨더 개편] DailySlots는 메인에서 내렸다 — 컴포넌트/로직은 보존, 필요 시 복구.
+// import { DailySlots } from "@/components/daily-slots"
 import { WeeklyMiniInsight } from "@/components/weekly-mini-insight"
 import { PreviewInsightCard } from "@/components/preview-insight-card"
 import { SkinWeatherCard } from "@/components/skin-weather-card"
+import { DoSkipCard } from "@/components/do-skip-card"
 import { SkinBalanceRadar } from "@/components/skin-balance-radar"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
@@ -107,15 +109,19 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
         <SkinWeatherCard />
 
+        <DoSkipCard />
+
         <WeeklyMiniInsight />
 
-        <div id="daily-slots-anchor">
-          <DailySlots
-            day={activeDay}
-            onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
-            onCollapse={() => setCalendarPulse((p) => p + 1)}
-          />
-        </div>
+        {/* [스킨 웨더 개편] 4개 슬롯 상세 입력 UI는 메인에서 제거. DO & SKIP + 원탭 체크인으로 대체.
+            <div id="daily-slots-anchor">
+              <DailySlots
+                day={activeDay}
+                onConditionRecord={(condition, linkedCategory) => diary.recordCondition(activeDay, condition)}
+                onCollapse={() => setCalendarPulse((p) => p + 1)}
+              />
+            </div>
+        */}
 
         <PreviewInsightCard />
 
