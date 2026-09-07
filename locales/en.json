@@ -486,6 +486,13 @@
       "face_oil_seal": { "label": "A drop of face oil to seal", "desc": "One drop of oil over cream holds back overnight dryness." }
     }
   },
+  "recordsPanel": {
+    "title": "Browse my skin records",
+    "tab": {
+      "balance": "Skin balance",
+      "calendar": "Record calendar"
+    }
+  },
   "weeklyInsight": {
     "banner": "Mostly {{topTag}} this week · D-{{remaining}} to next report",
     "bannerNoTag": "D-{{remaining}} to next report",
