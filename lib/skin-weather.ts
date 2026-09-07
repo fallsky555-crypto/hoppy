@@ -205,6 +205,11 @@ export function getWeatherRecommendedSlot(w: SkinWeather, now: Date = new Date()
   return null
 }
 
+/** 메인 화면 연령대 탭. 온보딩 설문 없이 1초 전환용 */
+export type AgeGroup = "2030" | "4050" | "60plus"
+export const AGE_GROUPS: AgeGroup[] = ["2030", "4050", "60plus"]
+export const DEFAULT_AGE_GROUP: AgeGroup = "4050"
+
 /**
  * DO / SKIP 케어 아이템. key는 i18n 문구(doSkip.item.<key>)와
  * 어필리에이트 픽 매핑(slot)에 함께 쓰인다.
@@ -213,22 +218,49 @@ export interface CarePlanItem {
   key: string
   /** 연관 슬롯 — 아이콘·추천 제품 매핑용 */
   slot: SlotType
+  /** 연령대 보강으로 추가된 "+1 단계" 레이어인지 (기본 날씨 DO가 아님) */
+  layer?: boolean
 }
 
 export interface DoSkipPlan {
-  /** 오늘 꼭 챙길 것 (최대 2) */
+  /** 오늘 꼭 챙길 것 (날씨 기본 최대 2 + 연령대 레이어) */
   doItems: CarePlanItem[]
   /** 오늘 생략할 것 (최대 2) */
   skipItems: CarePlanItem[]
 }
 
 /**
- * 오늘 날씨 + 시간대 → [오늘 필수(DO) / 오늘 생략(SKIP)] 처방.
+ * 날씨/시간대로 만든 기본 DO(최대 2)에 연령대별 보강 레이어를 얹는다.
  *
- *  DO
+ *  2030  — 보강 없음. 유수분 밸런스 중심의 산뜻한 2단계.
+ *  4050  — +1 필수 레이어. 건조/환절기·밤이면 세라마이드·판테놀 밀폐,
+ *          낮이면 항산화 앰플, 밤이면 펩타이드·아이케어.
+ *  60+   — +1~2 영양 밀폐 레이어. 고영양 리치 크림 + (건조·저온·밤이면) 페이스 오일 밀폐.
+ */
+function ageLayers(ageGroup: AgeGroup, ctx: { time: TimeOfDay; dryish: boolean }): CarePlanItem[] {
+  const { time, dryish } = ctx
+  const layer = (key: string, slot: SlotType): CarePlanItem => ({ key, slot, layer: true })
+
+  if (ageGroup === "2030") return []
+
+  if (ageGroup === "4050") {
+    if (dryish) return [layer("ceramide_seal", "barrier")]
+    return time === "night" ? [layer("peptide_eye", "active")] : [layer("antioxidant_serum", "active")]
+  }
+
+  // 60plus
+  const out: CarePlanItem[] = [layer("rich_nutrition_cream", "barrier")]
+  if (dryish || time === "night") out.push(layer("face_oil_seal", "barrier"))
+  return out
+}
+
+/**
+ * 오늘 날씨 + 시간대 + 연령대 → [오늘 필수(DO) / 오늘 생략(SKIP)] 처방.
+ *
+ *  DO(날씨)
  *   - 낮: 선크림은 항상. 건조/자외선이면 판테놀·수분 진정. 미세먼지/저온이면 장벽 크림.
- *   - 밤: 낮 UV가 강했으면 수분 진정팩. 건조/저온/미세먼지면 장벽 크림.
- *         해당 없으면 가벼운 수분.
+ *   - 밤: 낮 UV가 강했으면 수분 진정팩. 건조/저온/미세먼지면 장벽 크림. 해당 없으면 가벼운 수분.
+ *  DO(연령대) — 위 ageLayers() 참고.
  *
  *  SKIP
  *   - 미세먼지·강한 자외선·폭염·스트레스 '매우 높음' → 각질제거
@@ -236,7 +268,11 @@ export interface DoSkipPlan {
  *   - 낮에 자외선/폭염 → 레티놀·고농도 액티브
  *   - 밤엔 스트레스 '매우 높음' 또는 UV 8+ 일 때만 레티놀 생략(밤은 원래 액티브 타임)
  */
-export function getDoSkipPlan(w: SkinWeather, now: Date = new Date()): DoSkipPlan {
+export function getDoSkipPlan(
+  w: SkinWeather,
+  now: Date = new Date(),
+  ageGroup: AgeGroup = DEFAULT_AGE_GROUP,
+): DoSkipPlan {
   const { drivers, level } = computeSkinStress(w)
   const has = (k: StressDriverKey) => drivers.some((d) => d.key === k)
   const time = getTimeOfDay(now)
@@ -272,7 +308,14 @@ export function getDoSkipPlan(w: SkinWeather, now: Date = new Date()): DoSkipPla
     addSkip("retinoid", "active")
   }
 
-  return { doItems: doItems.slice(0, 2), skipItems: skipItems.slice(0, 2) }
+  // 건조 계열: 건조 driver, 저온, 또는 습도 45% 미만
+  const dryish = has("dry") || has("cold") || (w.humidity !== null && w.humidity < 45)
+  const layers = ageLayers(ageGroup, { time, dryish })
+
+  return {
+    doItems: [...doItems.slice(0, 2), ...layers],
+    skipItems: skipItems.slice(0, 2),
+  }
 }
 
 /** WMO 날씨코드 → 비/눈 여부 (문구 보조용) */

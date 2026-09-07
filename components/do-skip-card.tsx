@@ -6,7 +6,8 @@ import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
 import { t } from "@/lib/i18n"
 import { useSkinWeather } from "@/lib/use-skin-weather"
-import { getDoSkipPlan, type CarePlanItem } from "@/lib/skin-weather"
+import { useAgeGroup } from "@/lib/use-age-group"
+import { AGE_GROUPS, getDoSkipPlan, type AgeGroup, type CarePlanItem } from "@/lib/skin-weather"
 import { getAffiliatePick } from "@/lib/affiliate-picks"
 import type { SlotType } from "@/lib/slot-mapping"
 
@@ -26,12 +27,20 @@ function CareRow({ item, tone }: { item: CarePlanItem; tone: "do" | "skip" }) {
         {SLOT_EMOJI[item.slot]}
       </span>
       <div className="flex flex-col">
-        <span
-          className={
-            "text-sm font-semibold " + (tone === "skip" ? "text-foreground line-through decoration-[#D9534F]/50" : "text-foreground")
-          }
-        >
-          {t(`doSkip.item.${item.key}.label`, locale)}
+        <span className="flex items-center gap-1.5">
+          <span
+            className={
+              "text-sm font-semibold " +
+              (tone === "skip" ? "text-foreground line-through decoration-[#D9534F]/50" : "text-foreground")
+            }
+          >
+            {t(`doSkip.item.${item.key}.label`, locale)}
+          </span>
+          {item.layer && (
+            <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-text">
+              {t("doSkip.layerBadge", locale)}
+            </span>
+          )}
         </span>
         <span className="text-[12.5px] leading-snug text-muted-foreground">
           {t(`doSkip.item.${item.key}.desc`, locale)}
@@ -41,9 +50,9 @@ function CareRow({ item, tone }: { item: CarePlanItem; tone: "do" | "skip" }) {
   )
 }
 
-function AffiliateBanner({ slot }: { slot: SlotType }) {
+function AffiliateBanner({ slot, ageGroup }: { slot: SlotType; ageGroup: AgeGroup }) {
   const locale = useLocale()
-  const pick = getAffiliatePick(slot)
+  const pick = getAffiliatePick(slot, ageGroup)
   if (!pick) return null
 
   return (
@@ -67,10 +76,33 @@ function AffiliateBanner({ slot }: { slot: SlotType }) {
   )
 }
 
+function AgeTabs({ value, onChange }: { value: AgeGroup; onChange: (g: AgeGroup) => void }) {
+  const locale = useLocale()
+  return (
+    <div className="flex gap-1.5 rounded-full bg-secondary p-1">
+      {AGE_GROUPS.map((g) => (
+        <button
+          key={g}
+          type="button"
+          onClick={() => onChange(g)}
+          aria-pressed={value === g}
+          className={
+            "flex-1 rounded-full py-1.5 text-[12.5px] font-bold transition-colors " +
+            (value === g ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")
+          }
+        >
+          {t(`doSkip.age.${g}`, locale)}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function DoSkipCard() {
   const locale = useLocale()
   const diary = useDiary()
   const { weather, status } = useSkinWeather()
+  const [ageGroup, setAgeGroup] = useAgeGroup()
 
   const [toast, setToast] = useState(false)
   useEffect(() => {
@@ -91,11 +123,11 @@ export function DoSkipCard() {
 
   const plan =
     weather && status === "ready"
-      ? getDoSkipPlan(weather)
+      ? getDoSkipPlan(weather, new Date(), ageGroup)
       : { doItems: [] as CarePlanItem[], skipItems: [] as CarePlanItem[] }
 
   const alreadyDone = diary.loggedDays.includes(diary.currentDay)
-  const pickSlot = plan.doItems.find((i) => getAffiliatePick(i.slot))?.slot ?? null
+  const pickSlot = plan.doItems.find((i) => getAffiliatePick(i.slot, ageGroup))?.slot ?? null
 
   const handleCheckin = () => {
     if (alreadyDone) return
@@ -106,6 +138,8 @@ export function DoSkipCard() {
   return (
     <div className={shell}>
       <div className="flex flex-col gap-5">
+        <AgeTabs value={ageGroup} onChange={setAgeGroup} />
+
         {status === "error" && (
           <p className="text-[12.5px] font-medium text-muted-foreground">{t("doSkip.unavailable", locale)}</p>
         )}
@@ -120,7 +154,7 @@ export function DoSkipCard() {
             {plan.doItems.map((item) => (
               <div key={item.key}>
                 <CareRow item={item} tone="do" />
-                {pickSlot === item.slot && <AffiliateBanner slot={item.slot} />}
+                {pickSlot === item.slot && <AffiliateBanner slot={item.slot} ageGroup={ageGroup} />}
               </div>
             ))}
           </ul>

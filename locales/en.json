@@ -459,6 +459,12 @@
     "skipNone": "Nothing to avoid today. Keep your usual routine.",
     "unavailable": "Couldn't load weather, showing default guidance only.",
     "pickLabel": "Hoppy's pick",
+    "layerBadge": "+layer",
+    "age": {
+      "2030": "20-30s",
+      "4050": "40-50s",
+      "60plus": "60+"
+    },
     "checkin": {
       "cta": "Done with today's Skin Weather routine ✨",
       "done": "Today's routine done ✓",
@@ -472,7 +478,12 @@
       "gentle_hydration": { "label": "Light hydration", "desc": "On an easy day, toner and lotion for moisture is enough." },
       "exfoliant": { "label": "Exfoliants (scrubs, AHA/BHA)", "desc": "Skip physical and chemical exfoliation when the barrier is sensitive." },
       "retinoid": { "label": "Retinol / strong actives", "desc": "When stressors stack up, skipping actives for a day is better." },
-      "heavy_oil": { "label": "Heavy oils / rich balms", "desc": "Can feel suffocating and trigger breakouts on humid or hazy days." }
+      "heavy_oil": { "label": "Heavy oils / rich balms", "desc": "Can feel suffocating and trigger breakouts on humid or hazy days." },
+      "ceramide_seal": { "label": "Ceramide / panthenol moisture seal", "desc": "For deep dryness and season changes, lock in one more layer of moisture." },
+      "antioxidant_serum": { "label": "Antioxidant serum (vitamin C, etc.)", "desc": "Reduces daytime oxidative stress and protects your tone." },
+      "peptide_eye": { "label": "Peptide / eye cream care", "desc": "At night, start with the eye area and expression lines for firmness." },
+      "rich_nutrition_cream": { "label": "Rich nourishing cream", "desc": "A nutrient seal that prevents moisture loss from thinning skin." },
+      "face_oil_seal": { "label": "A drop of face oil to seal", "desc": "One drop of oil over cream holds back overnight dryness." }
     }
   },
   "weeklyInsight": {
