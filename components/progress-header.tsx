@@ -38,12 +38,12 @@ export function ProgressHeader({ currentDay, cycleIndex, loggedDays, heroImageSr
   return (
     <header className="overflow-hidden rounded-4xl bg-card ring-1 ring-border">
       {/* 텍스트와 겹치지 않는 별도 배너 영역 */}
-      <div className="relative h-40 w-full">
+      <div className="relative h-48 w-full">
         <Image
           src={heroImageSrc}
           alt=""
           fill
-          className="object-cover"
+          className="object-cover object-[center_top]"
           priority
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
