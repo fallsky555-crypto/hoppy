@@ -8,7 +8,7 @@ import { t } from "@/lib/i18n"
 import { useSkinWeather } from "@/lib/use-skin-weather"
 import { useAgeGroup } from "@/lib/use-age-group"
 import { AGE_GROUPS, getDoSkipPlan, type AgeGroup, type CarePlanItem } from "@/lib/skin-weather"
-import { getAffiliatePick } from "@/lib/affiliate-picks"
+import { getAffiliatePicks } from "@/lib/affiliate-picks"
 import type { SlotType } from "@/lib/slot-mapping"
 
 const SLOT_EMOJI: Record<SlotType, string> = {
@@ -50,29 +50,43 @@ function CareRow({ item, tone }: { item: CarePlanItem; tone: "do" | "skip" }) {
   )
 }
 
-function AffiliateBanner({ slot, ageGroup }: { slot: SlotType; ageGroup: AgeGroup }) {
+function AffiliatePicks({ slot, ageGroup }: { slot: SlotType; ageGroup: AgeGroup }) {
   const locale = useLocale()
-  const pick = getAffiliatePick(slot, ageGroup)
-  if (!pick) return null
+  const picks = getAffiliatePicks(slot, ageGroup)
+  if (picks.length === 0) return null
 
   return (
-    <a
-      href={pick.affiliateUrl}
-      target="_blank"
-      rel="noopener noreferrer sponsored"
-      className="mt-2 ml-8 flex items-center gap-3 rounded-2xl border border-border bg-secondary/60 px-3 py-2.5 transition-colors hover:bg-secondary"
-    >
-      <div className="flex min-w-0 flex-col">
-        <span className="text-[10.5px] font-bold uppercase tracking-wide text-primary-text">
-          {t("doSkip.pickLabel", locale)}
-        </span>
-        <span className="truncate text-[13px] font-semibold text-foreground">
-          {pick.brand} · {pick.title}
-        </span>
-        <span className="truncate text-[11.5px] text-muted-foreground">{pick.description}</span>
+    <div className="mt-2 ml-8 flex flex-col gap-1.5">
+      <span className="text-[10.5px] font-bold uppercase tracking-wide text-primary-text">
+        {t("doSkip.pickLabel", locale)}
+      </span>
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {picks.map((pick, i) => (
+          <a
+            key={i}
+            href={pick.affiliateUrl}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+            className="flex w-[170px] shrink-0 flex-col gap-1 rounded-2xl border border-border bg-secondary/60 px-3 py-2.5 transition-colors hover:bg-secondary"
+          >
+            <div className="flex items-center justify-between">
+              {pick.tag ? (
+                <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9.5px] font-bold leading-none text-primary-text">
+                  {pick.tag}
+                </span>
+              ) : (
+                <span />
+              )}
+              <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+            </div>
+            <span className="text-[12.5px] font-semibold leading-tight text-foreground">
+              {pick.brand} {pick.title}
+            </span>
+            <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">{pick.description}</span>
+          </a>
+        ))}
       </div>
-      <ExternalLink className="ml-auto size-4 shrink-0 text-muted-foreground" aria-hidden />
-    </a>
+    </div>
   )
 }
 
@@ -127,7 +141,7 @@ export function DoSkipCard() {
       : { doItems: [] as CarePlanItem[], skipItems: [] as CarePlanItem[] }
 
   const alreadyDone = diary.loggedDays.includes(diary.currentDay)
-  const pickSlot = plan.doItems.find((i) => getAffiliatePick(i.slot, ageGroup))?.slot ?? null
+  const pickSlot = plan.doItems.find((i) => getAffiliatePicks(i.slot, ageGroup).length > 0)?.slot ?? null
 
   const handleCheckin = () => {
     if (alreadyDone) return
@@ -154,7 +168,7 @@ export function DoSkipCard() {
             {plan.doItems.map((item) => (
               <div key={item.key}>
                 <CareRow item={item} tone="do" />
-                {pickSlot === item.slot && <AffiliateBanner slot={item.slot} ageGroup={ageGroup} />}
+                {pickSlot === item.slot && <AffiliatePicks slot={item.slot} ageGroup={ageGroup} />}
               </div>
             ))}
           </ul>
