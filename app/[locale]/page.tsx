@@ -7,7 +7,7 @@ import { CalendarGrid } from "@/components/calendar-grid"
 import { DailySlots } from "@/components/daily-slots"
 import { WeeklyMiniInsight } from "@/components/weekly-mini-insight"
 import { PreviewInsightCard } from "@/components/preview-insight-card"
-import { TodayCareCard } from "@/components/today-care-card"
+import { SkinWeatherCard } from "@/components/skin-weather-card"
 import { SkinBalanceRadar } from "@/components/skin-balance-radar"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
@@ -105,7 +105,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
           name={diary.name}
         />
 
-        <TodayCareCard />
+        <SkinWeatherCard />
 
         <WeeklyMiniInsight />
 

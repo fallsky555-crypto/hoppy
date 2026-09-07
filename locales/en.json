@@ -415,6 +415,44 @@
     "untilReport": "Until Report",
     "reportReady": "Report Ready"
   },
+  "skinWeather": {
+    "title": "Today's Skin Weather",
+    "subtitle": "Skin stress index",
+    "locationDefault": "Based on your location",
+    "loading": "Checking today's weather…",
+    "unavailable": "Couldn't load weather data. We'll show your default routine today.",
+    "allClear": "Low-stress day for your skin. Keep your usual routine going.",
+    "metric": {
+      "humidity": "Humidity",
+      "uv": "UV",
+      "pm25": "PM2.5"
+    },
+    "level": {
+      "low": "Low",
+      "moderate": "Moderate",
+      "high": "High",
+      "severe": "Very high"
+    },
+    "driver": {
+      "dry": "The air is dry. Add an extra layer of hydration and barrier care.",
+      "uv": "UV is strong. Apply sunscreen thoroughly and save exfoliants and actives for the evening.",
+      "uvNight": "UV ran high during the day. Tonight, calm your skin with soothing and hydrating care.",
+      "pm": "Particulate levels are high. Cleanse thoroughly tonight and focus on barrier care.",
+      "cold": "It's cold out. Your barrier weakens easily today, so moisturize generously.",
+      "heat": "It's hot out. Keep it light and hydrating, and minimize irritating products."
+    },
+    "slotShort": {
+      "sun_care": "Sunscreen",
+      "hydration": "Hydration",
+      "exfoliation": "Exfoliation",
+      "active": "Actives",
+      "barrier": "Barrier"
+    }
+  },
+  "slotHint": {
+    "boost": "Recommended",
+    "caution": "Go easy"
+  },
   "weeklyInsight": {
     "banner": "Mostly {{topTag}} this week · D-{{remaining}} to next report",
     "bannerNoTag": "D-{{remaining}} to next report",
