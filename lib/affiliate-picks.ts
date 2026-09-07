@@ -3,15 +3,22 @@
  * 2~3개 제품을 "비교 큐레이션" 형태로 노출한다 (가성비 / 더마 / 프리미엄 / 민감성).
  *
  * ⚠️ 현재는 더미 데이터다. affiliateUrl은 oy() 헬퍼(올리브영 검색, 실동작)로 채운
- *    자리표시자이며, 실제 파트너스 트래킹 URL 문자열로 그대로 덮어쓰면 된다.
- *    brand / title / description / tag 도 예시이므로 자유롭게 교체.
+ *    자리표시자이며, 실제 파트너스 트래킹 URL로 그대로 덮어쓰면 된다.
+ *
+ *    다국어 링크 분기: affiliateUrl에 문자열 대신 { ko, en } 객체를 넣으면
+ *    ko(쿠팡 파트너스) / en(아마존 어소시에이트)로 자동 분기된다. 단일 문자열이면
+ *    두 locale 공용으로 쓴다.  brand / title / description / tag 도 예시이므로 자유 교체.
  */
 
 import type { SlotType } from "@/lib/slot-mapping"
 import type { AgeGroup } from "@/lib/skin-weather"
+import type { Locale } from "@/lib/i18n"
 
 /** 큐레이션 성격 태그 — 사용자가 취향/피부타입으로 고르는 기준 */
 export type CurationTag = "가성비" | "더마" | "민감성" | "프리미엄"
+
+/** 단일 공용 URL 또는 locale별 URL */
+export type LocalizedUrl = string | { ko: string; en: string }
 
 export interface AffiliatePick {
   /** 큐레이션 태그 (선택) */
@@ -21,8 +28,8 @@ export interface AffiliatePick {
   title: string
   /** 한 줄 추천 이유 — "오늘 날씨에 왜 이게 맞는지" (~25자 권장) */
   description: string
-  /** 클릭 시 새 창(_blank)으로 열리는 링크 */
-  affiliateUrl: string
+  /** 클릭 시 새 창(_blank)으로 열리는 링크. 문자열(공용) 또는 { ko, en } */
+  affiliateUrl: LocalizedUrl
 }
 
 /** slot 하나당: default 배열 필수 + 연령대별 오버라이드 배열은 선택 */
@@ -31,25 +38,40 @@ type PickTable = { default: AffiliatePick[] } & Partial<Record<AgeGroup, Affilia
 const oy = (q: string) =>
   `https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query=${encodeURIComponent(q)}`
 
-/** 항목 작성 헬퍼 — affiliateUrl 자리에 실제 링크 문자열을 바로 넣어도 됨 */
+const toUrl = (s: string) => (s.startsWith("http") ? s : oy(s))
+
+/**
+ * 현재 locale에 맞는 최종 URL 문자열을 고른다.
+ * 문자열이면 그대로, { ko, en }이면 해당 locale → 없으면 반대쪽으로 폴백.
+ */
+export function resolveAffiliateUrl(url: LocalizedUrl, locale: Locale): string {
+  if (typeof url === "string") return url
+  return url[locale] || url.ko || url.en
+}
+
+/** 항목 작성 헬퍼 — 5번째 인자에 실제 링크 문자열 또는 { ko, en } 를 바로 넣어도 됨 */
 const p = (
   tag: CurationTag,
   brand: string,
   title: string,
   description: string,
-  searchOrUrl: string,
+  url: LocalizedUrl,
 ): AffiliatePick => ({
   tag,
   brand,
   title,
   description,
-  affiliateUrl: searchOrUrl.startsWith("http") ? searchOrUrl : oy(searchOrUrl),
+  affiliateUrl: typeof url === "string" ? toUrl(url) : { ko: toUrl(url.ko), en: toUrl(url.en) },
 })
 
 export const AFFILIATE_PICKS: Partial<Record<SlotType, PickTable>> = {
   sun_care: {
     default: [
-      p("가성비", "조선미녀", "맑은 쌀 선크림 SPF50+ PA++++", "얇게 발리는 저자극 화학자차, 데일리 부담 없는 가격", "조선미녀 맑은 쌀 선크림"),
+      // ↓ 다국어 링크 분기 예시: ko=쿠팡 파트너스, en=아마존 어소시에이트 (실제 URL로 교체)
+      p("가성비", "조선미녀", "맑은 쌀 선크림 SPF50+ PA++++", "얇게 발리는 저자극 화학자차, 데일리 부담 없는 가격", {
+        ko: "조선미녀 맑은 쌀 선크림",
+        en: "Beauty of Joseon Relief Sun SPF50",
+      }),
       p("더마", "라운드랩", "자작나무 수분 선크림 SPF50+", "진정 성분 함유, 백탁 없이 밀착되는 데일리", "라운드랩 자작나무 선크림"),
       p("프리미엄", "달바", "워터풀 에센스 선크림", "미스트 겸용, 촉촉하게 마무리되는 프리미엄 선에센스", "달바 워터풀 선크림"),
     ],
