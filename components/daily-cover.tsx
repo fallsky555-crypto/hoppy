@@ -35,7 +35,7 @@ export function DailyCover({ locale, name, onSaveName, onClose }: DailyCoverProp
   }
 
   return (
-    <div className="min-h-dvh w-full flex items-center justify-center p-4 bg-background">
+    <div className="min-h-dvh w-full flex items-center justify-center p-4 bg-[#FAF7F1]">
       <div
         className="w-full max-w-md aspect-[1240/1748] rounded-3xl overflow-hidden bg-cover bg-center flex flex-col justify-center items-center relative"
         style={{
@@ -52,7 +52,7 @@ export function DailyCover({ locale, name, onSaveName, onClose }: DailyCoverProp
           />
 
           <div className="space-y-3">
-            <h2 className="text-[1.47rem] font-sans font-medium text-foreground leading-snug">
+            <h2 className="text-[1.47rem] font-sans font-semibold text-[#2E2A26] leading-snug">
               {quote}
             </h2>
 
@@ -63,12 +63,12 @@ export function DailyCover({ locale, name, onSaveName, onClose }: DailyCoverProp
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   placeholder={t("dailyCover.namePlaceholder", locale)}
-                  className="w-full max-w-[200px] bg-transparent border-0 border-b border-[#A9C9C6] text-center text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-[#5B9A97] py-1.5 transition-colors"
+                  className="w-full max-w-[220px] bg-transparent border-0 border-b border-[#5B9A97]/60 text-center text-[15px] font-medium text-[#2E2A26] placeholder:text-[#8A8378] focus:outline-none focus:border-[#5B9A97] py-1.5 transition-colors"
                   autoFocus
                 />
                 <button
                   onClick={handleSaveName}
-                  className="text-[13px] font-semibold tracking-wide text-[#5B9A97] bg-[#5B9A97]/10 rounded-full px-4 py-1.5 hover:bg-[#5B9A97]/20 transition-colors"
+                  className="text-[13px] font-bold tracking-wide text-white bg-[#5B9A97] rounded-full px-5 py-2 hover:bg-[#4E8A87] transition-colors"
                 >
                   {t("dailyCover.nameSave", locale)}
                 </button>
@@ -77,7 +77,7 @@ export function DailyCover({ locale, name, onSaveName, onClose }: DailyCoverProp
               // 이름 표시: 탭하면 다시 인풋으로 전환해 수정 가능 (연필 아이콘도 같은 클릭 영역)
               <button
                 onClick={handleEditName}
-                className="inline-flex items-center gap-1.5 text-lg text-muted-foreground pt-1 underline decoration-dotted underline-offset-4 hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1.5 text-lg font-medium text-[#5B9A97] pt-1 underline decoration-dotted underline-offset-4 hover:text-[#4E8A87] transition-colors"
               >
                 {displayLine}
                 <Pencil className="h-3.5 w-3.5 shrink-0" />

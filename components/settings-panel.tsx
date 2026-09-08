@@ -2,7 +2,7 @@
 
 import { t } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
-import { getCheckerUrl } from "@/components/report-card"
+import { getCheckerUrl } from "@/lib/checker"
 
 /**
  * 날씨 확인 앱에는 '루틴 리셋' 개념이 없어 초기화 버튼은 두지 않는다.

@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState } from "react"
+import { use, useEffect, useRef, useState } from "react"
 import { ProgressHeader } from "@/components/progress-header"
 // [스킨 웨더 개편] DailySlots는 메인에서 내렸다 — 컴포넌트/로직은 보존, 필요 시 복구.
 // import { DailySlots } from "@/components/daily-slots"
@@ -13,7 +13,6 @@ import { RecordsPanel } from "@/components/records-panel"
 import { SkinArchiveCalendar } from "@/components/skin-archive-calendar"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
-import { OnboardingFlow } from "@/components/onboarding-flow"
 import { ThirtyDayReport } from "@/components/thirty-day-report"
 import { InstallBanner } from "@/components/install-banner"
 import { DailyCover } from "@/components/daily-cover"
@@ -56,17 +55,22 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   const diary = useDiary()
 
   const [coverConfirmed, setCoverConfirmed] = useState(() => hasSeenCoverToday())
+  const onboardingKicked = useRef(false)
 
-  if (!diary.hydrated) return null
-
-  if (!diary.onboarded) {
-    const handleOnboardingComplete = (dataConsent: boolean) => {
-      diary.completeOnboarding(dataConsent)
+  // 레거시 온보딩 스텝('결과지 정보동의' · '결과지 다시보기')을 제거했다 — 이제 다이어리
+  // 커버가 곧 진입점이다. 온보딩 플래그가 없으면 화면 앞을 막지 않고 조용히 완료 처리한다.
+  // (비식별 통계의 백엔드 저장은 completeOnboarding 내부에서 그대로 수행된다.)
+  useEffect(() => {
+    if (diary.hydrated && !diary.onboarded && !onboardingKicked.current) {
+      onboardingKicked.current = true
+      diary.completeOnboarding(true)
     }
-    return <OnboardingFlow locale={locale} diary={diary} onComplete={handleOnboardingComplete} />
-  }
+  }, [diary.hydrated, diary.onboarded, diary])
 
-  // 온보딩 완료 후, 하루 한 번, 날짜가 바뀌면 다시 보여준다(같은 날 재방문 시엔 건너뛴다).
+  // completeOnboarding()의 setState가 반영될 때까지(찰나) 빈 화면을 유지한다.
+  if (!diary.hydrated || !diary.onboarded) return null
+
+  // 커버는 하루 한 번, 날짜가 바뀌면 다시 보여준다(같은 날 재방문 시엔 건너뛴다).
   // 하트 버튼을 눌러야만 아래 홈 화면으로 넘어간다(자동 전환 없음). 단, 소유자 불일치로
   // 방금 원격 데이터를 복원한 경우(로그인 직후 등)는 예외 — "다이어리를 펼치는 의식"이
   // 아니라 로그인 성공을 확인하고 싶은 순간이라, 커버 대신 바로 홈으로 넘어간다.
