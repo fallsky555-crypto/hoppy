@@ -475,7 +475,7 @@
       "60plus": "60+"
     },
     "checkin": {
-      "cta": "Done with today's Skin Weather routine ✨",
+      "cta": "Today's Skin Weather, done ✨",
       "done": "Today's routine done ✓",
       "toast": "Matched your skin to today's weather! 🎉",
       "modalTitle": "Today's skin defense, done!",
@@ -735,7 +735,9 @@
   "dailyCover": {
     "namePlaceholder": "Leave your name (optional)",
     "nameSave": "Save and continue",
-    "recordSuffix": "'s Morning Skin Weather Defense"
+    "recordSuffix": "'s Morning Skin Weather Defense",
+    "title": "In today's fickle weather,\nwe'll keep your skin safe.",
+    "enterCta": "Check my skin weather today"
   },
   "report30day": {
     "openLink": "View my cumulative skin defense log →",

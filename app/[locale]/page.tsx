@@ -78,9 +78,6 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
     return (
       <DailyCover
         locale={locale}
-        name={diary.name}
-        joinDate={diary.joinDate}
-        onSaveName={diary.setName}
         onClose={() => {
           markCoverSeenToday()
           setCoverConfirmed(true)

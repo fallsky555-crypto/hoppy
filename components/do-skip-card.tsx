@@ -128,6 +128,11 @@ function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGrou
               </a>
             ))}
           </div>
+
+          {/* 쿠팡 파트너스 고지 — 서랍이 열렸을 때 캐러셀 아래에만 노출 */}
+          <p className="mt-2.5 text-center text-[11px] leading-relaxed text-[#8A8378]">
+            {t("doSkip.coupangDisclosure", locale)}
+          </p>
         </div>
       </div>
     </div>
@@ -233,15 +238,9 @@ export function DoSkipCard() {
           )}
         </div>
 
-        {/* 오늘 날씨 방어 추천 픽 — 기본 접힘, 터치 시 서랍형으로 펼침 + 가로 롤링 */}
-        {pickSlots.length > 0 && (
-          <div className="flex flex-col">
-            <PicksDrawer slots={pickSlots} ageGroup={ageGroup} />
-            <p className="mt-2 mb-3 text-center text-[11px] leading-relaxed text-[#8A8378]">
-              {t("doSkip.coupangDisclosure", locale)}
-            </p>
-          </div>
-        )}
+        {/* 오늘 날씨 방어 추천 픽 — 기본 접힘, 터치 시 서랍형으로 펼침 + 가로 롤링.
+            쿠팡 고지 문구는 서랍 내부(캐러셀 아래)에 있어 열렸을 때만 보인다. */}
+        {pickSlots.length > 0 && <PicksDrawer slots={pickSlots} ageGroup={ageGroup} />}
 
         {/* 원탭 체크인 */}
         <button
@@ -249,10 +248,10 @@ export function DoSkipCard() {
           onClick={handleCheckin}
           disabled={alreadyDone}
           className={
-            "w-full rounded-2xl py-3.5 text-sm font-bold transition-all " +
+            "w-full rounded-2xl py-3.5 text-sm font-bold shadow-sm transition-all " +
             (alreadyDone
               ? "cursor-default bg-secondary text-muted-foreground"
-              : "bg-[#4A7F7C] text-white shadow-sm hover:shadow-md")
+              : "bg-[#DCE8D2] text-[#244234] hover:opacity-90")
           }
         >
           {alreadyDone ? t("doSkip.checkin.done", locale) : t("doSkip.checkin.cta", locale)}
