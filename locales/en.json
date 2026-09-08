@@ -467,6 +467,7 @@
     "unavailable": "Couldn't load weather, showing default guidance only.",
     "pickLabel": "Hoppy's pick",
     "picksToggle": "See today's weather-defense picks",
+    "coupangDisclosure": "This post is part of the Coupang Partners program, and the author earns a commission from qualifying purchases.",
     "layerBadge": "+layer",
     "age": {
       "2030": "20-30s",

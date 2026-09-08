@@ -121,7 +121,7 @@ export function SkinArchiveCalendar({ locale }: { locale: Locale }) {
         {(t("calendar.weekdays", locale) as string[]).map((label, i) => (
           <div
             key={i}
-            className="flex h-6 items-center justify-center text-[11px] font-semibold text-muted-foreground"
+            className="flex h-7 items-center justify-center text-[11px] font-semibold text-muted-foreground"
           >
             {label}
           </div>
@@ -137,23 +137,26 @@ export function SkinArchiveCalendar({ locale }: { locale: Locale }) {
           const isToday = isSameDate(date, today)
 
           return (
-            <div key={date.toISOString()} className="flex aspect-square items-center justify-center">
-              <span
-                className={cn(
-                  "flex size-7 items-center justify-center rounded-full text-[12px] font-semibold tabular-nums transition-colors",
-                  !inMonth && "opacity-25",
-                  done ? "text-white" : isToday ? "" : "text-muted-foreground",
-                )}
-                style={
-                  done
-                    ? { backgroundColor: ACCENT }
-                    : isToday
-                      ? { color: ACCENT, boxShadow: `inset 0 0 0 1px ${ACCENT}` }
-                      : undefined
-                }
-              >
-                {date.getDate()}
-              </span>
+            <div
+              key={date.toISOString()}
+              className={cn(
+                "flex aspect-square items-center justify-center rounded-xl border text-[12px] tabular-nums transition-colors",
+                !inMonth && "opacity-40",
+                done
+                  ? "border-transparent font-semibold text-white"
+                  : isToday
+                    ? "border-[#5B9A97]/45 font-bold"
+                    : "border-[#F0EBE1] bg-[#FAF8F5] font-semibold text-muted-foreground",
+              )}
+              style={
+                done
+                  ? { backgroundColor: ACCENT }
+                  : isToday
+                    ? { backgroundColor: "#E4EEEC", color: "#2F6360" }
+                    : undefined
+              }
+            >
+              {date.getDate()}
             </div>
           )
         })}

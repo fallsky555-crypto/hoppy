@@ -54,12 +54,24 @@ function CareRow({ item, tone }: { item: CarePlanItem; tone: "do" | "skip" }) {
 /**
  * 추천 픽 서랍 — 첫 진입 시 거대한 제품 카드가 바로 노출되지 않도록,
  * 슬림한 "추천 픽 보기 ▼" 버튼으로 접어두고 터치 시 부드럽게 펼친다.
+ * 오늘 DO로 잡힌 모든 슬롯(선크림·수분·장벽 등)의 추천 제품을 한 줄
+ * 가로 롤링(캐러셀)으로 묶어 충분히 탐색할 수 있게 한다.
  */
-function PicksDrawer({ slot, ageGroup }: { slot: SlotType; ageGroup: AgeGroup }) {
+function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGroup }) {
   const locale = useLocale()
   const [open, setOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
-  const picks = getAffiliatePicks(slot, ageGroup)
+
+  // 오늘 DO 슬롯들의 픽을 합치고 brand+title 기준으로 중복 제거
+  const seen = new Set<string>()
+  const picks = slots
+    .flatMap((s) => getAffiliatePicks(s, ageGroup))
+    .filter((p) => {
+      const k = `${p.brand}|${p.title}`
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
   if (picks.length === 0) return null
 
   const contentHeight = contentRef.current?.scrollHeight ?? 0
@@ -90,14 +102,14 @@ function PicksDrawer({ slot, ageGroup }: { slot: SlotType; ageGroup: AgeGroup })
           <span className="mb-1.5 block text-[10.5px] font-bold uppercase tracking-wide text-primary-text">
             {t("doSkip.pickLabel", locale)}
           </span>
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {picks.map((pick, i) => (
               <a
                 key={i}
                 href={resolveAffiliateUrl(pick.affiliateUrl, locale)}
                 target="_blank"
-                rel="noopener noreferrer sponsored"
-                className="flex w-[170px] shrink-0 flex-col gap-1 rounded-2xl border border-border bg-secondary/60 px-3 py-2.5 transition-colors hover:bg-secondary"
+                rel="noopener noreferrer"
+                className="flex w-[240px] flex-shrink-0 snap-start flex-col gap-1 rounded-2xl border border-border bg-secondary/60 px-3.5 py-3 transition-colors hover:bg-secondary"
               >
                 <div className="flex items-center justify-between">
                   {pick.tag ? (
@@ -169,7 +181,10 @@ export function DoSkipCard() {
       : { doItems: [] as CarePlanItem[], skipItems: [] as CarePlanItem[] }
 
   const alreadyDone = diary.loggedDays.includes(diary.currentDay)
-  const pickSlot = plan.doItems.find((i) => getAffiliatePicks(i.slot, ageGroup).length > 0)?.slot ?? null
+  // 오늘 DO로 잡힌 슬롯 중 추천 픽이 있는 슬롯 전부 → 캐러셀에서 함께 탐색
+  const pickSlots = Array.from(new Set(plan.doItems.map((i) => i.slot))).filter(
+    (s) => getAffiliatePicks(s, ageGroup).length > 0,
+  )
 
   const handleCheckin = () => {
     if (alreadyDone) return
@@ -218,8 +233,15 @@ export function DoSkipCard() {
           )}
         </div>
 
-        {/* 오늘 날씨 방어 추천 픽 — 기본 접힘, 터치 시 서랍형으로 펼침 */}
-        {pickSlot && <PicksDrawer slot={pickSlot} ageGroup={ageGroup} />}
+        {/* 오늘 날씨 방어 추천 픽 — 기본 접힘, 터치 시 서랍형으로 펼침 + 가로 롤링 */}
+        {pickSlots.length > 0 && (
+          <div className="flex flex-col">
+            <PicksDrawer slots={pickSlots} ageGroup={ageGroup} />
+            <p className="mt-2 mb-3 text-center text-[11px] leading-relaxed text-[#8A8378]">
+              {t("doSkip.coupangDisclosure", locale)}
+            </p>
+          </div>
+        )}
 
         {/* 원탭 체크인 */}
         <button
@@ -227,10 +249,10 @@ export function DoSkipCard() {
           onClick={handleCheckin}
           disabled={alreadyDone}
           className={
-            "w-full rounded-full py-3.5 text-sm font-bold transition-colors " +
+            "w-full rounded-2xl py-3.5 text-sm font-bold transition-all " +
             (alreadyDone
               ? "cursor-default bg-secondary text-muted-foreground"
-              : "bg-[#5B9A97] text-white hover:bg-[#4E8A87]")
+              : "bg-[#4A7F7C] text-white shadow-sm hover:shadow-md")
           }
         >
           {alreadyDone ? t("doSkip.checkin.done", locale) : t("doSkip.checkin.cta", locale)}
