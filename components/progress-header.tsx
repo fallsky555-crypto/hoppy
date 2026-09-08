@@ -13,12 +13,12 @@ interface ProgressHeaderProps {
  */
 export function ProgressHeader({ heroImageSrc }: ProgressHeaderProps) {
   return (
-    <div className="relative block h-52 w-full">
+    <div className="relative block h-56 w-full">
       <Image
         src={heroImageSrc}
         alt=""
         fill
-        className="object-cover object-[center_35%]"
+        className="object-cover object-top"
         priority
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       />

@@ -457,6 +457,20 @@
       "humidity": { "veryDry": "매우 건조", "dry": "건조", "comfortable": "촉촉" },
       "uv": { "low": "낮음", "moderate": "보통", "high": "높음", "veryHigh": "매우 높음" },
       "pm25": { "good": "좋음", "moderate": "보통", "bad": "나쁨", "veryBad": "매우 나쁨" }
+    },
+    "condition": {
+      "clear": "☀️ 맑음",
+      "mostlyClear": "🌤️ 대체로 맑음",
+      "cloudy": "☁️ 흐림",
+      "fog": "🌫️ 안개",
+      "rain": "🌧️ 비",
+      "snow": "🌨️ 눈",
+      "storm": "⛈️ 뇌우"
+    },
+    "metricBack": {
+      "humidity": { "title": "💧 50% 미만은 건조!", "body": "속당김 시작 구간. 판테놀·수분막으로 잠가주세요." },
+      "uv": { "title": "☀️ 3.0부터 손상 시작!", "body": "6.0 이상 광노화 위험. PA++++ 선크림 필수." },
+      "pm25": { "title": "🍃 35 넘으면 장벽 자극!", "body": "모공보다 작아요. 항산화 세럼으로 방어막 형성." }
     }
   },
   "slotHint": {
@@ -470,7 +484,7 @@
     "unavailable": "날씨 정보를 불러오지 못해 기본 안내만 보여드려요.",
     "ageSelectLabel": "연령대 선택",
     "pickLabel": "호빵이 추천 픽",
-    "picksToggle": "오늘 날씨 방어 추천 픽 보기",
+    "picksToggle": "오늘 날씨 맞춤 추천템",
     "coupangDisclosure": "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.",
     "pickCategory": {
       "all": "전체",

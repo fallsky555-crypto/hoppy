@@ -327,6 +327,22 @@ export function precipFromWeatherCode(code: number | null): { isRain: boolean; i
   return { isRain, isSnow }
 }
 
+/** WMO 날씨코드 → 직관적 상태 키 (skinWeather.condition.<key> i18n와 매핑) */
+export type WeatherConditionKey = "clear" | "mostlyClear" | "cloudy" | "fog" | "rain" | "snow" | "storm"
+
+export function weatherConditionKey(code: number | null): WeatherConditionKey | null {
+  if (code === null) return null
+  if (code === 0) return "clear"
+  if (code === 1 || code === 2) return "mostlyClear"
+  if (code === 3) return "cloudy"
+  if (code === 45 || code === 48) return "fog"
+  if (code >= 71 && code <= 77) return "snow"
+  if (code === 85 || code === 86) return "snow"
+  if (code >= 95) return "storm"
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "rain"
+  return "cloudy"
+}
+
 /** 클라이언트에서 /api/weather 호출 */
 export async function fetchSkinWeather(): Promise<SkinWeather> {
   const res = await fetch("/api/weather")

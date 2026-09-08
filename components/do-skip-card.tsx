@@ -29,7 +29,7 @@ const CATEGORY_EMOJI: Record<SlotType, string> = {
   barrier: "🛡️",
 }
 
-function CareRow({ item, tone }: { item: CarePlanItem; tone: "do" | "skip" }) {
+function CareRow({ item }: { item: CarePlanItem }) {
   const locale = useLocale()
   return (
     <li className="flex items-start gap-3">
@@ -38,12 +38,7 @@ function CareRow({ item, tone }: { item: CarePlanItem; tone: "do" | "skip" }) {
       </span>
       <div className="flex flex-col">
         <span className="flex items-center gap-1.5">
-          <span
-            className={
-              "text-sm font-semibold " +
-              (tone === "skip" ? "text-foreground line-through decoration-[#D9534F]/50" : "text-foreground")
-            }
-          >
+          <span className="text-sm font-semibold text-foreground">
             {t(`doSkip.item.${item.key}.label`, locale)}
           </span>
           {item.layer && (
@@ -98,7 +93,7 @@ function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGrou
   const cats: Array<SlotType | "all"> = ["all", ...slots]
 
   return (
-    <div className="flex flex-col">
+    <div className="flex w-full min-w-0 flex-col">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -112,14 +107,14 @@ function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGrou
       {/* 높이 트랜지션으로 부드럽게 펼침 (서랍형). max-height는 인라인 스타일로
           측정값을 넣어 Tailwind 유틸 생성 여부에 의존하지 않는다. */}
       <div
-        className="overflow-hidden transition-all duration-300 ease-out"
+        className="w-full min-w-0 overflow-hidden transition-all duration-300 ease-out"
         style={{
           maxHeight: open ? contentHeight || 720 : 0,
           opacity: open ? 1 : 0,
           marginTop: open ? 10 : 0,
         }}
       >
-        <div ref={contentRef}>
+        <div ref={contentRef} className="w-full min-w-0">
           <span className="mb-1.5 block text-[10.5px] font-bold uppercase tracking-wide text-primary-text">
             {t("doSkip.pickLabel", locale)}
           </span>
@@ -141,7 +136,7 @@ function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGrou
           </div>
 
           <div
-            className="flex w-full gap-3 overflow-x-auto pb-2 select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex w-full select-none gap-3 overflow-x-auto px-1 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
             onWheel={(e) => {
               // PC 세로 휠 → 가로 스크롤 변환
@@ -156,7 +151,7 @@ function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGrou
                 href={resolveAffiliateUrl(pick.affiliateUrl, locale)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex w-[240px] flex-shrink-0 flex-col gap-1 rounded-2xl border border-border bg-secondary/60 px-3.5 py-3 transition-colors hover:bg-secondary"
+                className="flex w-[220px] min-w-[220px] max-w-[220px] shrink-0 flex-col gap-1 rounded-2xl border border-border bg-secondary/60 px-3.5 py-3 transition-colors hover:bg-secondary"
               >
                 <div className="flex items-center justify-between">
                   {pick.tag ? (
@@ -249,54 +244,28 @@ export function DoSkipCard() {
 
   return (
     <div className={shell}>
-      <div className="flex flex-col gap-5">
+      <div className="flex w-full min-w-0 flex-col gap-5">
         {status === "error" && (
           <p className="text-[12.5px] font-medium text-muted-foreground">{t("doSkip.unavailable", locale)}</p>
         )}
 
-        {/* DO */}
+        {/* 오늘 필수 — 처방 리스트에 화력 집중 ('오늘 생략' 섹션은 제거) */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="size-2.5 rounded-full bg-[#4CAF87]" aria-hidden />
               <h3 className="font-display text-lg font-semibold text-foreground">{t("doSkip.doTitle", locale)}</h3>
             </div>
-            <div className="flex items-center gap-2">
-              <AgeSelect value={ageGroup} onChange={setAgeGroup} />
-              <img
-                src="/onboarding/cover-cat-camera.png"
-                alt=""
-                className="h-8 w-8 shrink-0 object-contain"
-              />
-            </div>
+            <AgeSelect value={ageGroup} onChange={setAgeGroup} />
           </div>
           <ul className="flex flex-col gap-3">
             {plan.doItems.map((item) => (
-              <CareRow key={item.key} item={item} tone="do" />
+              <CareRow key={item.key} item={item} />
             ))}
           </ul>
         </div>
 
-        <div className="h-px bg-border" />
-
-        {/* SKIP */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <span className="size-2.5 rounded-full bg-[#D9534F]" aria-hidden />
-            <h3 className="font-display text-lg font-semibold text-foreground">{t("doSkip.skipTitle", locale)}</h3>
-          </div>
-          {plan.skipItems.length > 0 ? (
-            <ul className="flex flex-col gap-3">
-              {plan.skipItems.map((item) => (
-                <CareRow key={item.key} item={item} tone="skip" />
-              ))}
-            </ul>
-          ) : (
-            <p className="text-[13px] text-muted-foreground">{t("doSkip.skipNone", locale)}</p>
-          )}
-        </div>
-
-        {/* 오늘 날씨 방어 추천 픽 — 기본 접힘, 터치 시 서랍형으로 펼침 + 가로 롤링.
+        {/* 오늘 날씨 맞춤 추천템 — 기본 접힘, 터치 시 서랍형으로 펼침 + 가로 롤링.
             쿠팡 고지 문구는 서랍 내부(캐러셀 아래)에 있어 열렸을 때만 보인다. */}
         {pickSlots.length > 0 && <PicksDrawer slots={pickSlots} ageGroup={ageGroup} />}
 

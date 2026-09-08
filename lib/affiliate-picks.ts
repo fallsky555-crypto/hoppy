@@ -67,7 +67,7 @@ const p = (
 export const AFFILIATE_PICKS: Partial<Record<SlotType, PickTable>> = {
   sun_care: {
     default: [
-      p("가성비", "조선미녀", "맑은 쌀 선크림 SPF50+ PA++++", "얇게 발리는 저자극 화학자차, 데일리 부담 없는 가격", "https://link.coupang.com/a/gRhJwU7tDM"),
+      p("가성비", "조선미녀", "맑은 쌀 선크림 SPF50+ PA++++", "얇고 촉촉하게 발리는 저자극 데일리 선크림, 부담 없는 가격", "https://link.coupang.com/a/gRhJwU7tDM"),
       p("더마", "라운드랩", "자작나무 수분 선크림 SPF50+", "진정 성분 함유, 백탁 없이 밀착되는 데일리", "https://link.coupang.com/a/gRhTorvc4a"),
       p("프리미엄", "달바", "워터풀 에센스 선크림", "미스트 겸용, 촉촉하게 마무리되는 프리미엄 선에센스", "https://link.coupang.com/a/gRGFiXz9em"),
     ],

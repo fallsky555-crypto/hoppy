@@ -1,9 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import { useLocale } from "@/lib/locale-context"
 import { t } from "@/lib/i18n"
 import { useSkinWeather } from "@/lib/use-skin-weather"
-import { computeSkinStress, type StressLevel } from "@/lib/skin-weather"
+import { computeSkinStress, weatherConditionKey, type StressLevel } from "@/lib/skin-weather"
 
 /** 스트레스 단계별 색 — 라이트 카드 위에서 대비가 확보되는 값으로 고정 */
 const LEVEL_COLOR: Record<StressLevel, { fill: string; track: string; text: string }> = {
@@ -30,13 +31,13 @@ interface MetricStatus {
 
 const WEEKDAYS_KO = ["일", "월", "화", "수", "목", "금", "토"]
 
-/** 오늘 날짜 캡션 (예: "9월 8일 화요일" / "September 8, Monday") */
+/** 오늘 날짜 캡션 (예: "2026년 9월 8일 화요일" / "Monday, September 8, 2026") */
 function todayLabel(locale: "ko" | "en"): string {
   const now = new Date()
   if (locale === "ko") {
-    return `${now.getMonth() + 1}월 ${now.getDate()}일 ${WEEKDAYS_KO[now.getDay()]}요일`
+    return `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${WEEKDAYS_KO[now.getDay()]}요일`
   }
-  return now.toLocaleDateString("en-US", { month: "long", day: "numeric", weekday: "long" })
+  return now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", weekday: "long" })
 }
 
 /** 습도 → 건조/촉촉 상태. 낮을수록 건조(주의). */
@@ -68,29 +69,74 @@ function pm25Status(v: number | null, locale: "ko" | "en"): MetricStatus {
   return { label: k("veryBad"), tone: "red" }
 }
 
+const TILE_FACE =
+  "absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-[#F0EBE1] bg-[#FAF8F5]"
+
+/**
+ * 지표 타일 — 탭하면 3D 플립. 앞면은 수치/상태, 뒷면은 기준점 + 즉각 솔루션 2줄.
+ * perspective + preserve-3d + backface-visibility(둘 다 인라인 스타일)로 구현.
+ */
 function MetricPill({
+  metricKey,
   label,
   value,
   status,
 }: {
+  metricKey: "humidity" | "uv" | "pm25"
   label: string
   value: string
   status: MetricStatus
 }) {
+  const locale = useLocale()
+  const [flipped, setFlipped] = useState(false)
   const tone = TONE_COLOR[status.tone]
+  const backTitle = t(`skinWeather.metricBack.${metricKey}.title`, locale) as string
+  const backBody = t(`skinWeather.metricBack.${metricKey}.body`, locale) as string
+
   return (
-    <div className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl border border-[#F0EBE1] bg-[#FAF8F5] px-1 py-4">
-      <span className="text-[26px] font-semibold leading-none tracking-tight tabular-nums text-[#2E2A26]">
-        {value}
-      </span>
-      <span className="text-[11px] font-semibold text-muted-foreground">{label}</span>
-      <span
-        className="rounded-full px-2 py-0.5 text-[10px] font-bold leading-none"
-        style={{ color: tone.text, backgroundColor: tone.bg }}
+    <button
+      type="button"
+      onClick={() => setFlipped((v) => !v)}
+      aria-pressed={flipped}
+      aria-label={`${label} ${value}`}
+      className="flex-1"
+      style={{ perspective: "900px" }}
+    >
+      <div
+        className="relative h-[124px] w-full transition-transform duration-500 ease-out"
+        style={{ transformStyle: "preserve-3d", transform: flipped ? "rotateY(180deg)" : "none" }}
       >
-        {status.label}
-      </span>
-    </div>
+        {/* 앞면 */}
+        <div
+          className={`${TILE_FACE} gap-1.5 px-1`}
+          style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+        >
+          <span className="font-display text-[26px] font-semibold leading-none tracking-tight text-[#2E2A26]">
+            {value}
+          </span>
+          <span className="text-[11px] font-semibold text-muted-foreground">{label}</span>
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-bold leading-none"
+            style={{ color: tone.text, backgroundColor: tone.bg }}
+          >
+            {status.label}
+          </span>
+        </div>
+
+        {/* 뒷면 — 기준점 + 즉각 솔루션 */}
+        <div
+          className={`${TILE_FACE} gap-1 px-2.5 text-center`}
+          style={{
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+          }}
+        >
+          <p className="text-[11px] font-bold leading-tight text-[#2E2A26]">{backTitle}</p>
+          <p className="text-[10px] leading-snug text-muted-foreground">{backBody}</p>
+        </div>
+      </div>
+    </button>
   )
 }
 
@@ -123,6 +169,7 @@ export function SkinWeatherCard() {
 
   const stress = computeSkinStress(weather)
   const color = LEVEL_COLOR[stress.level]
+  const conditionKey = weatherConditionKey(weather.weatherCode)
 
   const fmt = {
     humidity: weather.humidity !== null ? `${weather.humidity}%` : "—",
@@ -133,30 +180,40 @@ export function SkinWeatherCard() {
   return (
     <div className={shell}>
       <div className="flex flex-col gap-4">
-        {/* 헤더 — 오늘 날짜 캡션 + 타이틀 (호빵이 아이콘은 아래 처방 영역으로 이동) */}
+        {/* 헤더 — 오늘 날짜 캡션 + 타이틀 + 날씨 상태 뱃지 */}
         <div className="flex flex-col gap-0.5">
           <p className="text-xs font-semibold text-[#8A8378]">{todayLabel(locale)}</p>
-          <h3 className="font-display text-xl font-semibold leading-tight text-foreground">
-            {t("skinWeather.title", locale)}
-          </h3>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <h3 className="font-display text-xl font-semibold leading-tight text-foreground">
+              {t("skinWeather.title", locale)}
+            </h3>
+            {conditionKey && (
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-foreground">
+                {t(`skinWeather.condition.${conditionKey}`, locale)}
+              </span>
+            )}
+          </div>
           <p className="text-[12px] font-semibold text-muted-foreground">
             {t("skinWeather.locationDefault", locale)}
           </p>
         </div>
 
-        {/* 오늘 환경 지표 — 큰 수치 + 라벨 + 상태 뱃지 (아이콘 제거) */}
+        {/* 오늘 환경 지표 — 탭하면 3D 플립(앞: 수치/상태, 뒤: 기준점+솔루션) */}
         <div className="flex gap-2">
           <MetricPill
+            metricKey="humidity"
             label={t("skinWeather.metric.humidity", locale)}
             value={fmt.humidity}
             status={humidityStatus(weather.humidity, locale)}
           />
           <MetricPill
+            metricKey="uv"
             label={t("skinWeather.metric.uv", locale)}
             value={fmt.uv}
             status={uvStatus(weather.uvIndex, locale)}
           />
           <MetricPill
+            metricKey="pm25"
             label={t("skinWeather.metric.pm25", locale)}
             value={fmt.pm25}
             status={pm25Status(weather.pm25, locale)}

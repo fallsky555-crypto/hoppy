@@ -460,6 +460,20 @@
       "humidity": { "veryDry": "Very dry", "dry": "Dry", "comfortable": "Comfortable" },
       "uv": { "low": "Low", "moderate": "Moderate", "high": "High", "veryHigh": "Very high" },
       "pm25": { "good": "Good", "moderate": "Moderate", "bad": "Bad", "veryBad": "Very bad" }
+    },
+    "condition": {
+      "clear": "☀️ Clear",
+      "mostlyClear": "🌤️ Mostly clear",
+      "cloudy": "☁️ Cloudy",
+      "fog": "🌫️ Foggy",
+      "rain": "🌧️ Rain",
+      "snow": "🌨️ Snow",
+      "storm": "⛈️ Thunderstorm"
+    },
+    "metricBack": {
+      "humidity": { "title": "💧 Below 50% is dry!", "body": "Tightness starts here. Lock it in with panthenol and a moisture layer." },
+      "uv": { "title": "☀️ Damage starts at 3.0!", "body": "Above 6.0 risks photoaging. PA++++ sunscreen is a must." },
+      "pm25": { "title": "🍃 Over 35 irritates the barrier!", "body": "Smaller than your pores. Build a shield with antioxidant serum." }
     }
   },
   "slotHint": {
@@ -473,7 +487,7 @@
     "unavailable": "Couldn't load weather, showing default guidance only.",
     "ageSelectLabel": "Select age group",
     "pickLabel": "Hoppy's pick",
-    "picksToggle": "See today's weather-defense picks",
+    "picksToggle": "Today's weather-matched picks",
     "coupangDisclosure": "This post is part of the Coupang Partners program, and the author earns a commission from qualifying purchases.",
     "pickCategory": {
       "all": "All",
