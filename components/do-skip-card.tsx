@@ -140,7 +140,16 @@ function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGrou
             ))}
           </div>
 
-          <div className="flex w-full max-w-full touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div
+            className="flex w-full gap-3 overflow-x-auto pb-2 select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+            onWheel={(e) => {
+              // PC 세로 휠 → 가로 스크롤 변환
+              if (e.deltaY !== 0) {
+                e.currentTarget.scrollLeft += e.deltaY
+              }
+            }}
+          >
             {picks.map((pick, i) => (
               <a
                 key={i}
@@ -177,24 +186,27 @@ function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGrou
   )
 }
 
-function AgeTabs({ value, onChange }: { value: AgeGroup; onChange: (g: AgeGroup) => void }) {
+/** '오늘 필수' 헤더 우측에 붙는 콤팩트 연령대 선택기 (기존 큰 3분할 토글 대체) */
+function AgeSelect({ value, onChange }: { value: AgeGroup; onChange: (g: AgeGroup) => void }) {
   const locale = useLocale()
   return (
-    <div className="flex gap-1.5 rounded-full bg-secondary p-1">
-      {AGE_GROUPS.map((g) => (
-        <button
-          key={g}
-          type="button"
-          onClick={() => onChange(g)}
-          aria-pressed={value === g}
-          className={
-            "flex-1 rounded-full py-1.5 text-[12.5px] font-bold transition-colors " +
-            (value === g ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")
-          }
-        >
-          {t(`doSkip.age.${g}`, locale)}
-        </button>
-      ))}
+    <div className="relative shrink-0">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as AgeGroup)}
+        aria-label={t("doSkip.ageSelectLabel", locale)}
+        className="appearance-none rounded-full bg-secondary py-1 pl-3 pr-6 text-[11.5px] font-bold text-foreground focus:outline-none"
+      >
+        {AGE_GROUPS.map((g) => (
+          <option key={g} value={g}>
+            {t(`doSkip.age.${g}`, locale)}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute right-1.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+        aria-hidden
+      />
     </div>
   )
 }
@@ -238,22 +250,25 @@ export function DoSkipCard() {
   return (
     <div className={shell}>
       <div className="flex flex-col gap-5">
-        <AgeTabs value={ageGroup} onChange={setAgeGroup} />
-
         {status === "error" && (
           <p className="text-[12.5px] font-medium text-muted-foreground">{t("doSkip.unavailable", locale)}</p>
         )}
 
         {/* DO */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <span className="size-2.5 rounded-full bg-[#4CAF87]" aria-hidden />
-            <h3 className="font-display text-lg font-semibold text-foreground">{t("doSkip.doTitle", locale)}</h3>
-            <img
-              src="/onboarding/cover-cat-camera.png"
-              alt=""
-              className="ml-0.5 h-8 w-8 shrink-0 object-contain"
-            />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="size-2.5 rounded-full bg-[#4CAF87]" aria-hidden />
+              <h3 className="font-display text-lg font-semibold text-foreground">{t("doSkip.doTitle", locale)}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <AgeSelect value={ageGroup} onChange={setAgeGroup} />
+              <img
+                src="/onboarding/cover-cat-camera.png"
+                alt=""
+                className="h-8 w-8 shrink-0 object-contain"
+              />
+            </div>
           </div>
           <ul className="flex flex-col gap-3">
             {plan.doItems.map((item) => (

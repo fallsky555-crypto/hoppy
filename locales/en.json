@@ -471,6 +471,7 @@
     "skipTitle": "Skip today",
     "skipNone": "Nothing to avoid today. Keep your usual routine.",
     "unavailable": "Couldn't load weather, showing default guidance only.",
+    "ageSelectLabel": "Select age group",
     "pickLabel": "Hoppy's pick",
     "picksToggle": "See today's weather-defense picks",
     "coupangDisclosure": "This post is part of the Coupang Partners program, and the author earns a commission from qualifying purchases.",
