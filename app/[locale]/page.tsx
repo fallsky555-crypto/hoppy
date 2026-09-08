@@ -91,7 +91,7 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
         <InstallBanner />
 
-        <ProgressHeader heroImageSrc={diary.heroImageSrc} name={diary.name} />
+        <ProgressHeader heroImageSrc={diary.heroImageSrc} />
 
         <SkinWeatherCard />
 

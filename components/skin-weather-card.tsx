@@ -33,6 +33,17 @@ interface MetricStatus {
   tone: Tone
 }
 
+const WEEKDAYS_KO = ["일", "월", "화", "수", "목", "금", "토"]
+
+/** 오늘 날짜 캡션 (예: "9월 8일 화요일" / "September 8, Monday") */
+function todayLabel(locale: "ko" | "en"): string {
+  const now = new Date()
+  if (locale === "ko") {
+    return `${now.getMonth() + 1}월 ${now.getDate()}일 ${WEEKDAYS_KO[now.getDay()]}요일`
+  }
+  return now.toLocaleDateString("en-US", { month: "long", day: "numeric", weekday: "long" })
+}
+
 /** 습도 → 건조/촉촉 상태. 낮을수록 건조(주의). */
 function humidityStatus(v: number | null, locale: "ko" | "en"): MetricStatus {
   const k = (s: string) => t(`skinWeather.metricStatus.humidity.${s}`, locale) as string
@@ -63,26 +74,21 @@ function pm25Status(v: number | null, locale: "ko" | "en"): MetricStatus {
 }
 
 function MetricPill({
-  icon,
   label,
   value,
   status,
 }: {
-  icon: string
   label: string
   value: string
   status: MetricStatus
 }) {
   const tone = TONE_COLOR[status.tone]
   return (
-    <div className="flex flex-1 flex-col items-center gap-1 rounded-2xl bg-secondary px-1 py-3">
-      <span className="text-lg leading-none" aria-hidden>
-        {icon}
-      </span>
-      <span className="font-display text-xl font-semibold leading-none text-foreground">{value}</span>
+    <div className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl bg-secondary px-1 py-4">
+      <span className="text-[26px] font-bold leading-none tracking-tight text-[#2E2A26]">{value}</span>
       <span className="text-[11px] font-semibold text-muted-foreground">{label}</span>
       <span
-        className="mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold leading-none"
+        className="rounded-full px-2 py-0.5 text-[10px] font-bold leading-none"
         style={{ color: tone.text, backgroundColor: tone.bg }}
       >
         {status.label}
@@ -108,12 +114,13 @@ export function SkinWeatherCard() {
   if (status === "error" || !weather) {
     return (
       <div className={shell}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col gap-2">
+        <div className="flex items-start gap-3">
+          <div className="flex flex-col gap-1">
+            <p className="text-xs font-semibold text-[#8A8378]">{todayLabel(locale)}</p>
             <h3 className="font-display text-xl font-semibold text-foreground">{t("skinWeather.title", locale)}</h3>
-            <p className="text-sm leading-relaxed text-muted-foreground">{t("skinWeather.unavailable", locale)}</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t("skinWeather.unavailable", locale)}</p>
           </div>
-          <img src="/onboarding/cover-cat-camera.png" alt="" className="h-12 w-12 shrink-0 object-contain" />
+          <img src="/onboarding/cover-cat-camera.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
         </div>
       </div>
     )
@@ -140,39 +147,30 @@ export function SkinWeatherCard() {
   return (
     <div className={shell}>
       <div className="flex flex-col gap-4">
-        {/* 헤더 — 텍스트(좌) / 호빵이(우), 겹침 없이 세로 중앙 정렬 */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col gap-0.5">
-            <h3 className="font-display text-xl font-semibold leading-tight text-foreground">
-              {t("skinWeather.title", locale)}
-            </h3>
-            <p className="text-[12px] font-semibold text-muted-foreground">
-              {t("skinWeather.locationDefault", locale)}
-            </p>
-          </div>
-          <img
-            src="/onboarding/cover-cat-camera.png"
-            alt=""
-            className="h-12 w-12 shrink-0 object-contain"
-          />
+        {/* 헤더 — 오늘 날짜 캡션 + 타이틀 (호빵이 아이콘은 아래 처방 영역으로 이동) */}
+        <div className="flex flex-col gap-0.5">
+          <p className="text-xs font-semibold text-[#8A8378]">{todayLabel(locale)}</p>
+          <h3 className="font-display text-xl font-semibold leading-tight text-foreground">
+            {t("skinWeather.title", locale)}
+          </h3>
+          <p className="text-[12px] font-semibold text-muted-foreground">
+            {t("skinWeather.locationDefault", locale)}
+          </p>
         </div>
 
-        {/* 오늘 환경 지표 — 아이콘 + 큰 수치 + 상태 뱃지 */}
+        {/* 오늘 환경 지표 — 큰 수치 + 라벨 + 상태 뱃지 (아이콘 제거) */}
         <div className="flex gap-2">
           <MetricPill
-            icon="💧"
             label={t("skinWeather.metric.humidity", locale)}
             value={fmt.humidity}
             status={humidityStatus(weather.humidity, locale)}
           />
           <MetricPill
-            icon="☀️"
             label={t("skinWeather.metric.uv", locale)}
             value={fmt.uv}
             status={uvStatus(weather.uvIndex, locale)}
           />
           <MetricPill
-            icon="😷"
             label={t("skinWeather.metric.pm25", locale)}
             value={fmt.pm25}
             status={pm25Status(weather.pm25, locale)}
@@ -195,15 +193,22 @@ export function SkinWeatherCard() {
           </div>
         </div>
 
-        {/* 처방 문구 */}
-        <ul className="flex flex-col gap-1.5">
-          {lines.map((line, i) => (
-            <li key={i} className="flex gap-2 text-sm leading-relaxed text-foreground">
-              <span aria-hidden style={{ color: color.fill }}>•</span>
-              <span>{line}</span>
-            </li>
-          ))}
-        </ul>
+        {/* 오늘의 처방 — 미니 호빵이 + 액션 가이드 문구 */}
+        <div className="flex items-start gap-3">
+          <img
+            src="/onboarding/cover-cat-camera.png"
+            alt=""
+            className="mt-0.5 h-10 w-10 shrink-0 object-contain"
+          />
+          <ul className="flex flex-1 flex-col gap-1.5">
+            {lines.map((line, i) => (
+              <li key={i} className="flex gap-2 text-sm leading-relaxed text-foreground">
+                <span aria-hidden style={{ color: color.fill }}>•</span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         {/* 슬롯 추천 요약 — 실제 뱃지는 아래 데일리 슬롯에 표시됨 */}
         {(hints.boost.length > 0 || hints.caution.length > 0) && (

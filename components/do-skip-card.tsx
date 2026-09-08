@@ -20,6 +20,15 @@ const SLOT_EMOJI: Record<SlotType, string> = {
   barrier: "🌿",
 }
 
+/** 추천 픽 카테고리 탭 아이콘 — 사용자 요청 표기(장벽은 🛡️) */
+const CATEGORY_EMOJI: Record<SlotType, string> = {
+  sun_care: "☀️",
+  hydration: "💧",
+  exfoliation: "✨",
+  active: "🎯",
+  barrier: "🛡️",
+}
+
 function CareRow({ item, tone }: { item: CarePlanItem; tone: "do" | "skip" }) {
   const locale = useLocale()
   return (
@@ -60,21 +69,33 @@ function CareRow({ item, tone }: { item: CarePlanItem; tone: "do" | "skip" }) {
 function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGroup }) {
   const locale = useLocale()
   const [open, setOpen] = useState(false)
+  const [activeCat, setActiveCat] = useState<SlotType | "all">("all")
   const contentRef = useRef<HTMLDivElement>(null)
 
-  // 오늘 DO 슬롯들의 픽을 합치고 brand+title 기준으로 중복 제거
+  // 슬롯별 픽 (탭 필터의 소스). 표시할 땐 brand+title로 중복 제거한다.
+  const perSlot = slots.map((s) => ({ slot: s, picks: getAffiliatePicks(s, ageGroup) }))
+  if (perSlot.every((x) => x.picks.length === 0)) return null
+
+  // 연령대 변경 등으로 현재 탭이 더 이상 유효하지 않으면 '전체'로 폴백
+  const effectiveCat = activeCat !== "all" && slots.includes(activeCat) ? activeCat : "all"
+
   const seen = new Set<string>()
-  const picks = slots
-    .flatMap((s) => getAffiliatePicks(s, ageGroup))
+  const picks = (effectiveCat === "all" ? perSlot.flatMap((x) => x.picks) : perSlot.find((x) => x.slot === effectiveCat)?.picks ?? [])
     .filter((p) => {
       const k = `${p.brand}|${p.title}`
       if (seen.has(k)) return false
       seen.add(k)
       return true
     })
-  if (picks.length === 0) return null
 
   const contentHeight = contentRef.current?.scrollHeight ?? 0
+
+  const catTabClass = (active: boolean) =>
+    cn(
+      "flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-[11.5px] font-bold transition-colors",
+      active ? "border-transparent bg-[#DCE8D2] text-[#244234]" : "border-border text-muted-foreground hover:text-foreground",
+    )
+  const cats: Array<SlotType | "all"> = ["all", ...slots]
 
   return (
     <div className="flex flex-col">
@@ -102,6 +123,23 @@ function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGrou
           <span className="mb-1.5 block text-[10.5px] font-bold uppercase tracking-wide text-primary-text">
             {t("doSkip.pickLabel", locale)}
           </span>
+
+          {/* 카테고리 미니 세그먼트 탭 */}
+          <div className="-mx-1 mb-2 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {cats.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveCat(cat)}
+                aria-pressed={effectiveCat === cat}
+                className={catTabClass(effectiveCat === cat)}
+              >
+                {cat !== "all" && <span aria-hidden>{CATEGORY_EMOJI[cat]}</span>}
+                <span>{t(`doSkip.pickCategory.${cat}`, locale)}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {picks.map((pick, i) => (
               <a

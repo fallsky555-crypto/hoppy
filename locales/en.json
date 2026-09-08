@@ -468,6 +468,14 @@
     "pickLabel": "Hoppy's pick",
     "picksToggle": "See today's weather-defense picks",
     "coupangDisclosure": "This post is part of the Coupang Partners program, and the author earns a commission from qualifying purchases.",
+    "pickCategory": {
+      "all": "All",
+      "sun_care": "Sun protection",
+      "hydration": "Hydration",
+      "barrier": "Barrier care",
+      "exfoliation": "Exfoliation",
+      "active": "Active care"
+    },
     "layerBadge": "+layer",
     "age": {
       "2030": "20-30s",

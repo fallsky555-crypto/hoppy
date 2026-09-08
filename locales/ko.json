@@ -465,6 +465,14 @@
     "pickLabel": "호빵이 추천 픽",
     "picksToggle": "오늘 날씨 방어 추천 픽 보기",
     "coupangDisclosure": "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.",
+    "pickCategory": {
+      "all": "전체",
+      "sun_care": "자외선 차단",
+      "hydration": "수분·진정",
+      "barrier": "장벽 케어",
+      "exfoliation": "각질 정돈",
+      "active": "기능성 케어"
+    },
     "layerBadge": "+레이어",
     "age": {
       "2030": "2030",
