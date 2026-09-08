@@ -718,97 +718,21 @@
     "recordSuffix": "의 스킨케어 저널"
   },
   "report30day": {
-    "title": "30일 전문가 분석 리포트",
-    "section_goal": "이번 달 목표",
-    "stage1_goal": "1단계: 장벽 리셋 코스",
-    "stage1_detail": "피부 보호막을 안정화하고 기초 사이클을 완성하는 단계예요.",
-    "stage2_goal": "2단계: 미백 · 톤 케어 프로그램",
-    "stage2_detail": "결이 정돈되면, 미백과 톤 개선에 중점을 둔 다음 단계로 진행할 수 있어요.",
-    "stage3_goal": "3단계: 탄력 재생 프로그램",
-    "stage3_detail": "피부장벽이 자리 잡으면, 탄력을 돕는 재생 케어를 천천히 시작해 볼 수 있어요.",
-    "section_usage_pattern": "사용 패턴",
-    "usage_pattern_intro": "당신이 집중한 케어 카테고리를 분석했어요.",
-    "usage_recommendation_hint": "권장 범위와 비교해보세요 (충분한 데이터 확보 전이라 참고만 하세요)",
-    "tag_label_active": "고민케어",
-    "tag_label_defense": "진정케어",
-    "tag_label_hydration": "수분케어",
-    "tag_label_prep": "클렌징",
-    "tag_label_sun": "자외선차단",
-    "section_balance": "밸런스",
-    "balance_intro": "고민케어(Active)와 진정케어(Defense)의 비율이에요.",
-    "balance_ratio_template": "고민케어 {{active}}% : 진정케어 {{defense}}%",
-    "balance_recommended": "권장범위 30-40% : 30-40%",
-    "section_periodicity": "주기성",
-    "periodicity_intro": "케어를 얼마나 일관되게 했는지 보여줘요.",
-    "periodicity_regular": "규칙적이에요 (간격 편차 {{variance}}일)",
-    "periodicity_varied": "다양하게 했어요 (간격 {{average}}일, 편차 {{variance}}일)",
-    "periodicity_detail": "간격: {{gaps}}",
-    "section_condition": "컨디션 상관",
-    "condition_intro": "각 케어를 할 때 피부가 어떤 상태였는지 분석했어요.",
-    "condition_usage_template": "{{tag}} 사용일 중 {{goodPercentage}}%가 좋음 응답이었어요",
-    "condition_note": "자주 나타나는 패턴을 관찰하는 정보일 뿐, 원인 관계를 뜻하지 않습니다",
-    "section_next": "다음 30일 제안",
-    "next_intro": "당신의 제품과 반응을 바탕으로 맞춤 제안을 준비했어요.",
-    "paywall_locked": "이 섹션은 프리미엄 콘텐츠예요. 2회차부터는 이 시점에 맞춤 루틴 캘린더가 제공됩니다.",
-    "compact": {
-      "chapterLabel1": "1장",
-      "chapterLabel2": "2장",
-      "chapterLabel3": "3장",
-      "chapterLabel4": "4장",
-      "checklistTitle": "아침 루틴 체크리스트",
-      "checklistSteps": [
-        { "name": "세안", "detail": "" },
-        { "name": "퍼스트에센스", "detail": "pH 정돈, 다음 단계 흡수율을 위한 준비 단계" },
-        { "name": "비타민C(10~20%)", "detail": "항산화, 톤 개선" },
-        { "name": "미백세럼", "detail": "색소 개선" },
-        { "name": "세콜지크림", "detail": "장벽 마감" },
-        { "name": "선크림", "detail": "앞 단계 효과 유지 필수" }
-      ],
-      "scheduleTitle": "요일별 루틴",
-      "attackDayTitle": "공격일 — 레티놀 나이트",
-      "attackDaySteps": [
-        { "name": "나이아신아마이드", "detail": "장벽 강화, 레티놀 자극 완충" },
-        { "name": "레티놀(0.1~0.3%)", "detail": "턴오버 촉진, 밤에만" },
-        { "name": "세콜지크림", "detail": "밤새 장벽 복구" }
-      ],
-      "deviceDayTitle": "기기 케어 데이",
-      "deviceDaySteps": [
-        { "name": "미백세럼", "detail": "색소 개선" },
-        { "name": "기기(마이크로니들)", "detail": "레티놀 절대 금지일" },
-        { "name": "진정크림", "detail": "즉각 장벽 보호" }
-      ],
-      "maskDayTitle": "리셋 마스크 데이",
-      "maskDaySteps": [
-        { "name": "각질정리", "detail": "주 1회 한정, 레티놀과 같은 밤 금지" },
-        { "name": "나이아신아마이드", "detail": "진정 준비" },
-        { "name": "시트마스크(15~20분)", "detail": "시간 꼭 지키기" },
-        { "name": "세콜지크림", "detail": "장벽 마감" }
-      ],
-      "nightResetDayTitle": "나이트 리셋 데이",
-      "nightResetDaySteps": [
-        { "name": "나이아신아마이드", "detail": "장벽 강화, 레티놀 자극 완충" },
-        { "name": "레티놀(0.1~0.3%)", "detail": "턴오버 촉진, 밤에만" },
-        { "name": "수면팩", "detail": "밤새 지속되는 가벼운 마감" }
-      ],
-      "warningTitle": "병행 금지 원칙",
-      "warningLines": [
-        "레티놀 + 기기 같은 날 금지 (최소 5일 간격)",
-        "레티놀 + 각질정리(밀폐 마스크 포함) 같은 밤 금지"
-      ],
-      "summaryTitle": "이번 주기 밸런스",
-      "summaryBridge": "지금까지 본 6성분을 두 그룹으로 나눠볼게요",
-      "summaryCommentHigh": "공격이 방어보다 많아요. 다음 30일은 방어일 비중을 조금 늘려보세요",
-      "summaryCommentBalanced": "지금 이 밸런스, 잘 유지하고 계세요",
-      "summaryCommentLow": "방어 위주로 흘러가고 있어요. 공격일을 조금 더 챙겨보세요",
-      "toggleShow": "전체 텍스트 보기",
-      "toggleHide": "접기",
-      "fullTextPlaceholder": "전체 텍스트 리포트가 여기에 표시될 예정이에요"
-    },
-    "lowData": {
-      "title": "지금까지의 기록",
-      "subtitle": "{{days}}일 기록하셨어요",
-      "note": "기록이 쌓일수록 더 선명한 패턴을 보여드릴게요.",
-      "countSuffix": "회"
-    }
+    "title": "호빵이의 30일 스킨 웨더 결산",
+    "subtitle": "{{name}}님의 피부 방어 리포트",
+    "subtitleNoName": "나의 피부 방어 리포트",
+    "defenseRateLabel": "30일 날씨 대응 실천도",
+    "defenseRateSub": "피부 방어율",
+    "attendance": "{{attended}}일 / {{total}}일 체크인",
+    "defenseComment": "환절기 급변하는 날씨 속에서도 {{days}}일간 피부 장벽을 든든히 지켜냈어요! 👏",
+    "prescriptionTitle": "{{profile}} 맞춤 방어 처방",
+    "prescriptionTitleNoProfile": "계절·날씨 맞춤 방어 처방",
+    "tipDayLabel": "낮",
+    "tipDay": "자외선·외부 자극 차단막",
+    "tipNightLabel": "밤",
+    "tipNight": "세라마이드 보습 장벽 잠금",
+    "tipWeatherLabel": "날씨 주의",
+    "tipWeather": "일교차가 크고 건조한 날엔 고기능성보다 진정·수분 레이어 우선",
+    "cta": "오늘 날씨 맞춤 케어 픽 보기"
   }
 }

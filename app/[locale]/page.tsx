@@ -105,7 +105,10 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
         <SkinWeatherCard />
 
-        <DoSkipCard />
+        {/* id: 30일 결산 리포트 CTA가 스크롤로 되돌아오는 지점 */}
+        <div id="today-picks" className="scroll-mt-4">
+          <DoSkipCard />
+        </div>
 
         <WeeklyMiniInsight />
 
