@@ -423,6 +423,12 @@
     "loading": "Checking today's weather…",
     "unavailable": "Couldn't load weather data. We'll show your default routine today.",
     "allClear": "Low-stress day for your skin. Keep your usual routine going.",
+    "summary": {
+      "low": "An easy, comfortable day for your skin 🌿",
+      "moderate": "A day worth a little extra care",
+      "high": "Your skin tires easily today — focus on defense",
+      "severe": "Stressors are stacking up — keep it gentle"
+    },
     "metric": {
       "humidity": "Humidity",
       "uv": "UV",

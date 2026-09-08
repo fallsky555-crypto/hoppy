@@ -140,14 +140,14 @@ function PicksDrawer({ slots, ageGroup }: { slots: SlotType[]; ageGroup: AgeGrou
             ))}
           </div>
 
-          <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-full max-w-full touch-pan-x gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {picks.map((pick, i) => (
               <a
                 key={i}
                 href={resolveAffiliateUrl(pick.affiliateUrl, locale)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex w-[240px] flex-shrink-0 snap-start flex-col gap-1 rounded-2xl border border-border bg-secondary/60 px-3.5 py-3 transition-colors hover:bg-secondary"
+                className="flex w-[240px] flex-shrink-0 flex-col gap-1 rounded-2xl border border-border bg-secondary/60 px-3.5 py-3 transition-colors hover:bg-secondary"
               >
                 <div className="flex items-center justify-between">
                   {pick.tag ? (
@@ -249,6 +249,11 @@ export function DoSkipCard() {
           <div className="flex items-center gap-2">
             <span className="size-2.5 rounded-full bg-[#4CAF87]" aria-hidden />
             <h3 className="font-display text-lg font-semibold text-foreground">{t("doSkip.doTitle", locale)}</h3>
+            <img
+              src="/onboarding/cover-cat-camera.png"
+              alt=""
+              className="ml-0.5 h-8 w-8 shrink-0 object-contain"
+            />
           </div>
           <ul className="flex flex-col gap-3">
             {plan.doItems.map((item) => (

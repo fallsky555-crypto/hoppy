@@ -3,12 +3,7 @@
 import { useLocale } from "@/lib/locale-context"
 import { t } from "@/lib/i18n"
 import { useSkinWeather } from "@/lib/use-skin-weather"
-import {
-  computeSkinStress,
-  getTimeOfDay,
-  getWeatherSlotHints,
-  type StressLevel,
-} from "@/lib/skin-weather"
+import { computeSkinStress, type StressLevel } from "@/lib/skin-weather"
 
 /** 스트레스 단계별 색 — 라이트 카드 위에서 대비가 확보되는 값으로 고정 */
 const LEVEL_COLOR: Record<StressLevel, { fill: string; track: string; text: string }> = {
@@ -84,8 +79,10 @@ function MetricPill({
 }) {
   const tone = TONE_COLOR[status.tone]
   return (
-    <div className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl bg-secondary px-1 py-4">
-      <span className="text-[26px] font-bold leading-none tracking-tight text-[#2E2A26]">{value}</span>
+    <div className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl border border-[#F0EBE1] bg-[#FAF8F5] px-1 py-4">
+      <span className="text-[26px] font-semibold leading-none tracking-tight tabular-nums text-[#2E2A26]">
+        {value}
+      </span>
       <span className="text-[11px] font-semibold text-muted-foreground">{label}</span>
       <span
         className="rounded-full px-2 py-0.5 text-[10px] font-bold leading-none"
@@ -101,7 +98,8 @@ export function SkinWeatherCard() {
   const locale = useLocale()
   const { weather, status } = useSkinWeather()
 
-  const shell = "rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border"
+  // 상단 히어로 배너와 한 장의 카드로 결합되므로, 카드 자체 라운딩·테두리 없이 패딩만.
+  const shell = "bg-card px-[22px] pb-6 pt-5"
 
   if (status === "loading") {
     return (
@@ -114,29 +112,17 @@ export function SkinWeatherCard() {
   if (status === "error" || !weather) {
     return (
       <div className={shell}>
-        <div className="flex items-start gap-3">
-          <div className="flex flex-col gap-1">
-            <p className="text-xs font-semibold text-[#8A8378]">{todayLabel(locale)}</p>
-            <h3 className="font-display text-xl font-semibold text-foreground">{t("skinWeather.title", locale)}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t("skinWeather.unavailable", locale)}</p>
-          </div>
-          <img src="/onboarding/cover-cat-camera.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-semibold text-[#8A8378]">{todayLabel(locale)}</p>
+          <h3 className="font-display text-xl font-semibold text-foreground">{t("skinWeather.title", locale)}</h3>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t("skinWeather.unavailable", locale)}</p>
         </div>
       </div>
     )
   }
 
   const stress = computeSkinStress(weather)
-  const hints = getWeatherSlotHints(weather)
   const color = LEVEL_COLOR[stress.level]
-  const isNight = getTimeOfDay() === "night"
-
-  // 처방 문구 — 기여도 상위 2개 요인. 밤에는 UV 요인을 "진정·회복" 관점 문구로 바꾼다.
-  const driverCopyKey = (key: string) => (isNight && key === "uv" ? "uvNight" : key)
-  const lines =
-    stress.drivers.length > 0
-      ? stress.drivers.slice(0, 2).map((d) => t(`skinWeather.driver.${driverCopyKey(d.key)}`, locale) as string)
-      : [t("skinWeather.allClear", locale) as string]
 
   const fmt = {
     humidity: weather.humidity !== null ? `${weather.humidity}%` : "—",
@@ -193,45 +179,10 @@ export function SkinWeatherCard() {
           </div>
         </div>
 
-        {/* 오늘의 처방 — 미니 호빵이 + 액션 가이드 문구 */}
-        <div className="flex items-start gap-3">
-          <img
-            src="/onboarding/cover-cat-camera.png"
-            alt=""
-            className="mt-0.5 h-10 w-10 shrink-0 object-contain"
-          />
-          <ul className="flex flex-1 flex-col gap-1.5">
-            {lines.map((line, i) => (
-              <li key={i} className="flex gap-2 text-sm leading-relaxed text-foreground">
-                <span aria-hidden style={{ color: color.fill }}>•</span>
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* 슬롯 추천 요약 — 실제 뱃지는 아래 데일리 슬롯에 표시됨 */}
-        {(hints.boost.length > 0 || hints.caution.length > 0) && (
-          <div className="flex flex-wrap gap-1.5">
-            {hints.boost.map((s) => (
-              <span
-                key={`b-${s}`}
-                className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary-text"
-              >
-                {t("skinWeather.slotShort." + s, locale)} {t("slotHint.boost", locale)}
-              </span>
-            ))}
-            {hints.caution.map((s) => (
-              <span
-                key={`c-${s}`}
-                className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
-                style={{ backgroundColor: LEVEL_COLOR.high.track, color: LEVEL_COLOR.high.text }}
-              >
-                {t("skinWeather.slotShort." + s, locale)} {t("slotHint.caution", locale)}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* 오늘 날씨 감성 한 줄 요약 — 구체적 행동 가이드는 아래 '오늘 필수' 리스트가 전담 */}
+        <p className="text-sm leading-relaxed text-foreground">
+          {t(`skinWeather.summary.${stress.level}`, locale)}
+        </p>
       </div>
     </div>
   )

@@ -8,13 +8,12 @@ interface ProgressHeaderProps {
 }
 
 /**
- * 상단 히어로 배너. SKIN JOURNAL / 이름 / 날짜 회색 박스 카드는 제거하고
- * 큰 일러스트 하나만 남겼다 — 바로 아래 '오늘의 스킨 웨더' 카드로 연결된다.
- * (오늘 날짜는 스킨 웨더 카드 상단 캡션으로 흡수)
+ * 상단 히어로 배너. 바로 아래 SkinWeatherCard와 하나의 카드 컨테이너 안에서
+ * 이어붙어 한 장의 다이어리 카드처럼 보인다 — 자체 라운딩·테두리·여백 없음.
  */
 export function ProgressHeader({ heroImageSrc }: ProgressHeaderProps) {
   return (
-    <header className="relative h-48 w-full overflow-hidden rounded-4xl ring-1 ring-border">
+    <div className="relative block h-44 w-full">
       <Image
         src={heroImageSrc}
         alt=""
@@ -23,6 +22,6 @@ export function ProgressHeader({ heroImageSrc }: ProgressHeaderProps) {
         priority
         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       />
-    </header>
+    </div>
   )
 }

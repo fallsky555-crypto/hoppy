@@ -91,9 +91,11 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
         <InstallBanner />
 
-        <ProgressHeader heroImageSrc={diary.heroImageSrc} />
-
-        <SkinWeatherCard />
+        {/* 상단 히어로 배너 + 스킨 웨더 = 매끄러운 한 장의 다이어리 카드 (사이 여백 없음) */}
+        <section className="overflow-hidden rounded-4xl bg-card ring-1 ring-border">
+          <ProgressHeader heroImageSrc={diary.heroImageSrc} />
+          <SkinWeatherCard />
+        </section>
 
         {/* id: 30일 결산 리포트 CTA가 스크롤로 되돌아오는 지점 */}
         <div id="today-picks" className="scroll-mt-4">
