@@ -93,44 +93,44 @@
   /* 보상 카드 손글씨 영역 전용 폰트 — 지금은 시스템 기본 폰트, 추후 손글씨 폰트로 교체 예정 */
   --font-handwriting: var(--font-sans);
   /*
-   * 새 팔레트: 청회색(뉴트럴) + 하늘색(포인트)
-   * 배경: #EAF4F8, 카드: #F7FBFC, 텍스트: #26424D
+   * 팔레트: 웜 크림(뉴트럴) + 세이지 민트/틸 그린(포인트)
+   * 배경: #FAF7F1, 카드: #FFFFFF, 텍스트: #2E2A26, 포인트: #5B9A97
    */
-  --background: #EAF4F8;
-  --foreground: #26424D;
-  --card: #F7FBFC;
-  --card-foreground: #26424D;
-  --popover: #F7FBFC;
-  --popover-foreground: #26424D;
-  --primary: #5FA8D3;
+  --background: #FAF7F1;
+  --foreground: #2E2A26;
+  --card: #FFFFFF;
+  --card-foreground: #2E2A26;
+  --popover: #FFFFFF;
+  --popover-foreground: #2E2A26;
+  --primary: #5B9A97;
   --primary-foreground: #ffffff;
-  --text-caption: #7FA3AF;
-  /* secondary = 카드 안 그룹핑용 옅은 배경 */
-  --secondary: #EAF4F8;
-  --secondary-foreground: #26424D;
-  --muted: #EAF4F8;
-  --muted-foreground: #4A6873;
-  /* accent = 보조 강조 배경 */
-  --accent: #D5E8F0;
-  --accent-foreground: #26424D;
+  --text-caption: #8A8175;
+  /* secondary = 카드 안 그룹핑용 옅은 배경 (흰 카드 위에서도 구분되도록 크림보다 살짝 진하게) */
+  --secondary: #F1ECE1;
+  --secondary-foreground: #2E2A26;
+  --muted: #F1ECE1;
+  --muted-foreground: #6B6459;
+  /* accent = 보조 강조 배경 (옅은 세이지 틴트) */
+  --accent: #E4EEEC;
+  --accent-foreground: #2E2A26;
   --destructive: oklch(0.62 0.2 25);
-  --border: #B8D4E0;
-  --input: #B8D4E0;
-  --ring: #5FA8D3;
-  --chart-1: #5FA8D3;
+  --border: #E8E2D6;
+  --input: #E8E2D6;
+  --ring: #5B9A97;
+  --chart-1: #5B9A97;
   --chart-2: oklch(0.82 0.09 150);
   --chart-3: oklch(0.75 0.1 230);
   --chart-4: oklch(0.72 0.13 20);
   --chart-5: oklch(0.85 0.08 90);
-  --sidebar: #F7FBFC;
-  --sidebar-foreground: #26424D;
-  --sidebar-primary: #5FA8D3;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #2E2A26;
+  --sidebar-primary: #5B9A97;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #D5E8F0;
-  --sidebar-accent-foreground: #26424D;
-  --sidebar-border: #B8D4E0;
-  --sidebar-ring: #5FA8D3;
-  --emphasis: #1e1d1b;
+  --sidebar-accent: #E4EEEC;
+  --sidebar-accent-foreground: #2E2A26;
+  --sidebar-border: #E8E2D6;
+  --sidebar-ring: #5B9A97;
+  --emphasis: #2E2A26;
 
   /*
    * 카테고리 색상 — 저채도·중명도 팔레트. 배경 워시로 쓰지 않고 아이콘색+카드 좌측
@@ -156,14 +156,14 @@
   --retinol-soft: #e9e3e6;
   --sos-rest: #b5573f; /* SOS 진정 — 유일한 고채도 경고색 */
   --sos-rest-soft: #f4e6e2;
-  --primary-text: #2A6E93;
-  --today-accent: #4C9E7A;
+  --primary-text: #2F6360;
+  --today-accent: #5B9A97;
   --today-accent-foreground: #ffffff;
-  /* ReportCard 신규 토큰 */
+  /* 보조 톤 토큰 */
   --warn: #B5651D;
   --warn-bg: #F6E3D8;
   --warn-border: #E8C4A8;
-  --primary-soft: #EAF3FC;
+  --primary-soft: #EDF4F2;
   --future-dark: #2A2219;
   --future-accent: #C9A876;
   --ink: var(--foreground);
@@ -212,22 +212,6 @@
   --primary-soft: #1A3B52;
   --future-dark: #2A2219;
   --future-accent: #D4A574;
-}
-
-/* ReportCard 전용 스코프 — 앱 전역 스카이블루 대신 체커의 크림/그린 톤 오버라이드.
-   .dark와 같은 위치(:root 밖)에 둬서 ReportCard를 벗어나면 자동으로 원래 톤으로 복귀한다. */
-.theme-report {
-  --background: #FFFFFF;
-  --card: #FFFFFF;
-  --ink: #171512;
-  --ink-2: #555555;
-  --ink-3: #888888;
-  --line: #E2D7CD;
-  --primary: #FFFFFF;
-  --primary-foreground: #2A5C43;
-  --primary-text: #2A5C43;
-  --primary-fg: #1E4532;
-  --primary-soft: #F2F7F4;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -370,15 +354,15 @@
   }
   11% {
     transform: scale(1.2);
-    box-shadow: 0 0 0 4px #85B7EB, 0 0 14px 3px rgba(133, 183, 235, 0.65);
+    box-shadow: 0 0 0 4px #5B9A97, 0 0 14px 3px rgba(91, 154, 151, 0.55);
   }
   22% {
     transform: scale(1);
-    box-shadow: 0 0 0 4px #85B7EB, 0 0 14px 3px rgba(133, 183, 235, 0.65);
+    box-shadow: 0 0 0 4px #5B9A97, 0 0 14px 3px rgba(91, 154, 151, 0.55);
   }
   88% {
     transform: scale(1);
-    box-shadow: 0 0 0 4px #85B7EB, 0 0 14px 3px rgba(133, 183, 235, 0.65);
+    box-shadow: 0 0 0 4px #5B9A97, 0 0 14px 3px rgba(91, 154, 151, 0.55);
   }
   100% {
     transform: scale(1);

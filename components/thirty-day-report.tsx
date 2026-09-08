@@ -162,7 +162,7 @@ export function ThirtyDayReport() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="relative max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-[28px] bg-gradient-to-b from-[#E6F4EE] via-[#EEF6FA] to-card shadow-xl ring-1 ring-border animate-in fade-in slide-in-from-bottom-4 sm:rounded-[28px]"
+            className="relative max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-[28px] bg-gradient-to-b from-[#E7F1EE] via-[#F4F1E9] to-card shadow-xl ring-1 ring-border animate-in fade-in slide-in-from-bottom-4 sm:rounded-[28px]"
             onClick={(e) => e.stopPropagation()}
           >
             <button
