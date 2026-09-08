@@ -461,6 +461,7 @@
       "uv": { "low": "Low", "moderate": "Moderate", "high": "High", "veryHigh": "Very high" },
       "pm25": { "good": "Good", "moderate": "Moderate", "bad": "Bad", "veryBad": "Very bad" }
     },
+    "flipHint": "Tap a card for the threshold and solution ↺",
     "condition": {
       "clear": "☀️ Clear",
       "mostlyClear": "🌤️ Mostly clear",

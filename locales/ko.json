@@ -458,6 +458,7 @@
       "uv": { "low": "낮음", "moderate": "보통", "high": "높음", "veryHigh": "매우 높음" },
       "pm25": { "good": "좋음", "moderate": "보통", "bad": "나쁨", "veryBad": "매우 나쁨" }
     },
+    "flipHint": "카드 터치 시 기준과 솔루션 확인 ↺",
     "condition": {
       "clear": "☀️ 맑음",
       "mostlyClear": "🌤️ 대체로 맑음",

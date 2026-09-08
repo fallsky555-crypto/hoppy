@@ -199,25 +199,28 @@ export function SkinWeatherCard() {
         </div>
 
         {/* 오늘 환경 지표 — 탭하면 3D 플립(앞: 수치/상태, 뒤: 기준점+솔루션) */}
-        <div className="flex gap-2">
-          <MetricPill
-            metricKey="humidity"
-            label={t("skinWeather.metric.humidity", locale)}
-            value={fmt.humidity}
-            status={humidityStatus(weather.humidity, locale)}
-          />
-          <MetricPill
-            metricKey="uv"
-            label={t("skinWeather.metric.uv", locale)}
-            value={fmt.uv}
-            status={uvStatus(weather.uvIndex, locale)}
-          />
-          <MetricPill
-            metricKey="pm25"
-            label={t("skinWeather.metric.pm25", locale)}
-            value={fmt.pm25}
-            status={pm25Status(weather.pm25, locale)}
-          />
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[11px] text-muted-foreground">{t("skinWeather.flipHint", locale)}</p>
+          <div className="flex gap-2">
+            <MetricPill
+              metricKey="humidity"
+              label={t("skinWeather.metric.humidity", locale)}
+              value={fmt.humidity}
+              status={humidityStatus(weather.humidity, locale)}
+            />
+            <MetricPill
+              metricKey="uv"
+              label={t("skinWeather.metric.uv", locale)}
+              value={fmt.uv}
+              status={uvStatus(weather.uvIndex, locale)}
+            />
+            <MetricPill
+              metricKey="pm25"
+              label={t("skinWeather.metric.pm25", locale)}
+              value={fmt.pm25}
+              status={pm25Status(weather.pm25, locale)}
+            />
+          </div>
         </div>
 
         {/* 피부 스트레스 지수 */}
