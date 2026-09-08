@@ -10,6 +10,7 @@ import { PreviewInsightCard } from "@/components/preview-insight-card"
 import { SkinWeatherCard } from "@/components/skin-weather-card"
 import { DoSkipCard } from "@/components/do-skip-card"
 import { RecordsPanel } from "@/components/records-panel"
+import { SkinArchiveCalendar } from "@/components/skin-archive-calendar"
 import { LoginBanner } from "@/components/login-banner"
 import { SettingsPanel } from "@/components/settings-panel"
 import { OnboardingFlow } from "@/components/onboarding-flow"
@@ -114,8 +115,10 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
         <RecordsPanel locale={locale} />
 
-        {/* 스킨 웨더 기록 — 30일 완주 게이트 없이 상시 노출. 기록이 적은 유저는
-            ThirtyDayReport 내부에서 "첫 방어 체크인" 안내 카드로 자동 분기된다. */}
+        {/* 체크인한 날짜만 잔잔하게 보여주는 아카이브형 미니 캘린더 (화면 하단) */}
+        <SkinArchiveCalendar locale={locale} />
+
+        {/* 누적 방어 리포트 — 홈에는 슬림한 링크만, 터치 시 모달로 연다(홈 경량화) */}
         <ThirtyDayReport />
 
         <LoginBanner />

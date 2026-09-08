@@ -7,15 +7,13 @@ import { t } from "@/lib/i18n"
 import type { Locale } from "@/lib/i18n"
 import { useDiary } from "@/lib/diary-context"
 import { SkinBalanceRadar } from "@/components/skin-balance-radar"
-import { CalendarGrid } from "@/components/calendar-grid"
 
 const OPEN_KEY = "hoppy-records-panel-open"
-type RecordTab = "balance" | "calendar"
 
 /**
- * '피부 밸런스'와 '30일 기록 캘린더'를 하나의 접이식 패널로 묶는다.
- * 스킨 웨더 개편의 목적이 "매일 1초 확인"이라, 기본은 접힌 상태로 두고
- * 날씨 + DO/SKIP 카드가 첫 화면에서 돋보이게 한다. 펼침 여부는 로컬에 기억.
+ * '피부 밸런스' 레이더를 접이식으로 묶는다. 기록 캘린더는 홈 하단의
+ * SkinArchiveCalendar로 분리했다(중복 제거). 스킨 웨더 개편의 목적이
+ * "매일 1초 확인"이라 기본은 접힌 상태. 펼침 여부는 로컬에 기억.
  */
 export function RecordsPanel({ locale }: { locale: Locale }) {
   const diary = useDiary()
@@ -27,8 +25,6 @@ export function RecordsPanel({ locale }: { locale: Locale }) {
       return false
     }
   })
-  const [tab, setTab] = useState<RecordTab>("balance")
-  const [selectedDay, setSelectedDay] = useState<number | null>(null)
 
   const toggle = () => {
     setOpen((prev) => {
@@ -58,41 +54,7 @@ export function RecordsPanel({ locale }: { locale: Locale }) {
       </button>
 
       {open && (
-        <>
-          <div className="flex gap-1.5 rounded-full bg-secondary p-1">
-            {(["balance", "calendar"] as RecordTab[]).map((tb) => (
-              <button
-                key={tb}
-                type="button"
-                onClick={() => setTab(tb)}
-                aria-pressed={tab === tb}
-                className={cn(
-                  "flex-1 rounded-full py-1.5 text-[12.5px] font-bold transition-colors",
-                  tab === tb ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t(`recordsPanel.tab.${tb}`, locale)}
-              </button>
-            ))}
-          </div>
-
-          {tab === "balance" ? (
-            <SkinBalanceRadar skinType={diary.skinType} locale={locale} onChangeSkinType={diary.setSkinType} />
-          ) : (
-            <CalendarGrid
-              totalDays={diary.totalDays}
-              currentDay={diary.currentDay}
-              selectedDay={selectedDay ?? diary.currentDay}
-              completedDays={diary.loggedDays}
-              justStampedDay={null}
-              onSelect={setSelectedDay}
-              loggedSlots={diary.loggedSlots}
-              conditions={diary.conditions}
-              joinDate={diary.joinDate}
-              revealPulse={false}
-            />
-          )}
-        </>
+        <SkinBalanceRadar skinType={diary.skinType} locale={locale} onChangeSkinType={diary.setSkinType} />
       )}
     </div>
   )

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { ChevronDown, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/lib/locale-context"
@@ -150,12 +150,8 @@ export function DoSkipCard() {
   const { weather, status } = useSkinWeather()
   const [ageGroup, setAgeGroup] = useAgeGroup()
 
-  const [toast, setToast] = useState(false)
-  useEffect(() => {
-    if (!toast) return
-    const id = setTimeout(() => setToast(false), 2800)
-    return () => clearTimeout(id)
-  }, [toast])
+  // 체크인 완료 축하 모달
+  const [celebrate, setCelebrate] = useState(false)
 
   const shell = "rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border"
 
@@ -178,7 +174,7 @@ export function DoSkipCard() {
   const handleCheckin = () => {
     if (alreadyDone) return
     diary.recordLoggedDay(diary.currentDay)
-    setToast(true)
+    setCelebrate(true)
   }
 
   return (
@@ -234,17 +230,36 @@ export function DoSkipCard() {
             "w-full rounded-full py-3.5 text-sm font-bold transition-colors " +
             (alreadyDone
               ? "cursor-default bg-secondary text-muted-foreground"
-              : "bg-primary text-primary-foreground hover:bg-primary/80")
+              : "bg-[#5B9A97] text-white hover:bg-[#4E8A87]")
           }
         >
           {alreadyDone ? t("doSkip.checkin.done", locale) : t("doSkip.checkin.cta", locale)}
         </button>
       </div>
 
-      {toast && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
-          <div className="animate-in fade-in slide-in-from-bottom-2 rounded-full bg-foreground px-5 py-3 text-sm font-semibold text-background shadow-lg">
-            {t("doSkip.checkin.toast", locale)}
+      {celebrate && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6 backdrop-blur-sm"
+          onClick={() => setCelebrate(false)}
+        >
+          <div
+            className="flex w-full max-w-[300px] flex-col items-center gap-3 rounded-3xl bg-card p-7 text-center shadow-xl ring-1 ring-border animate-in fade-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img src="/onboarding/cover-cat-sleeping.png" alt="" className="size-20 object-contain" />
+            <h3 className="font-display text-lg font-semibold text-foreground">
+              {t("doSkip.checkin.modalTitle", locale)}
+            </h3>
+            <p className="text-[13.5px] leading-relaxed text-muted-foreground">
+              {t("doSkip.checkin.modalBody", locale)}
+            </p>
+            <button
+              type="button"
+              onClick={() => setCelebrate(false)}
+              className="mt-2 w-full rounded-full bg-[#5B9A97] py-3 text-sm font-bold text-white transition-colors hover:bg-[#4E8A87]"
+            >
+              {t("doSkip.checkin.modalClose", locale)}
+            </button>
           </div>
         </div>
       )}

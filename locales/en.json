@@ -476,7 +476,10 @@
     "checkin": {
       "cta": "Done with today's Skin Weather routine ✨",
       "done": "Today's routine done ✓",
-      "toast": "Matched your skin to today's weather! 🎉"
+      "toast": "Matched your skin to today's weather! 🎉",
+      "modalTitle": "Today's skin defense, done!",
+      "modalBody": "Have a healthy, clear day 🌿",
+      "modalClose": "OK"
     },
     "item": {
       "sunscreen": { "label": "Sunscreen, thoroughly", "desc": "Sun protection is today's top priority for your skin." },
@@ -494,8 +497,16 @@
       "face_oil_seal": { "label": "A drop of face oil to seal", "desc": "One drop of oil over cream holds back overnight dryness." }
     }
   },
+  "archiveCalendar": {
+    "ariaLabel": "Skin diary log calendar",
+    "title": "Skin diary log",
+    "subtitle": "{{count}} days logged so far",
+    "legend": "Days you completed weather defense",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month"
+  },
   "recordsPanel": {
-    "title": "Browse my skin records",
+    "title": "Check your skin balance",
     "tab": {
       "balance": "Skin balance",
       "calendar": "Record calendar"
@@ -726,6 +737,8 @@
     "recordSuffix": "'s Morning Skin Weather Defense"
   },
   "report30day": {
+    "openLink": "View my cumulative skin defense log →",
+    "close": "Close",
     "title": "Hoppy's Skin Weather Log",
     "subtitle": "{{name}}'s weather defense log",
     "subtitleNoName": "My weather defense log",
