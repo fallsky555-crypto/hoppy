@@ -215,7 +215,8 @@ export function DoSkipCard() {
   // 체크인 완료 축하 모달
   const [celebrate, setCelebrate] = useState(false)
 
-  const shell = "rounded-4xl px-[22px] py-[26px] ring-1 bg-card ring-border"
+  // 진한 테두리 대신 은은한 웜 섀도우로만 공간을 구분한다(에디토리얼 무드).
+  const shell = "rounded-4xl px-[22px] py-[26px] bg-card shadow-[0_4px_18px_rgba(46,42,38,0.06)] ring-1 ring-[#2E2A26]/[0.04]"
 
   if (status === "loading") {
     return (

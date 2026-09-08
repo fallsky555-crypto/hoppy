@@ -111,12 +111,12 @@ function MetricPill({
           className={`${TILE_FACE} gap-1.5 px-1`}
           style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
         >
-          <span className="font-display text-[26px] font-semibold leading-none tracking-tight text-[#2E2A26]">
+          <span className="font-display text-[30px] font-semibold leading-none tracking-tight text-[#2E2A26]">
             {value}
           </span>
-          <span className="text-[11px] font-semibold text-muted-foreground">{label}</span>
+          <span className="text-[12px] font-semibold text-foreground/65">{label}</span>
           <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-bold leading-none"
+            className="rounded-full px-2.5 py-1 text-[10.5px] font-bold leading-none"
             style={{ color: tone.text, backgroundColor: tone.bg }}
           >
             {status.label}
@@ -171,6 +171,14 @@ export function SkinWeatherCard() {
   const color = LEVEL_COLOR[stress.level]
   const conditionKey = weatherConditionKey(weather.weatherCode)
 
+  // "🌤️ 대체로 맑음 · 24°C" — 데이터 없는 조각은 빼고 이어붙인다
+  const weatherLine = [
+    conditionKey ? (t(`skinWeather.condition.${conditionKey}`, locale) as string) : null,
+    weather.temp !== null ? `${weather.temp}°C` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ")
+
   const fmt = {
     humidity: weather.humidity !== null ? `${weather.humidity}%` : "—",
     uv: weather.uvIndex !== null ? String(weather.uvIndex) : "—",
@@ -180,20 +188,16 @@ export function SkinWeatherCard() {
   return (
     <div className={shell}>
       <div className="flex flex-col gap-4">
-        {/* 헤더 — 오늘 날짜 캡션 + 타이틀 + 날씨 상태 뱃지 */}
-        <div className="flex flex-col gap-0.5">
+        {/* 헤더 — 오늘 날짜 · 타이틀 · 날씨 상태 텍스트(선명하게) */}
+        <div className="flex flex-col gap-1">
           <p className="text-xs font-semibold text-[#8A8378]">{todayLabel(locale)}</p>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="font-display text-xl font-semibold leading-tight text-foreground">
-              {t("skinWeather.title", locale)}
-            </h3>
-            {conditionKey && (
-              <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-foreground">
-                {t(`skinWeather.condition.${conditionKey}`, locale)}
-              </span>
-            )}
-          </div>
-          <p className="text-[12px] font-semibold text-muted-foreground">
+          <h3 className="font-display text-xl font-semibold leading-tight text-foreground">
+            {t("skinWeather.title", locale)}
+          </h3>
+          {weatherLine && (
+            <p className="text-[15px] font-semibold text-foreground">{weatherLine}</p>
+          )}
+          <p className="text-[11px] font-medium text-muted-foreground">
             {t("skinWeather.locationDefault", locale)}
           </p>
         </div>

@@ -91,8 +91,9 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
         <InstallBanner />
 
-        {/* 상단 히어로 배너 + 스킨 웨더 = 매끄러운 한 장의 다이어리 카드 (사이 여백 없음) */}
-        <section className="overflow-hidden rounded-4xl bg-card ring-1 ring-border">
+        {/* 상단 히어로 배너 + 스킨 웨더 = 매끄러운 한 장의 다이어리 카드 (사이 여백 없음).
+            진한 테두리 대신 은은한 웜 섀도우로만 공간을 구분한다(에디토리얼 무드). */}
+        <section className="overflow-hidden rounded-4xl bg-card shadow-[0_4px_18px_rgba(46,42,38,0.06)] ring-1 ring-[#2E2A26]/[0.04]">
           <ProgressHeader heroImageSrc={diary.heroImageSrc} />
           <SkinWeatherCard />
         </section>
