@@ -63,12 +63,12 @@ export function DailyCover({ locale, name, onSaveName, onClose }: DailyCoverProp
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   placeholder={t("dailyCover.namePlaceholder", locale)}
-                  className="w-full max-w-[200px] bg-transparent border-0 border-b border-[#B8C9D9] text-center text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-[#5FA8D3] py-1.5 transition-colors"
+                  className="w-full max-w-[200px] bg-transparent border-0 border-b border-[#A9C9C6] text-center text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-[#5B9A97] py-1.5 transition-colors"
                   autoFocus
                 />
                 <button
                   onClick={handleSaveName}
-                  className="text-[13px] font-semibold tracking-wide text-[#5FA8D3] bg-[#5FA8D3]/10 rounded-full px-4 py-1.5 hover:bg-[#5FA8D3]/20 transition-colors"
+                  className="text-[13px] font-semibold tracking-wide text-[#5B9A97] bg-[#5B9A97]/10 rounded-full px-4 py-1.5 hover:bg-[#5B9A97]/20 transition-colors"
                 >
                   {t("dailyCover.nameSave", locale)}
                 </button>
@@ -88,7 +88,7 @@ export function DailyCover({ locale, name, onSaveName, onClose }: DailyCoverProp
           <button
             onClick={onClose}
             aria-label={t("common.today", locale)}
-            className="h-11 w-11 rounded-full border border-[#5FA8D3] flex items-center justify-center text-[#5FA8D3] hover:bg-[#5FA8D3]/10 transition-colors mt-2"
+            className="h-11 w-11 rounded-full bg-[#5B9A97] flex items-center justify-center text-white hover:bg-[#4E8A87] transition-colors mt-2"
           >
             <Heart className="h-4 w-4" fill="currentColor" />
           </button>

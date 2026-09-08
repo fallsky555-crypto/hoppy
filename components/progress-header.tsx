@@ -3,37 +3,34 @@
 import Image from "next/image"
 import { t, interpolate } from "@/lib/i18n"
 import { useLocale } from "@/lib/locale-context"
-import { TOTAL_DAYS } from "@/lib/schedule"
 
 interface ProgressHeaderProps {
-  currentDay: number
-  /** 0-based 사이클 회차 — 30일 사이클마다 "기록한 날"/"리포트까지" 배지를 리셋하는 데 쓴다 */
-  cycleIndex: number
-  loggedDays: number[]
   /** 상단 여정 카드 히어로 이미지 — "스페셜케어 사이클"마다 바뀐다(lib/hero-image.ts 참고) */
   heroImageSrc: string
   /** 다이어리 커버에서 입력한 이름 — 있으면 타이틀에 반영, 없으면 기본 타이틀 */
   name?: string | null
 }
 
-export function ProgressHeader({ currentDay, cycleIndex, loggedDays, heroImageSrc, name }: ProgressHeaderProps) {
+const WEEKDAYS_KO = ["일", "월", "화", "수", "목", "금", "토"]
+
+function todayLabel(locale: "ko" | "en"): string {
+  const now = new Date()
+  if (locale === "ko") {
+    return `${now.getMonth() + 1}월 ${now.getDate()}일 ${WEEKDAYS_KO[now.getDay()]}요일`
+  }
+  return now.toLocaleDateString("en-US", { month: "long", day: "numeric", weekday: "long" })
+}
+
+/**
+ * 상단 여정 카드. 카운트다운·달성률 통계는 스킨 웨더 개편으로 제거하고,
+ * 오늘 날짜 + 다정한 감성 카피 한 줄로 대체했다.
+ */
+export function ProgressHeader({ heroImageSrc, name }: ProgressHeaderProps) {
   const locale = useLocale()
 
   const title = name
     ? interpolate(t("progressHeader.titleWithName", locale), { name })
     : t("progressHeader.title", locale)
-
-  // 기록한 날 수 — 30일이 지나도 누적이 아니라 "이번 사이클" 기준으로 리셋해서 보여준다
-  const cycleStartDay = cycleIndex * TOTAL_DAYS + 1
-  const cycleEndDay = cycleStartDay + TOTAL_DAYS - 1
-  const loggedCount = loggedDays.filter((day) => day >= cycleStartDay && day <= cycleEndDay).length
-
-  // 이번 주 기록 (최근 7일: currentDay-6 ~ currentDay)
-  const thisWeekCount = loggedDays.filter(day => day >= currentDay - 6 && day <= currentDay).length
-
-  // 리포트까지 남은 날 — 이번 사이클 기준
-  const daysUntilReport = Math.max(0, TOTAL_DAYS - loggedCount)
-  const isReportReady = loggedCount >= TOTAL_DAYS
 
   return (
     <header className="overflow-hidden rounded-4xl bg-card ring-1 ring-border">
@@ -50,38 +47,22 @@ export function ProgressHeader({ currentDay, cycleIndex, loggedDays, heroImageSr
       </div>
 
       <div className="px-6 py-7">
-        <p className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("progressHeader.tagline", locale)}</p>
+        <p className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          {t("progressHeader.tagline", locale)}
+        </p>
         <div className="mt-2.5 flex items-center gap-3">
           <h1 className="flex-1 truncate font-display text-lg font-semibold leading-tight text-foreground">
             {title}
           </h1>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-2">
-          <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary py-3">
-            <span className="font-display text-2xl font-semibold text-foreground">
-              {loggedCount}
-              <span className="font-sans text-xs font-medium text-muted-foreground">/{TOTAL_DAYS}</span>
-            </span>
-            <span className="text-[11px] font-semibold text-muted-foreground">{t("homeStats.loggedDays", locale)}</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary py-3">
-            <span className="font-display text-2xl font-semibold text-foreground">
-              {thisWeekCount}
-              <span className="font-sans text-xs font-medium text-muted-foreground">/7</span>
-            </span>
-            <span className="text-[11px] font-semibold text-muted-foreground">{t("homeStats.thisWeek", locale)}</span>
-          </div>
-
-          <div className="flex flex-col items-center gap-1 rounded-2xl bg-secondary py-3">
-            <span className="font-display text-2xl font-semibold text-primary-text">
-              {isReportReady ? "✓" : `D-${daysUntilReport}`}
-            </span>
-            <span className="text-[11px] font-semibold text-muted-foreground">
-              {isReportReady ? t("homeStats.reportReady", locale) : t("homeStats.untilReport", locale)}
-            </span>
-          </div>
+        <div className="mt-5 rounded-2xl bg-secondary px-4 py-3.5">
+          <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-primary-text">
+            {todayLabel(locale)}
+          </p>
+          <p className="mt-1.5 text-[13.5px] font-medium leading-relaxed text-foreground">
+            {t("progressHeader.greeting", locale)}
+          </p>
         </div>
       </div>
     </header>

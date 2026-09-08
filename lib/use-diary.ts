@@ -405,21 +405,21 @@ function clearContextURLParams() {
  */
 function applyURLContext(base: DiaryState, context: URLContextPayload | null): DiaryState {
   if (!context) return base
+  // 모든 체커 필드를 "URL에 값이 있으면 반영, 없으면 기존 값 유지"로 병합한다.
+  // 예전엔 checker_result_url만 이렇게 보존하고 나머지는 매번 덮어썼는데, 그러면
+  // age 하나만 실린 공유 링크로 재방문했을 때 이미 저장된 skinType/concernTags 등이
+  // stale null로 지워졌다. 온보딩 첫 진입 땐 base가 freshState(전부 null)라 결과가 같다.
   return {
     ...base,
-    usedProducts: context.usedProducts,
-    skinType: context.skinType,
-    age: context.age,
-    concernTags: context.concernTags,
-    overlap: context.overlap,
-    tier: context.tier,
-    gender: context.gender,
-    concern: context.concern,
-    supportOwned: context.supportOwned,
-    // 이 값만 예외적으로 "없으면 기존 값 유지"로 병합한다 — ReportCard의 "검사지 보기"
-    // 링크가 이 값 하나에 의존하는데, 다른 필드처럼 매번 덮어쓰면 checker_result_url이
-    // 없는 URL로 재방문할 때(예: 파라미터 일부만 들고 오는 경우) 이미 저장해둔 링크가
-    // null로 지워져버린다.
+    usedProducts: context.usedProducts ?? base.usedProducts,
+    skinType: context.skinType ?? base.skinType,
+    age: context.age ?? base.age,
+    concernTags: context.concernTags ?? base.concernTags,
+    overlap: context.overlap ?? base.overlap,
+    tier: context.tier ?? base.tier,
+    gender: context.gender ?? base.gender,
+    concern: context.concern !== "none" ? context.concern : base.concern,
+    supportOwned: context.supportOwned.length > 0 ? context.supportOwned : base.supportOwned,
     checkerResultUrl: context.checkerResultUrl ?? base.checkerResultUrl,
   }
 }
@@ -847,15 +847,6 @@ export function useDiary() {
     [userId],
   )
 
-  /**
-   * 설정 화면의 "루틴 처음부터 다시 시작하기" 버튼 전용. 체커 재방문 흐름과는 완전히
-   * 분리된, 유저가 직접 요청한 명시적 초기화다 — 가입일을 오늘로 재설정해 진행 기록을
-   * 지우되, 슬라이더 설정·관심사·보유 성분 등 개인화 정보는 그대로 유지한다.
-   */
-  const startFresh = useCallback(() => {
-    setState((prev) => ({ ...prev, joinDate: todayISO(), conditions: {} }))
-  }, [])
-
   const submitFeedback = useCallback(
     async (feedbackText: string) => {
       if (!userId) return
@@ -908,7 +899,6 @@ export function useDiary() {
     checkerResultUrl: state.checkerResultUrl,
     userId,
     joinDate: state.joinDate,
-    startFresh,
     submitFeedback,
   }
 }

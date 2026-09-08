@@ -63,13 +63,11 @@ export function WeeklyMiniInsight() {
 
   if (!showInsight || milestone === 0) return null
 
-  const remaining = 30 - diary.loggedDays.length
   const message = topTag
     ? interpolate(t("weeklyInsight.banner", locale), {
         topTag: SLOT_TAG_LABELS[topTag]?.[locale] ?? topTag,
-        remaining: String(remaining),
       })
-    : interpolate(t("weeklyInsight.bannerNoTag", locale), { remaining: String(remaining) })
+    : t("weeklyInsight.bannerNoTag", locale)
 
   return (
     <section

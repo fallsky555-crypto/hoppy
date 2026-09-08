@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { ExternalLink } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { ChevronDown, ExternalLink } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { useLocale } from "@/lib/locale-context"
 import { useDiary } from "@/lib/diary-context"
 import { t } from "@/lib/i18n"
@@ -50,41 +51,72 @@ function CareRow({ item, tone }: { item: CarePlanItem; tone: "do" | "skip" }) {
   )
 }
 
-function AffiliatePicks({ slot, ageGroup }: { slot: SlotType; ageGroup: AgeGroup }) {
+/**
+ * 추천 픽 서랍 — 첫 진입 시 거대한 제품 카드가 바로 노출되지 않도록,
+ * 슬림한 "추천 픽 보기 ▼" 버튼으로 접어두고 터치 시 부드럽게 펼친다.
+ */
+function PicksDrawer({ slot, ageGroup }: { slot: SlotType; ageGroup: AgeGroup }) {
   const locale = useLocale()
+  const [open, setOpen] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
   const picks = getAffiliatePicks(slot, ageGroup)
   if (picks.length === 0) return null
 
+  const contentHeight = contentRef.current?.scrollHeight ?? 0
+
   return (
-    <div className="mt-2 ml-8 flex flex-col gap-1.5">
-      <span className="text-[10.5px] font-bold uppercase tracking-wide text-primary-text">
-        {t("doSkip.pickLabel", locale)}
-      </span>
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {picks.map((pick, i) => (
-          <a
-            key={i}
-            href={resolveAffiliateUrl(pick.affiliateUrl, locale)}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-            className="flex w-[170px] shrink-0 flex-col gap-1 rounded-2xl border border-border bg-secondary/60 px-3 py-2.5 transition-colors hover:bg-secondary"
-          >
-            <div className="flex items-center justify-between">
-              {pick.tag ? (
-                <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9.5px] font-bold leading-none text-primary-text">
-                  {pick.tag}
+    <div className="flex flex-col">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between rounded-full bg-secondary px-4 py-2.5 text-[13px] font-bold text-foreground transition-colors hover:bg-secondary/70"
+      >
+        <span>{t("doSkip.picksToggle", locale)}</span>
+        <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} aria-hidden />
+      </button>
+
+      {/* 높이 트랜지션으로 부드럽게 펼침 (서랍형). max-height는 인라인 스타일로
+          측정값을 넣어 Tailwind 유틸 생성 여부에 의존하지 않는다. */}
+      <div
+        className="overflow-hidden transition-all duration-300 ease-out"
+        style={{
+          maxHeight: open ? contentHeight || 720 : 0,
+          opacity: open ? 1 : 0,
+          marginTop: open ? 10 : 0,
+        }}
+      >
+        <div ref={contentRef}>
+          <span className="mb-1.5 block text-[10.5px] font-bold uppercase tracking-wide text-primary-text">
+            {t("doSkip.pickLabel", locale)}
+          </span>
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {picks.map((pick, i) => (
+              <a
+                key={i}
+                href={resolveAffiliateUrl(pick.affiliateUrl, locale)}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                className="flex w-[170px] shrink-0 flex-col gap-1 rounded-2xl border border-border bg-secondary/60 px-3 py-2.5 transition-colors hover:bg-secondary"
+              >
+                <div className="flex items-center justify-between">
+                  {pick.tag ? (
+                    <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9.5px] font-bold leading-none text-primary-text">
+                      {pick.tag}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                </div>
+                <span className="text-[12.5px] font-semibold leading-tight text-foreground">
+                  {pick.brand} {pick.title}
                 </span>
-              ) : (
-                <span />
-              )}
-              <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            </div>
-            <span className="text-[12.5px] font-semibold leading-tight text-foreground">
-              {pick.brand} {pick.title}
-            </span>
-            <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">{pick.description}</span>
-          </a>
-        ))}
+                <span className="line-clamp-2 text-[11px] leading-snug text-muted-foreground">{pick.description}</span>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -166,10 +198,7 @@ export function DoSkipCard() {
           </div>
           <ul className="flex flex-col gap-3">
             {plan.doItems.map((item) => (
-              <div key={item.key}>
-                <CareRow item={item} tone="do" />
-                {pickSlot === item.slot && <AffiliatePicks slot={item.slot} ageGroup={ageGroup} />}
-              </div>
+              <CareRow key={item.key} item={item} tone="do" />
             ))}
           </ul>
         </div>
@@ -192,6 +221,9 @@ export function DoSkipCard() {
             <p className="text-[13px] text-muted-foreground">{t("doSkip.skipNone", locale)}</p>
           )}
         </div>
+
+        {/* 오늘 날씨 방어 추천 픽 — 기본 접힘, 터치 시 서랍형으로 펼침 */}
+        {pickSlot && <PicksDrawer slot={pickSlot} ageGroup={ageGroup} />}
 
         {/* 원탭 체크인 */}
         <button

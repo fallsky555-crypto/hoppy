@@ -104,7 +104,7 @@ export function OnboardingFlow({ locale, diary, onComplete }: OnboardingFlowProp
                 className={cn(
                   "shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all",
                   dataConsent
-                    ? "bg-primary hover:bg-primary/90 active:scale-95"
+                    ? "bg-[#5B9A97] hover:bg-[#4E8A87] active:scale-95"
                     : "bg-slate-400 opacity-60 cursor-not-allowed"
                 )}
                 aria-label="Next step"

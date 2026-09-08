@@ -318,7 +318,7 @@
   },
   "onboarding": {
     "introStep": {
-      "title": "Create your skincare story",
+      "title": "How to protect your skin from today's weather",
       "subtitle": "Products you've tried that left you wondering —\nnow we'll show you both the ingredients and how your skin responds",
       "description": "Let's confirm a few things to create an accurate report",
       "ctaButton": "Load my checkup results",
@@ -338,7 +338,7 @@
     },
     "startToday": {
       "title": "Starting today",
-      "subtitle": "Create your skincare story",
+      "subtitle": "How to protect your skin from today's weather",
       "next": "Let's go"
     },
     "intro": {
@@ -407,7 +407,8 @@
   "progressHeader": {
     "tagline": "SKIN JOURNAL",
     "title": "My Skin Journal",
-    "titleWithName": "{{name}}'s Skin Journal"
+    "titleWithName": "{{name}}'s Skin Journal",
+    "greeting": "A sunny morning — I'll help keep your skin calm and clear today 🌿"
   },
   "homeStats": {
     "loggedDays": "Days Logged",
@@ -447,6 +448,12 @@
       "exfoliation": "Exfoliation",
       "active": "Actives",
       "barrier": "Barrier"
+    },
+    "metricStatus": {
+      "unknown": "No data",
+      "humidity": { "veryDry": "Very dry", "dry": "Dry", "comfortable": "Comfortable" },
+      "uv": { "low": "Low", "moderate": "Moderate", "high": "High", "veryHigh": "Very high" },
+      "pm25": { "good": "Good", "moderate": "Moderate", "bad": "Bad", "veryBad": "Very bad" }
     }
   },
   "slotHint": {
@@ -459,6 +466,7 @@
     "skipNone": "Nothing to avoid today. Keep your usual routine.",
     "unavailable": "Couldn't load weather, showing default guidance only.",
     "pickLabel": "Hoppy's pick",
+    "picksToggle": "See today's weather-defense picks",
     "layerBadge": "+layer",
     "age": {
       "2030": "20-30s",
@@ -494,8 +502,8 @@
     }
   },
   "weeklyInsight": {
-    "banner": "Mostly {{topTag}} this week · D-{{remaining}} to next report",
-    "bannerNoTag": "D-{{remaining}} to next report",
+    "banner": "Mostly {{topTag}} in your weather defense this week",
+    "bannerNoTag": "You're keeping up your weather-defense records this week",
     "ariaLabel": "Weekly insight"
   },
   "routineBanner": {
@@ -540,11 +548,8 @@
   },
   "settings": {
     "title": "Settings",
-    "restart_confirm": "Starting over will erase all your logged days and records. Are you sure?",
     "cancel": "Cancel",
-    "restart": "Start over",
-    "restart_button": "Start from day 1 again",
-    "reviewReportButton": "Review my results",
+    "reviewReportButton": "Re-check my skin weather sensitivity →",
     "skinTypeLabel": {
       "sensitive": "Sensitive",
       "dry": "Dry",
@@ -705,29 +710,31 @@
     "revisitFooterLine3": "to figuring out what actually works for you.",
     "revisitSettingsButton": "Check anytime in Settings",
     "revisitBrandFooter": "Your skin's record, Hoppy",
-    "emptyStateTitle": "No checkup records yet",
-    "emptyStateDescLine1": "Take the skin checker first",
-    "emptyStateDescLine2": "for more accurate info",
-    "emptyStateCta": "Go to the skin checker"
+    "emptyStateTitle": "Skin weather sensitivity check",
+    "emptyStateDescLine1": "A 1-minute check shows how sensitive",
+    "emptyStateDescLine2": "your skin is to the weather",
+    "emptyStateCta": "Check my skin weather sensitivity"
   },
   "metadata": {
     "title": "Hoppy Skin Diary · Your Daily Skin Record",
     "description": "Track your daily skincare routine and observe the changes in your skin over time. Log each step, note what works for you, and learn your own skin.",
-    "tagline": "myroutinediet · 30 days from your start date, at your own pace"
+    "tagline": "myroutinediet · Every morning, skin defense matched to the weather"
   },
   "dailyCover": {
     "namePlaceholder": "Leave your name (optional)",
     "nameSave": "Save and continue",
-    "recordSuffix": "'s Skincare Journal"
+    "recordSuffix": "'s Morning Skin Weather Defense"
   },
   "report30day": {
-    "title": "Hoppy's 30-Day Skin Weather Report",
-    "subtitle": "{{name}}'s skin defense report",
-    "subtitleNoName": "My skin defense report",
-    "defenseRateLabel": "30-day weather response rate",
-    "defenseRateSub": "Skin defense rate",
-    "attendance": "{{attended}} / {{total}} days checked in",
-    "defenseComment": "Through {{days}} days of shifting seasonal weather, you kept your skin barrier strong! 👏",
+    "title": "Hoppy's Skin Weather Log",
+    "subtitle": "{{name}}'s weather defense log",
+    "subtitleNoName": "My weather defense log",
+    "logCountLabel": "Defense check-ins",
+    "attendance": "{{attended}} days of weather defense so far 👏",
+    "defenseComment": "Through shifting seasonal weather, you're keeping your skin barrier strong day after day.",
+    "firstCheckinTitle": "Start your first defense check-in",
+    "firstCheckinBody": "Do today's weather-matched skin defense once, and your own skin weather log starts building up here.",
+    "firstCheckinCta": "See today's defense picks",
     "prescriptionTitle": "Defense plan for {{profile}}",
     "prescriptionTitleNoProfile": "Season & weather defense plan",
     "tipDayLabel": "Day",

@@ -40,11 +40,11 @@ export function ReportCard({
   const ageLabelKey = getAgeLabel(age)
   const ageLabel = ageLabelKey ? t(ageLabelKey, locale) : null
 
-  // revisit 모드에서 핵심 데이터 부재 시 안내 UI 표시. age는 Step Q에 질문이
-  // 없어서 체커 URL로 안 들어온 유저는 영영 null이라 필수 조건에서 뺐다 —
-  // skinType/concernTags만 있어도 리포트를 보여줄 수 있다.
-  const hasCoreData = skinType && concernTags
-  if (mode === "revisit" && !hasCoreData) {
+  // revisit 모드: 체커를 거쳐 들어온 흔적(피부타입/고민태그/나이대/결과지 링크)이
+  // 하나라도 있으면 리포트를 보여준다 — 체커를 완료하고 들어온 유저에게 "진단하러
+  // 가기" 안내 팝업이 뜨던 문제 수정. 아무 데이터도 없을 때만 진단 유도 카드를 띄운다.
+  const hasCheckerData = Boolean(skinType || concernTags || age || checkerResultUrl)
+  if (mode === "revisit" && !hasCheckerData) {
     return (
       <main className="theme-report mx-auto w-full max-w-md px-5 py-6 bg-background flex flex-col items-center justify-center min-h-[400px]">
         <div className="text-center space-y-6">

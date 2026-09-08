@@ -18,11 +18,75 @@ const LEVEL_COLOR: Record<StressLevel, { fill: string; track: string; text: stri
   severe: { fill: "#D9534F", track: "#FADEDD", text: "#A63734" },
 }
 
-function MetricPill({ label, value }: { label: string; value: string }) {
+/** 지표 뱃지 색 — 초록(안심) → 노랑 → 주황 → 빨강(주의) */
+type Tone = "green" | "amber" | "orange" | "red" | "neutral"
+const TONE_COLOR: Record<Tone, { text: string; bg: string }> = {
+  green: { text: "#2F7D5B", bg: "#E4F3EC" },
+  amber: { text: "#9A6F16", bg: "#FAF0DA" },
+  orange: { text: "#B0561F", bg: "#FBE7DA" },
+  red: { text: "#A63734", bg: "#FADEDD" },
+  neutral: { text: "#6B7280", bg: "#EDEFF1" },
+}
+
+interface MetricStatus {
+  label: string
+  tone: Tone
+}
+
+/** 습도 → 건조/촉촉 상태. 낮을수록 건조(주의). */
+function humidityStatus(v: number | null, locale: "ko" | "en"): MetricStatus {
+  const k = (s: string) => t(`skinWeather.metricStatus.humidity.${s}`, locale) as string
+  if (v === null) return { label: t("skinWeather.metricStatus.unknown", locale), tone: "neutral" }
+  if (v < 40) return { label: k("veryDry"), tone: "red" }
+  if (v < 55) return { label: k("dry"), tone: "amber" }
+  return { label: k("comfortable"), tone: "green" }
+}
+
+/** 자외선 지수 → 낮음/보통/높음/매우 높음 */
+function uvStatus(v: number | null, locale: "ko" | "en"): MetricStatus {
+  const k = (s: string) => t(`skinWeather.metricStatus.uv.${s}`, locale) as string
+  if (v === null) return { label: t("skinWeather.metricStatus.unknown", locale), tone: "neutral" }
+  if (v < 3) return { label: k("low"), tone: "green" }
+  if (v < 6) return { label: k("moderate"), tone: "amber" }
+  if (v < 8) return { label: k("high"), tone: "orange" }
+  return { label: k("veryHigh"), tone: "red" }
+}
+
+/** 초미세먼지(PM2.5) → 좋음/보통/나쁨/매우 나쁨 (WHO 권고 구간) */
+function pm25Status(v: number | null, locale: "ko" | "en"): MetricStatus {
+  const k = (s: string) => t(`skinWeather.metricStatus.pm25.${s}`, locale) as string
+  if (v === null) return { label: t("skinWeather.metricStatus.unknown", locale), tone: "neutral" }
+  if (v < 15) return { label: k("good"), tone: "green" }
+  if (v < 35) return { label: k("moderate"), tone: "amber" }
+  if (v < 75) return { label: k("bad"), tone: "orange" }
+  return { label: k("veryBad"), tone: "red" }
+}
+
+function MetricPill({
+  icon,
+  label,
+  value,
+  status,
+}: {
+  icon: string
+  label: string
+  value: string
+  status: MetricStatus
+}) {
+  const tone = TONE_COLOR[status.tone]
   return (
-    <div className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl bg-secondary py-2.5">
-      <span className="font-display text-base font-semibold text-foreground">{value}</span>
+    <div className="flex flex-1 flex-col items-center gap-1 rounded-2xl bg-secondary px-1 py-3">
+      <span className="text-lg leading-none" aria-hidden>
+        {icon}
+      </span>
+      <span className="font-display text-xl font-semibold leading-none text-foreground">{value}</span>
       <span className="text-[11px] font-semibold text-muted-foreground">{label}</span>
+      <span
+        className="mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold leading-none"
+        style={{ color: tone.text, backgroundColor: tone.bg }}
+      >
+        {status.label}
+      </span>
     </div>
   )
 }
@@ -44,12 +108,12 @@ export function SkinWeatherCard() {
   if (status === "error" || !weather) {
     return (
       <div className={shell}>
-        <div className="flex flex-row-reverse items-start gap-3">
-          <img src="/onboarding/cover-cat-camera.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
+        <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col gap-2">
             <h3 className="font-display text-xl font-semibold text-foreground">{t("skinWeather.title", locale)}</h3>
             <p className="text-sm leading-relaxed text-muted-foreground">{t("skinWeather.unavailable", locale)}</p>
           </div>
+          <img src="/onboarding/cover-cat-camera.png" alt="" className="h-12 w-12 shrink-0 object-contain" />
         </div>
       </div>
     )
@@ -76,19 +140,43 @@ export function SkinWeatherCard() {
   return (
     <div className={shell}>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-row-reverse items-start gap-3">
-          <img src="/onboarding/cover-cat-camera.png" alt="" className="h-11 w-11 shrink-0 object-contain" />
-          <div className="flex flex-col gap-1">
-            <h3 className="font-display text-xl font-semibold text-foreground">{t("skinWeather.title", locale)}</h3>
-            <p className="text-[12px] font-semibold text-muted-foreground">{t("skinWeather.locationDefault", locale)}</p>
+        {/* 헤더 — 텍스트(좌) / 호빵이(우), 겹침 없이 세로 중앙 정렬 */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="font-display text-xl font-semibold leading-tight text-foreground">
+              {t("skinWeather.title", locale)}
+            </h3>
+            <p className="text-[12px] font-semibold text-muted-foreground">
+              {t("skinWeather.locationDefault", locale)}
+            </p>
           </div>
+          <img
+            src="/onboarding/cover-cat-camera.png"
+            alt=""
+            className="h-12 w-12 shrink-0 object-contain"
+          />
         </div>
 
-        {/* 오늘 환경 지표 */}
+        {/* 오늘 환경 지표 — 아이콘 + 큰 수치 + 상태 뱃지 */}
         <div className="flex gap-2">
-          <MetricPill label={t("skinWeather.metric.humidity", locale)} value={fmt.humidity} />
-          <MetricPill label={t("skinWeather.metric.uv", locale)} value={fmt.uv} />
-          <MetricPill label={t("skinWeather.metric.pm25", locale)} value={fmt.pm25} />
+          <MetricPill
+            icon="💧"
+            label={t("skinWeather.metric.humidity", locale)}
+            value={fmt.humidity}
+            status={humidityStatus(weather.humidity, locale)}
+          />
+          <MetricPill
+            icon="☀️"
+            label={t("skinWeather.metric.uv", locale)}
+            value={fmt.uv}
+            status={uvStatus(weather.uvIndex, locale)}
+          />
+          <MetricPill
+            icon="😷"
+            label={t("skinWeather.metric.pm25", locale)}
+            value={fmt.pm25}
+            status={pm25Status(weather.pm25, locale)}
+          />
         </div>
 
         {/* 피부 스트레스 지수 */}

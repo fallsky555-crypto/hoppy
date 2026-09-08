@@ -1,7 +1,6 @@
 "use client"
 
 import { use, useState } from "react"
-import { ProgressBar30 } from "@/components/progress-bar-30"
 import { ProgressHeader } from "@/components/progress-header"
 // [스킨 웨더 개편] DailySlots는 메인에서 내렸다 — 컴포넌트/로직은 보존, 필요 시 복구.
 // import { DailySlots } from "@/components/daily-slots"
@@ -54,7 +53,6 @@ function markCoverSeenToday(): void {
 
 function PageContent({ locale }: { locale: 'ko' | 'en' }) {
   const diary = useDiary()
-  const { currentDay, totalDays } = diary
 
   const [coverConfirmed, setCoverConfirmed] = useState(() => hasSeenCoverToday())
 
@@ -86,22 +84,12 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
     )
   }
 
-  const isCourseComplete = currentDay >= totalDays
-
   return (
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pb-10 pt-6">
         <InstallBanner />
 
-        {/* <ProgressBar30 loggedDays={diary.loggedDays} /> */}
-
-        <ProgressHeader
-          currentDay={currentDay}
-          cycleIndex={diary.cycleIndex}
-          loggedDays={diary.loggedDays}
-          heroImageSrc={diary.heroImageSrc}
-          name={diary.name}
-        />
+        <ProgressHeader heroImageSrc={diary.heroImageSrc} name={diary.name} />
 
         <SkinWeatherCard />
 
@@ -126,15 +114,13 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
 
         <RecordsPanel locale={locale} />
 
-        {isCourseComplete && (
-          <>
-            <ThirtyDayReport isReady={isCourseComplete && diary.loggedDays.length > 0} />
-          </>
-        )}
+        {/* 스킨 웨더 기록 — 30일 완주 게이트 없이 상시 노출. 기록이 적은 유저는
+            ThirtyDayReport 내부에서 "첫 방어 체크인" 안내 카드로 자동 분기된다. */}
+        <ThirtyDayReport />
 
         <LoginBanner />
 
-        <SettingsPanel onStartFresh={diary.startFresh} />
+        <SettingsPanel />
 
         <p className="mt-1.5 text-center text-[12.5px] font-semibold text-[#5C5648]">
           {t("metadata.tagline", locale)}
