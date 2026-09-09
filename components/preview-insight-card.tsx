@@ -46,7 +46,7 @@ export function PreviewInsightCard() {
         <p className="text-xs leading-relaxed text-muted-foreground">{t("previewInsightCard.body3", locale)}</p>
       </div>
 
-      <div className="space-y-1.5 rounded-xl bg-card px-3 py-2.5 border border-[#E5DECF]">
+      <div className="space-y-1.5 rounded-xl bg-card px-3 py-2.5 border border-[#E7E4DD]">
         {EXAMPLE_KEYS.map((key) => (
           <div key={key} className="flex items-center gap-2">
             <Lock className="size-3 shrink-0 text-muted-foreground" aria-hidden />

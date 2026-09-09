@@ -93,10 +93,10 @@
   /* 보상 카드 손글씨 영역 전용 폰트 — 지금은 시스템 기본 폰트, 추후 손글씨 폰트로 교체 예정 */
   --font-handwriting: var(--font-sans);
   /*
-   * 팔레트: 웜 크림(뉴트럴) + 세이지 민트/틸 그린(포인트)
-   * 배경: #FAF7F1, 카드: #FFFFFF, 텍스트: #2E2A26, 포인트: #5B9A97
+   * 팔레트: 맑은 오프화이트/라이트 오트밀(뉴트럴) + 세이지 민트/틸 그린(포인트)
+   * 배경: #FAF9F6 (노란기 제거, 킨포크 매거진 톤), 카드: #FFFFFF, 텍스트: #2E2A26, 포인트: #5B9A97
    */
-  --background: #FAF7F1;
+  --background: #FAF9F6;
   --foreground: #2E2A26;
   --card: #FFFFFF;
   --card-foreground: #2E2A26;
@@ -105,17 +105,17 @@
   --primary: #5B9A97;
   --primary-foreground: #ffffff;
   --text-caption: #8A8175;
-  /* secondary = 카드 안 그룹핑용 옅은 배경 (흰 카드 위에서도 구분되도록 크림보다 살짝 진하게) */
-  --secondary: #F1ECE1;
+  /* secondary = 카드 안 그룹핑용 옅은 배경 (흰 카드 위에서도 구분되도록 배경보다 살짝 진하게, 노란기 없이) */
+  --secondary: #F1EFEA;
   --secondary-foreground: #2E2A26;
-  --muted: #F1ECE1;
+  --muted: #F1EFEA;
   --muted-foreground: #6B6459;
   /* accent = 보조 강조 배경 (옅은 세이지 틴트) */
   --accent: #E4EEEC;
   --accent-foreground: #2E2A26;
   --destructive: oklch(0.62 0.2 25);
-  --border: #E8E2D6;
-  --input: #E8E2D6;
+  --border: #E7E4DD;
+  --input: #E7E4DD;
   --ring: #5B9A97;
   --chart-1: #5B9A97;
   --chart-2: oklch(0.82 0.09 150);
@@ -128,7 +128,7 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #E4EEEC;
   --sidebar-accent-foreground: #2E2A26;
-  --sidebar-border: #E8E2D6;
+  --sidebar-border: #E7E4DD;
   --sidebar-ring: #5B9A97;
   --emphasis: #2E2A26;
 

@@ -76,7 +76,7 @@ export function SkinArchiveCalendar({ locale }: { locale: Locale }) {
 
   return (
     <section
-      className="border-t border-[#E5DECF] px-1 pt-6"
+      className="border-t border-[#E7E4DD] px-1 pt-6"
       aria-label={t("archiveCalendar.ariaLabel", locale)}
     >
       <div className="mb-4 flex items-center justify-between gap-2">
@@ -146,7 +146,7 @@ export function SkinArchiveCalendar({ locale }: { locale: Locale }) {
                   ? "border-transparent font-semibold text-white"
                   : isToday
                     ? "border-[#5B9A97]/45 font-bold"
-                    : "border-[#F0EBE1] bg-[#FAF8F5] font-semibold text-muted-foreground",
+                    : "border-[#EBE8E1] bg-[#F6F5F1] font-semibold text-muted-foreground",
               )}
               style={
                 done

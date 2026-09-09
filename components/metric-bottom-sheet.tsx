@@ -91,7 +91,7 @@ export function MetricBottomSheet({
       role="presentation"
     >
       <div
-        className="relative flex max-h-[88vh] min-h-[64vh] w-full max-w-md flex-col overflow-y-auto rounded-t-[26px] bg-[#FAF7F1] px-6 pb-10 pt-3 shadow-[0_-10px_44px_rgba(46,42,38,0.18)] animate-in slide-in-from-bottom-8 duration-300 ease-out"
+        className="relative flex max-h-[88vh] min-h-[64vh] w-full max-w-md flex-col overflow-y-auto rounded-t-[26px] bg-[#FAF9F6] px-6 pb-10 pt-3 shadow-[0_-10px_44px_rgba(46,42,38,0.18)] animate-in slide-in-from-bottom-8 duration-300 ease-out"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -159,7 +159,7 @@ export function MetricBottomSheet({
         </div>
 
         {/* 전문가 처방 — 넉넉한 폰트·행간 */}
-        <div className="mt-auto shrink-0 border-t border-[#E5DECF] pt-6">
+        <div className="mt-auto shrink-0 border-t border-[#E7E4DD] pt-6">
           <p className="text-[15px] font-semibold leading-relaxed text-[#2E2A26]">{prescription}</p>
         </div>
       </div>

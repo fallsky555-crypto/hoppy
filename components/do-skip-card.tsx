@@ -106,13 +106,25 @@ function PicksLookbook({ picks }: { picks: TodayPick[] }) {
             href={resolveAffiliateUrl(pick.affiliateUrl, locale)}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex w-[180px] shrink-0 flex-col rounded-2xl border border-[#ECE6DC] bg-[#FAF8F5] p-3.5 transition-colors hover:border-[#DCD3C2]"
+            className="group flex w-[180px] shrink-0 flex-col rounded-2xl border border-[#E7E4DD] bg-[#F6F5F1] p-3.5 transition-colors hover:border-[#D8D3C8]"
           >
-            {/* 제품 이미지 영역 — 데이터에 이미지가 없어 미색 플레이스홀더 (브랜드 이니셜) */}
-            <div className="mb-3 flex aspect-square w-full items-center justify-center rounded-xl bg-white/70">
-              <span className="font-display text-[24px] text-[#DAD1C1]" aria-hidden>
-                {pick.brand.slice(0, 1)}
-              </span>
+            {/* 제품 대표 이미지 — 공개 제품 컷 핫링크(referrerPolicy=no-referrer로 CDN
+                핫링크 차단 회피, next/image 아님 → 도메인 허용 설정 불필요).
+                URL이 없거나 로드 실패 시 img를 제거해 미색 패널만 남긴다. */}
+            <div className="mb-3 aspect-square w-full overflow-hidden rounded-xl bg-white">
+              {pick.imageUrl && (
+                <img
+                  src={pick.imageUrl}
+                  alt={`${pick.brand} ${pick.title}`}
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full object-contain p-1"
+                  onError={(e) => {
+                    e.currentTarget.remove()
+                  }}
+                />
+              )}
             </div>
 
             <span className="text-[11px] font-medium text-[#8A8378]">
@@ -147,7 +159,7 @@ export function DoSkipCard() {
   const [ageGroup, setAgeGroup] = useAgeGroup()
 
   // 카드 박스 없이 상단 1px 디바이더 + 여백으로만 앞 섹션과 구분한다(에디토리얼 무드).
-  const shell = "border-t border-[#E5DECF] px-1 pt-6"
+  const shell = "border-t border-[#E7E4DD] px-1 pt-6"
 
   if (status === "loading") {
     return (

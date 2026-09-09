@@ -8,19 +8,20 @@ import { useSkinWeather } from "@/lib/use-skin-weather"
 import { computeSkinStress, weatherConditionKey, type MetricKey, type StressLevel } from "@/lib/skin-weather"
 import { MetricBottomSheet } from "@/components/metric-bottom-sheet"
 
-/** 스트레스 단계별 색 — 라이트 배경 위에서 대비가 확보되는 값으로 고정 */
+/** 스트레스 단계별 색 — 라이트 배경 위에서 대비가 확보되는 값으로 고정.
+ *  '보통'의 누런 옐로우는 차분한 웜 토프로 톤다운했다(맑은 오프화이트 배경과 조화). */
 const LEVEL_COLOR: Record<StressLevel, { fill: string; track: string; text: string }> = {
   low: { fill: "#4CAF87", track: "#E4F3EC", text: "#2F7D5B" },
-  moderate: { fill: "#E0A83D", track: "#FaF0DA", text: "#9A6F16" },
+  moderate: { fill: "#B4A98E", track: "#ECEAE2", text: "#7A6E52" },
   high: { fill: "#E07A3D", track: "#FBE7DA", text: "#B0561F" },
   severe: { fill: "#D9534F", track: "#FADEDD", text: "#A63734" },
 }
 
-/** 지표 뱃지 색 — 초록(안심) → 노랑 → 주황 → 빨강(주의) */
+/** 지표 뱃지 색 — 초록(안심) → 웜 토프(보통) → 주황 → 빨강(주의) */
 type Tone = "green" | "amber" | "orange" | "red" | "neutral"
 const TONE_COLOR: Record<Tone, { text: string; bg: string }> = {
   green: { text: "#2F7D5B", bg: "#E4F3EC" },
-  amber: { text: "#9A6F16", bg: "#FAF0DA" },
+  amber: { text: "#7A6E52", bg: "#ECEAE2" },
   orange: { text: "#B0561F", bg: "#FBE7DA" },
   red: { text: "#A63734", bg: "#FADEDD" },
   neutral: { text: "#6B7280", bg: "#EDEFF1" },
@@ -29,7 +30,7 @@ const TONE_COLOR: Record<Tone, { text: string; bg: string }> = {
 /** 바텀시트 헤더·막대 강조에 쓰는 진한 단색 (뱃지 톤과 짝) */
 const TONE_ACCENT: Record<Tone, string> = {
   green: "#2F7D5B",
-  amber: "#C98A1A",
+  amber: "#9C8A63",
   orange: "#C25A28",
   red: "#C9412E",
   neutral: "#8A8378",
@@ -198,9 +199,9 @@ export function SkinWeatherCard() {
         </div>
 
         {/* 오늘 환경 지표 — 탭하면 공통 바텀시트(24h 그래프 + 처방)가 슬라이드업 */}
-        <div className="flex flex-col gap-2 border-t border-[#E5DECF] pt-5">
+        <div className="flex flex-col gap-2 border-t border-[#E7E4DD] pt-5">
           <p className="text-[11px] text-muted-foreground">{t("skinWeather.metricSheet.sheetHint", locale)}</p>
-          <div className="flex items-stretch divide-x divide-[#E5DECF]">
+          <div className="flex items-stretch divide-x divide-[#E7E4DD]">
             <MetricTile
               label={t("skinWeather.metric.humidity", locale)}
               value={fmt.humidity}
@@ -223,7 +224,7 @@ export function SkinWeatherCard() {
         </div>
 
         {/* 피부 스트레스 지수 */}
-        <div className="flex flex-col gap-2 border-t border-[#E5DECF] pt-5">
+        <div className="flex flex-col gap-2 border-t border-[#E7E4DD] pt-5">
           <div className="flex items-baseline justify-between">
             <span className="text-[13px] font-semibold text-foreground">{t("skinWeather.subtitle", locale)}</span>
             <span className="font-display text-sm font-semibold" style={{ color: color.text }}>

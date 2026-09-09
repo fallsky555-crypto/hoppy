@@ -14,7 +14,7 @@ interface DailyCoverProps {
  */
 export function DailyCover({ locale, onClose }: DailyCoverProps) {
   return (
-    <div className="flex min-h-dvh w-full items-center justify-center bg-[#FAF7F1] p-5">
+    <div className="flex min-h-dvh w-full items-center justify-center bg-[#FAF9F6] p-5">
       <div className="flex w-full max-w-sm flex-col items-center gap-8 text-center">
         <img
           src="/onboarding/intro-02.jpeg"
