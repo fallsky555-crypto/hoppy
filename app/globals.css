@@ -374,3 +374,12 @@
   animation: today-cell-pulse 2s ease-out both;
   animation-delay: 0.38s;
 }
+
+/* 가로 스크롤 룩북 등에서 스크롤바를 숨긴다 (스크롤 자체는 유지) */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

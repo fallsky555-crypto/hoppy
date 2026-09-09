@@ -71,7 +71,7 @@ export function WeeklyMiniInsight() {
 
   return (
     <section
-      className="flex items-center gap-2.5 rounded-3xl bg-secondary/30 px-4 py-3 ring-1 ring-border"
+      className="flex items-center gap-2.5 rounded-2xl bg-secondary/40 px-4 py-3"
       aria-label={t("weeklyInsight.ariaLabel", locale)}
     >
       <Sparkles className="size-4 shrink-0 text-primary" aria-hidden />

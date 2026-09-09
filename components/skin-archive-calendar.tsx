@@ -76,7 +76,7 @@ export function SkinArchiveCalendar({ locale }: { locale: Locale }) {
 
   return (
     <section
-      className="rounded-4xl bg-card px-5 py-6 ring-1 ring-border"
+      className="border-t border-[#E5DECF] px-1 pt-6"
       aria-label={t("archiveCalendar.ariaLabel", locale)}
     >
       <div className="mb-4 flex items-center justify-between gap-2">

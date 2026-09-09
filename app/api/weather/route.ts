@@ -9,6 +9,15 @@
  * 어느 단계에서 실패해도 200 + null 필드로 응답한다(클라이언트가 폴백 루틴을 보여줌).
  */
 
+/** 오늘 24시간 시간대별 시리즈 (스킨 웨더 바텀시트의 미니 그래프용) */
+interface HourlySeries {
+  /** 0~23 (사용자 로컬 시간) */
+  hour: number[]
+  humidity: (number | null)[]
+  uv: (number | null)[]
+  pm25: (number | null)[]
+}
+
 interface SkinWeatherResponse {
   temp: number | null
   humidity: number | null
@@ -16,6 +25,7 @@ interface SkinWeatherResponse {
   pm25: number | null
   pm10: number | null
   weatherCode: number | null
+  hourly: HourlySeries | null
   source: "open-meteo" | "unavailable"
 }
 
@@ -26,7 +36,23 @@ const UNAVAILABLE: SkinWeatherResponse = {
   pm25: null,
   pm10: null,
   weatherCode: null,
+  hourly: null,
   source: "unavailable",
+}
+
+/** Open-Meteo hourly 응답(시각 배열 + 값 배열)을 시각별 숫자로 정리한다 */
+function toHourMap(times: unknown, values: unknown): Map<number, number> {
+  const out = new Map<number, number>()
+  if (!Array.isArray(times) || !Array.isArray(values)) return out
+  for (let i = 0; i < times.length; i++) {
+    const ts = times[i]
+    const v = values[i]
+    if (typeof ts !== "string" || typeof v !== "number" || !Number.isFinite(v)) continue
+    // "2026-09-09T14:00" → 14
+    const hour = Number(ts.slice(11, 13))
+    if (Number.isInteger(hour)) out.set(hour, v)
+  }
+  return out
 }
 
 /** 서울 시청 */
@@ -51,6 +77,7 @@ export async function GET(request: Request): Promise<Response> {
     forecastUrl.searchParams.set("longitude", String(lon))
     forecastUrl.searchParams.set("current", "temperature_2m,relative_humidity_2m,weather_code")
     forecastUrl.searchParams.set("daily", "uv_index_max")
+    forecastUrl.searchParams.set("hourly", "relative_humidity_2m,uv_index")
     forecastUrl.searchParams.set("forecast_days", "1")
     forecastUrl.searchParams.set("timezone", "auto")
 
@@ -58,6 +85,8 @@ export async function GET(request: Request): Promise<Response> {
     airUrl.searchParams.set("latitude", String(lat))
     airUrl.searchParams.set("longitude", String(lon))
     airUrl.searchParams.set("current", "pm2_5,pm10")
+    airUrl.searchParams.set("hourly", "pm2_5")
+    airUrl.searchParams.set("forecast_days", "1")
     airUrl.searchParams.set("timezone", "auto")
 
     // 대기질 호출이 실패해도 날씨는 살리기 위해 allSettled
@@ -70,6 +99,8 @@ export async function GET(request: Request): Promise<Response> {
     let humidity: number | null = null
     let uvIndex: number | null = null
     let weatherCode: number | null = null
+    let humidityByHour = new Map<number, number>()
+    let uvByHour = new Map<number, number>()
 
     if (forecastRes.status === "fulfilled" && forecastRes.value.ok) {
       const data = await forecastRes.value.json()
@@ -81,12 +112,15 @@ export async function GET(request: Request): Promise<Response> {
       humidity = typeof h === "number" ? Math.round(h) : null
       weatherCode = typeof w === "number" ? w : null
       uvIndex = typeof uv === "number" ? Math.round(uv * 10) / 10 : null
+      humidityByHour = toHourMap(data.hourly?.time, data.hourly?.relative_humidity_2m)
+      uvByHour = toHourMap(data.hourly?.time, data.hourly?.uv_index)
     } else {
       console.warn("[weather/route] Open-Meteo forecast unavailable")
     }
 
     let pm25: number | null = null
     let pm10: number | null = null
+    let pm25ByHour = new Map<number, number>()
 
     if (airRes.status === "fulfilled" && airRes.value.ok) {
       const data = await airRes.value.json()
@@ -94,6 +128,7 @@ export async function GET(request: Request): Promise<Response> {
       const p10 = data.current?.pm10
       pm25 = typeof p25 === "number" ? Math.round(p25 * 10) / 10 : null
       pm10 = typeof p10 === "number" ? Math.round(p10 * 10) / 10 : null
+      pm25ByHour = toHourMap(data.hourly?.time, data.hourly?.pm2_5)
     } else {
       console.warn("[weather/route] Open-Meteo air-quality unavailable")
     }
@@ -102,6 +137,20 @@ export async function GET(request: Request): Promise<Response> {
       return Response.json(UNAVAILABLE)
     }
 
+    // 0~23시 시리즈. 값이 없는 시각은 null.
+    const round1 = (v: number) => Math.round(v * 10) / 10
+    const pick = (m: Map<number, number>, hour: number) => (m.has(hour) ? round1(m.get(hour) as number) : null)
+    const hours = Array.from({ length: 24 }, (_, i) => i)
+    const hourly: HourlySeries | null =
+      humidityByHour.size || uvByHour.size || pm25ByHour.size
+        ? {
+            hour: hours,
+            humidity: hours.map((h) => pick(humidityByHour, h)),
+            uv: hours.map((h) => pick(uvByHour, h)),
+            pm25: hours.map((h) => pick(pm25ByHour, h)),
+          }
+        : null
+
     const payload: SkinWeatherResponse = {
       temp,
       humidity,
@@ -109,6 +158,7 @@ export async function GET(request: Request): Promise<Response> {
       pm25,
       pm10,
       weatherCode,
+      hourly,
       source: "open-meteo",
     }
     return Response.json(payload)

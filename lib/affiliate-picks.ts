@@ -11,7 +11,7 @@
  */
 
 import type { SlotType } from "@/lib/slot-mapping"
-import type { AgeGroup } from "@/lib/skin-weather"
+import { getDoSkipPlan, type AgeGroup, type SkinWeather } from "@/lib/skin-weather"
 import type { Locale } from "@/lib/i18n"
 
 /** 큐레이션 성격 태그 — 사용자가 취향/피부타입으로 고르는 기준 */
@@ -145,4 +145,67 @@ export function getAffiliatePicks(slot: SlotType, ageGroup: AgeGroup): Affiliate
   const table = AFFILIATE_PICKS[slot]
   if (!table) return []
   return table[ageGroup] ?? table.default
+}
+
+/** 오늘의 추천 픽 한 장 — 카테고리(slot) 정보를 함께 담아 라벨/아이콘에 쓴다 */
+export interface TodayPick extends AffiliatePick {
+  slot: SlotType
+}
+
+/**
+ * 연령대별 큐레이션 태그 우선순위 — 같은 카테고리 안에서 어떤 제형/성분을 먼저 고를지.
+ *  2030 : 산뜻·가성비 우선
+ *  4050 / 60+ : 고보습·밀폐·탄력(프리미엄·순한 성분) 라인 우선
+ */
+const AGE_TAG_PRIORITY: Record<AgeGroup, CurationTag[]> = {
+  "2030": ["가성비", "순한 성분", "민감성", "프리미엄"],
+  "4050": ["프리미엄", "순한 성분", "민감성", "가성비"],
+  "60plus": ["프리미엄", "순한 성분", "민감성", "가성비"],
+}
+
+/** 날씨 DO로 카테고리가 3개가 안 될 때 채워 넣을 대표 카테고리 순서 */
+const FALLBACK_SLOTS: SlotType[] = ["hydration", "barrier", "sun_care", "active"]
+
+/**
+ * 오늘의 날씨 지표 × 선택 연령대 → 카테고리가 겹치지 않는 추천 제품 3~4개.
+ *
+ *  1) 필요한 카테고리: getDoSkipPlan(오늘 DO)의 슬롯 순서를 그대로 따른다
+ *     (UV·건조·미세먼지·시간대·연령대가 이미 반영된 결과). 3개 미만이면 대표 카테고리로 보강.
+ *  2) 카테고리별 1개: 해당 연령대 픽 목록에서 AGE_TAG_PRIORITY 순으로 매칭
+ *     (4050·60+는 고보습·밀폐·탄력 라인 우선).
+ *  3) 같은 제품 중복 제거, 최대 4개.
+ */
+export function getTodayWeatherPicks(
+  weather: SkinWeather,
+  ageGroup: AgeGroup,
+  now: Date = new Date(),
+): TodayPick[] {
+  const { doItems } = getDoSkipPlan(weather, now, ageGroup)
+
+  const slots: SlotType[] = []
+  const addSlot = (s: SlotType) => {
+    if (!slots.includes(s) && (AFFILIATE_PICKS[s]?.default.length ?? 0) > 0) slots.push(s)
+  }
+  for (const item of doItems) addSlot(item.slot)
+  for (const s of FALLBACK_SLOTS) {
+    if (slots.length >= 3) break
+    addSlot(s)
+  }
+
+  const priority = AGE_TAG_PRIORITY[ageGroup]
+  const out: TodayPick[] = []
+  const seen = new Set<string>()
+
+  for (const slot of slots) {
+    if (out.length >= 4) break
+    const list = getAffiliatePicks(slot, ageGroup)
+    if (list.length === 0) continue
+    const chosen = priority.map((tag) => list.find((x) => x.tag === tag)).find(Boolean) ?? list[0]
+    const key = `${chosen.brand}|${chosen.title}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push({ ...chosen, slot })
+  }
+
+  return out
 }

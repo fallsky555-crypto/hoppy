@@ -5,6 +5,15 @@
 
 import type { SlotType } from "@/lib/slot-mapping"
 
+/** 오늘 0~23시 시간대별 시리즈 — 스킨 웨더 바텀시트의 미니 그래프용 */
+export interface HourlySeries {
+  /** 0~23 (사용자 로컬 시간) */
+  hour: number[]
+  humidity: (number | null)[]
+  uv: (number | null)[]
+  pm25: (number | null)[]
+}
+
 export interface SkinWeather {
   /** °C, 정수 반올림 */
   temp: number | null
@@ -18,7 +27,24 @@ export interface SkinWeather {
   pm10: number | null
   /** WMO 날씨코드 */
   weatherCode: number | null
+  /** 오늘 시간대별 시리즈 (없으면 null) */
+  hourly: HourlySeries | null
   source: "open-meteo" | "unavailable"
+}
+
+/** 스킨 웨더 지표 3종 공통 키 */
+export type MetricKey = "humidity" | "uv" | "pm25"
+
+/**
+ * 지표별 "피부 기준선" — 바텀시트 미니 그래프에 점선으로 겹쳐 그린다.
+ *  - 습도 50% 미만: 속당김 시작
+ *  - 자외선 3.0: 손상 시작 / 6.0: 광노화 위험
+ *  - 초미세먼지 35: 장벽 자극 시작 (WHO 24h 권고 상한)
+ */
+export const METRIC_THRESHOLDS: Record<MetricKey, number[]> = {
+  humidity: [50],
+  uv: [3, 6],
+  pm25: [35],
 }
 
 export type StressLevel = "low" | "moderate" | "high" | "severe"

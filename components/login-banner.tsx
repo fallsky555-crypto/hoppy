@@ -150,8 +150,7 @@ export function LoginBanner() {
         return
       }
 
-      const dismissed = typeof window !== "undefined" && window.localStorage.getItem(DISMISSED_KEY) === "1"
-      if (dismissed) return
+      // 연결 안내는 이제 매거진 각주형 1줄 링크라 상시 노출한다(닫기 없음).
       const anonymous = await isAnonymousSession()
       if (!cancelled && anonymous) setVisible(true)
     })
@@ -273,7 +272,7 @@ export function LoginBanner() {
       ? interpolate(t("login.linked.with_nickname", locale), { nickname: linkedIdentity.nickname, provider: label })
       : interpolate(t("login.linked.without_nickname", locale), { provider: label })
     return (
-      <section className="flex items-center justify-between gap-3 rounded-4xl bg-card px-[22px] py-4 ring-1 ring-border" aria-label={t("login.linked.ariaLabel", locale)}>
+      <section className="flex items-center justify-between gap-3 rounded-3xl bg-secondary/40 px-[22px] py-4" aria-label={t("login.linked.ariaLabel", locale)}>
         <div className="min-w-0">
           <p className="truncate text-[13px] font-semibold text-foreground">
             {statusText}
@@ -297,7 +296,7 @@ export function LoginBanner() {
   if (identityConflict) {
     const label = PROVIDER_LABEL[identityConflict]
     return (
-      <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label={t("login.conflict.ariaLabel", locale)}>
+      <section className="rounded-3xl bg-secondary/40 px-[22px] py-5" aria-label={t("login.conflict.ariaLabel", locale)}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <h2 className="text-[13px] font-semibold text-foreground">
@@ -332,46 +331,33 @@ export function LoginBanner() {
 
   return (
     <>
-      <section className="rounded-4xl bg-card px-[22px] py-5 ring-1 ring-border" aria-label={t("login.connect.ariaLabel", locale)}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="text-[13px] font-semibold text-foreground">{t("login.connect.title", locale)}</h2>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            {t("login.connect.description", locale)}
-          </p>
-        </div>
+      {/* 매거진 맨 하단 각주형 — 카드·버튼·닫기 없이 아주 작고 차분한 1줄 텍스트 링크 */}
+      <p
+        className="px-1 text-[12px] leading-relaxed text-[#A0988C]"
+        aria-label={t("login.connect.ariaLabel", locale)}
+      >
+        {t("login.connect.footnote", locale)}{" "}
         <button
-          type="button"
-          onClick={dismiss}
-          aria-label={t("login.button.close", locale)}
-          className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-card/70"
-        >
-          <X className="size-3.5" aria-hidden />
-        </button>
-      </div>
-
-      <div className="mt-4 flex flex-col gap-2">
-        <Button
           type="button"
           onClick={() => handleLogin("kakao")}
           disabled={pending !== null}
-          className="w-full rounded-full bg-[#FEE500] text-[#191919] hover:bg-[#FEE500]/90"
+          className="font-medium underline underline-offset-2 transition-colors hover:text-[#7A746B] disabled:opacity-50"
         >
-          {pending === "kakao" ? t("login.button.kakao_pending", locale) : t("login.button.kakao", locale)}
-        </Button>
-        <Button
+          {pending === "kakao" ? t("login.connect.linkingKakao", locale) : t("login.connect.linkKakao", locale)}
+        </button>
+        <span className="mx-1.5 text-[#C9C1B4]" aria-hidden>
+          ·
+        </span>
+        <button
           type="button"
-          variant="outline"
           onClick={() => handleLogin("google")}
           disabled={pending !== null}
-          className="w-full rounded-full"
+          className="font-medium underline underline-offset-2 transition-colors hover:text-[#7A746B] disabled:opacity-50"
         >
-          {pending === "google" ? t("login.button.google_pending", locale) : t("login.button.google", locale)}
-        </Button>
-      </div>
-
-      {error && <p className="mt-2 text-center text-xs font-medium text-destructive">{error}</p>}
-      </section>
+          {pending === "google" ? t("login.connect.linkingGoogle", locale) : t("login.connect.linkGoogle", locale)}
+        </button>
+        {error && <span className="mt-1 block font-medium text-destructive">{error}</span>}
+      </p>
 
       {isDataLossDialogOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

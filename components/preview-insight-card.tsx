@@ -32,7 +32,7 @@ export function PreviewInsightCard() {
 
   return (
     <section
-      className="flex flex-col gap-3 rounded-3xl bg-secondary/30 p-4 ring-1 ring-border"
+      className="flex flex-col gap-3 rounded-2xl bg-secondary/40 p-4"
       aria-label={t("previewInsightCard.label", locale)}
     >
       <div className="flex items-center gap-1.5">
@@ -46,7 +46,7 @@ export function PreviewInsightCard() {
         <p className="text-xs leading-relaxed text-muted-foreground">{t("previewInsightCard.body3", locale)}</p>
       </div>
 
-      <div className="space-y-1.5 rounded-2xl bg-card px-3 py-2.5 ring-1 ring-border">
+      <div className="space-y-1.5 rounded-xl bg-card px-3 py-2.5 border border-[#E5DECF]">
         {EXAMPLE_KEYS.map((key) => (
           <div key={key} className="flex items-center gap-2">
             <Lock className="size-3 shrink-0 text-muted-foreground" aria-hidden />

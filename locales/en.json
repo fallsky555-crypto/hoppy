@@ -254,7 +254,12 @@
     "connect": {
       "ariaLabel": "Link your account",
       "title": "Keep your progress across devices",
-      "description": "Your current progress stays as-is. Just link your account, and you can continue from any device."
+      "description": "Your current progress stays as-is. Just link your account, and you can continue from any device.",
+      "footnote": "Keep your records safely backed up?",
+      "linkKakao": "Link Kakao",
+      "linkGoogle": "Link Google",
+      "linkingKakao": "Linking Kakao…",
+      "linkingGoogle": "Linking Google…"
     },
     "provider_label": {
       "kakao": "Kakao",
@@ -461,7 +466,6 @@
       "uv": { "low": "Low", "moderate": "Moderate", "high": "High", "veryHigh": "Very high" },
       "pm25": { "good": "Good", "moderate": "Moderate", "bad": "Bad", "veryBad": "Very bad" }
     },
-    "flipHint": "Tap a card for the threshold and solution ↺",
     "condition": {
       "clear": "☀️ Clear",
       "mostlyClear": "🌤️ Mostly clear",
@@ -471,10 +475,24 @@
       "snow": "🌨️ Snow",
       "storm": "⛈️ Thunderstorm"
     },
-    "metricBack": {
-      "humidity": { "title": "💧 Below 50% is dry!", "body": "Tightness starts here. Lock it in with panthenol and a moisture layer." },
-      "uv": { "title": "☀️ Damage starts at 3.0!", "body": "Above 6.0 risks photoaging. PA++++ sunscreen is a must." },
-      "pm25": { "title": "🍃 Over 35 irritates the barrier!", "body": "Smaller than your pores. Build a shield with antioxidant serum." }
+    "metricSheet": {
+      "sheetHint": "Tap a metric for today's 24-hour trend and a care prescription",
+      "chartTitle": "Today's hourly trend (6am–midnight)",
+      "thresholdLabel": "Skin threshold",
+      "nowLabel": "Now",
+      "noChart": "Couldn't load today's hourly data. See the prescription below.",
+      "humidity": {
+        "title": "Humidity report",
+        "prescription": "Below 50% humidity, moisture evaporates from the stratum corneum fast and tightness sets in. Within 3 minutes of cleansing, replenish with a toner and panthenol serum, then seal with a cream."
+      },
+      "uv": {
+        "title": "UV index report",
+        "prescription": "UV starts damaging collagen at 3.0, and above 6.0 the risk of photoaging and pigmentation climbs. Apply SPF50+ PA++++ (two finger-lengths) 20 minutes before going out, and reapply every 2–3 hours."
+      },
+      "pm25": {
+        "title": "Fine dust report",
+        "prescription": "PM2.5 is smaller than your pores — it slips through the barrier and leaves irritation and oxidative stress behind. When levels top 35 µg/m³, limit time outside, and double-cleanse at night before layering an antioxidant (vitamin C/E) serum."
+      }
     }
   },
   "slotHint": {
@@ -488,6 +506,8 @@
     "unavailable": "Couldn't load weather, showing default guidance only.",
     "ageSelectLabel": "Select age group",
     "pickLabel": "Hoppy's pick",
+    "pickTitle": "Today's weather-matched picks",
+    "pickEyebrow": "TODAY'S ARCHIVE",
     "picksToggle": "Today's weather-matched picks",
     "coupangDisclosure": "This post is part of the Coupang Partners program, and the author earns a commission from qualifying purchases.",
     "pickCategory": {
