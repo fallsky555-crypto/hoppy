@@ -599,17 +599,6 @@
     "promise": "After a week of logging, your actual ratio will overlay here",
     "actualLegend": "Dashed = your actual usage so far"
   },
-  "previewInsightCard": {
-    "label": "What you'll learn after 30 days",
-    "body1": "The longer you track, the more your skin's needs come into focus.",
-    "body2": "These six ingredients are just the foundation.",
-    "body3": "A month from now, we'll turn your balance into a graph.",
-    "example1": "Your barrier care has been running low",
-    "example2": "You've been spacing retinol every 2-3 days",
-    "example3": "Hydration tends to slip on rough weeks",
-    "progress": "{{count}} days logged so far · patterns like these usually start showing up around day 7",
-    "cta": "Log today's routine"
-  },
   "settings": {
     "title": "Settings",
     "cancel": "Cancel",

@@ -5,7 +5,6 @@ import { ProgressHeader } from "@/components/progress-header"
 // [스킨 웨더 개편] DailySlots는 메인에서 내렸다 — 컴포넌트/로직은 보존, 필요 시 복구.
 // import { DailySlots } from "@/components/daily-slots"
 import { WeeklyMiniInsight } from "@/components/weekly-mini-insight"
-import { PreviewInsightCard } from "@/components/preview-insight-card"
 import { SkinWeatherCard } from "@/components/skin-weather-card"
 import { DoSkipCard } from "@/components/do-skip-card"
 import { SkinArchiveCalendar } from "@/components/skin-archive-calendar"
@@ -80,8 +79,6 @@ function PageContent({ locale }: { locale: 'ko' | 'en' }) {
               />
             </div>
         */}
-
-        <PreviewInsightCard />
 
         {/* 체크인한 날짜만 잔잔하게 보여주는 아카이브형 미니 캘린더 (화면 하단) */}
         <SkinArchiveCalendar locale={locale} />
