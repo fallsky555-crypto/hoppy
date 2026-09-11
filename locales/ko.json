@@ -507,6 +507,7 @@
     "pickEyebrow": "TODAY'S ARCHIVE",
     "picksToggle": "오늘 날씨 맞춤 추천템",
     "coupangDisclosure": "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.",
+    "amazonDisclosure": "이 포스팅은 아마존 어소시에이트 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.",
     "pickCategory": {
       "all": "전체",
       "sun_care": "자외선 차단",
@@ -549,6 +550,7 @@
     "ariaLabel": "스킨 다이어리 기록 캘린더",
     "title": "스킨 다이어리 기록",
     "subtitle": "지금까지 {{count}}일 기록했어요",
+    "subtitleOne": "지금까지 {{count}}일 기록했어요",
     "legend": "날씨 방어를 완료한 날",
     "prevMonth": "이전 달",
     "nextMonth": "다음 달"
@@ -807,5 +809,17 @@
     "tipWeatherLabel": "날씨 주의",
     "tipWeather": "일교차가 크고 건조한 날엔 고기능성보다 진정·수분 레이어 우선",
     "cta": "오늘 날씨 맞춤 케어 픽 보기"
+  },
+  "devTest": {
+    "slotsSubtitle": "새로운 코랄 테마 디자인",
+    "colorTestTitle": "하늘색 CTA 색상 테스트",
+    "section1": "1. InstallBanner (PWA 설치)",
+    "section2": "2. RecipeCard \"기록 완료\" 버튼",
+    "section3": "3. 기본 Button variant (Default)",
+    "recordComplete": "기록 완료",
+    "next": "다음",
+    "additionalVariants": "추가 Button Variants",
+    "outlineButton": "Outline 버튼",
+    "secondaryButton": "Secondary 버튼"
   }
 }

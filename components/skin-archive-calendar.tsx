@@ -83,7 +83,10 @@ export function SkinArchiveCalendar({ locale }: { locale: Locale }) {
         <div className="flex flex-col gap-0.5">
           <h2 className="text-[13px] font-semibold text-foreground">{t("archiveCalendar.title", locale)}</h2>
           <p className="text-[11px] font-medium text-muted-foreground">
-            {interpolate(t("archiveCalendar.subtitle", locale), { count: String(totalLogged) })}
+            {interpolate(
+              t(totalLogged === 1 ? "archiveCalendar.subtitleOne" : "archiveCalendar.subtitle", locale),
+              { count: String(totalLogged) },
+            )}
           </p>
         </div>
         <div className="flex items-center gap-1">

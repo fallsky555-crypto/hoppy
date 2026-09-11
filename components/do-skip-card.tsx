@@ -8,6 +8,7 @@ import { useSkinWeather } from "@/lib/use-skin-weather"
 import { useAgeGroup } from "@/lib/use-age-group"
 import { getDoSkipPlan, type AgeGroup, type CarePlanItem } from "@/lib/skin-weather"
 import { getTodayWeatherPicks, resolveAffiliateUrl, type TodayPick } from "@/lib/affiliate-picks"
+import { getTodayAmazonPicks, type AmazonPick } from "@/lib/data/amazon-picks"
 
 /** 연령대 텍스트 탭 — '오늘 필수' 타이틀 우측. 2030 | 4050 두 갈래만 노출한다. */
 const AGE_TABS: AgeGroup[] = ["2030", "4050"]
@@ -153,6 +154,84 @@ function PicksLookbook({ picks }: { picks: TodayPick[] }) {
   )
 }
 
+/**
+ * English-locale-only Amazon lookbook — mirrors PicksLookbook's card layout but reads
+ * from the separate lib/data/amazon-picks.ts dataset (English product data, Amazon
+ * affiliate links). The Korean/Coupang path above (PicksLookbook + lib/affiliate-picks.ts)
+ * is untouched; this only renders when locale === "en".
+ */
+function AmazonPicksLookbook({ picks }: { picks: AmazonPick[] }) {
+  const locale = useLocale()
+  if (picks.length === 0) return null
+
+  return (
+    <div className="flex w-full min-w-0 flex-col gap-3">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[11px] font-medium uppercase tracking-widest text-[#A0988C]">
+          {t("doSkip.pickEyebrow", locale)}
+        </span>
+        <h4 className="font-display text-[18px] leading-tight text-[#2C2825]">
+          {t("doSkip.pickTitle", locale)}
+        </h4>
+      </div>
+
+      <div
+        className="no-scrollbar flex gap-3 overflow-x-auto pb-2"
+        style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
+        onWheel={(e) => {
+          if (e.deltaY !== 0) e.currentTarget.scrollLeft += e.deltaY
+        }}
+      >
+        {picks.map((pick) => (
+          <a
+            key={pick.id}
+            href={pick.affiliateUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex w-[180px] shrink-0 flex-col rounded-2xl border border-[#E7E4DD] bg-[#F6F5F1] p-3.5 transition-colors hover:border-[#D8D3C8]"
+          >
+            <div className="mb-3 aspect-square w-full overflow-hidden rounded-xl bg-white">
+              {pick.imageUrl && (
+                <img
+                  src={pick.imageUrl}
+                  alt={`${pick.brand} ${pick.name}`}
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full object-contain p-1"
+                  onError={(e) => {
+                    e.currentTarget.remove()
+                  }}
+                />
+              )}
+            </div>
+
+            <span className="text-[11px] font-medium text-[#8A8378]">{pick.category}</span>
+            <span className="mt-0.5 text-[12px] font-semibold text-[#5A544B]">{pick.brand}</span>
+            <div className="mt-0.5 flex items-center gap-1">
+              <span className="line-clamp-1 text-[14px] font-bold break-words text-[#2C2825]">{pick.name}</span>
+              <ArrowUpRight
+                className="size-3 shrink-0 text-[#A0988C] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                aria-hidden
+              />
+            </div>
+            <p className="mt-1 line-clamp-2 whitespace-normal text-[11.5px] leading-relaxed text-[#7A746B]">
+              {pick.tagLine}
+            </p>
+            <span className="mt-1 line-clamp-1 text-[10.5px] font-medium text-[#A0988C]">
+              {pick.ingredientFocus}
+            </span>
+          </a>
+        ))}
+      </div>
+
+      <p className="text-center text-[11px] leading-relaxed text-[#B0A89C]">
+        {t("doSkip.amazonDisclosure", locale)}
+      </p>
+    </div>
+  )
+}
+
 export function DoSkipCard() {
   const locale = useLocale()
   const { weather, status } = useSkinWeather()
@@ -175,7 +254,11 @@ export function DoSkipCard() {
   const plan = ready
     ? getDoSkipPlan(weather, new Date(), ageGroup)
     : { doItems: [] as CarePlanItem[], skipItems: [] as CarePlanItem[] }
-  const picks = ready ? getTodayWeatherPicks(weather, ageGroup) : []
+
+  // locale === "ko" → 기존 쿠팡 픽(연령대별), locale === "en" → 별도 아마존 데이터셋(날씨 기반).
+  // 두 데이터 소스는 완전히 분리되어 있어 한쪽을 바꿔도 다른 쪽에는 영향이 없다.
+  const picks = ready && locale !== "en" ? getTodayWeatherPicks(weather, ageGroup) : []
+  const amazonPicks = ready && locale === "en" ? getTodayAmazonPicks(weather, new Date()) : []
 
   return (
     <div className={shell}>
@@ -197,8 +280,11 @@ export function DoSkipCard() {
           </ul>
         </div>
 
-        {/* 오늘 날씨 맞춤 추천 — [날씨 × 연령대] 큐레이션 3~4개, 가로 스크롤 룩북 (상시 노출) */}
-        {picks.length > 0 && <PicksLookbook picks={picks} />}
+        {/* 오늘 날씨 맞춤 추천 — [날씨 × 연령대] 큐레이션 3~4개, 가로 스크롤 룩북 (상시 노출)
+            locale === "en"일 때만 아마존 데이터셋(lib/data/amazon-picks.ts)으로 분기한다. */}
+        {locale === "en"
+          ? amazonPicks.length > 0 && <AmazonPicksLookbook picks={amazonPicks} />
+          : picks.length > 0 && <PicksLookbook picks={picks} />}
       </div>
     </div>
   )

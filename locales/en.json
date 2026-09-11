@@ -510,6 +510,7 @@
     "pickEyebrow": "TODAY'S ARCHIVE",
     "picksToggle": "Today's weather-matched picks",
     "coupangDisclosure": "This post is part of the Coupang Partners program, and the author earns a commission from qualifying purchases.",
+    "amazonDisclosure": "As an Amazon Associate, we earn from qualifying purchases.",
     "pickCategory": {
       "all": "All",
       "sun_care": "Sun protection",
@@ -552,6 +553,7 @@
     "ariaLabel": "Skin diary log calendar",
     "title": "Skin diary log",
     "subtitle": "{{count}} days logged so far",
+    "subtitleOne": "{{count}} day logged so far",
     "legend": "Days you completed weather defense",
     "prevMonth": "Previous month",
     "nextMonth": "Next month"
@@ -810,5 +812,17 @@
     "tipWeatherLabel": "Weather note",
     "tipWeather": "On dry days with big temp swings, prioritize soothing and hydration layers over high-strength actives",
     "cta": "See today's weather-matched picks"
+  },
+  "devTest": {
+    "slotsSubtitle": "New coral theme design",
+    "colorTestTitle": "Sky blue CTA color test",
+    "section1": "1. InstallBanner (PWA install)",
+    "section2": "2. RecipeCard \"Log complete\" button",
+    "section3": "3. Default Button variant",
+    "recordComplete": "Log complete",
+    "next": "Next",
+    "additionalVariants": "Additional Button variants",
+    "outlineButton": "Outline button",
+    "secondaryButton": "Secondary button"
   }
 }
