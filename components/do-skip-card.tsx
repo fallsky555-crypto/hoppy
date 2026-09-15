@@ -8,7 +8,8 @@ import { useSkinWeather } from "@/lib/use-skin-weather"
 import { useAgeGroup } from "@/lib/use-age-group"
 import { getDoSkipPlan, type AgeGroup, type CarePlanItem } from "@/lib/skin-weather"
 import { getTodayWeatherPicks, resolveAffiliateUrl, type TodayPick } from "@/lib/affiliate-picks"
-import { getTodayAmazonPicks, type AmazonPick } from "@/lib/data/amazon-picks"
+import type { AmazonPick } from "@/lib/data/amazon-picks"
+import { useAmazonPicks } from "@/lib/use-amazon-picks"
 
 /** 연령대 텍스트 탭 — '오늘 필수' 타이틀 우측. 2030 | 4050 두 갈래만 노출한다. */
 const AGE_TABS: AgeGroup[] = ["2030", "4050"]
@@ -154,15 +155,87 @@ function PicksLookbook({ picks }: { picks: TodayPick[] }) {
   )
 }
 
+/** One lookbook card. `reasonOverride` (Today's Pick only) replaces the tagLine copy. */
+function AmazonPickCard({
+  pick,
+  isTodaysPick,
+  reasonOverride,
+}: {
+  pick: AmazonPick
+  isTodaysPick?: boolean
+  reasonOverride?: string
+}) {
+  const locale = useLocale()
+  return (
+    <a
+      href={pick.affiliateUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "group flex w-[180px] shrink-0 flex-col rounded-2xl border bg-[#F6F5F1] p-3.5 transition-colors",
+        isTodaysPick
+          ? "border-[#C9A063] ring-1 ring-[#C9A063]/40 hover:border-[#B88C4A]"
+          : "border-[#E7E4DD] hover:border-[#D8D3C8]",
+      )}
+    >
+      <div className="mb-3 aspect-square w-full overflow-hidden rounded-xl bg-white">
+        {pick.imageUrl && (
+          <img
+            src={pick.imageUrl}
+            alt={`${pick.brand} ${pick.name}`}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            className="h-full w-full object-contain p-1"
+            onError={(e) => {
+              e.currentTarget.remove()
+            }}
+          />
+        )}
+      </div>
+
+      {isTodaysPick && (
+        <span className="mb-1 inline-flex w-fit items-center rounded-full bg-[#C9A063] px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white">
+          {t("doSkip.todaysPickBadge", locale)}
+        </span>
+      )}
+      <span className="text-[11px] font-medium text-[#8A8378]">{pick.category}</span>
+      <span className="mt-0.5 text-[12px] font-semibold text-[#5A544B]">{pick.brand}</span>
+      <div className="mt-0.5 flex items-center gap-1">
+        <span className="line-clamp-1 text-[14px] font-bold break-words text-[#2C2825]">{pick.name}</span>
+        <ArrowUpRight
+          className="size-3 shrink-0 text-[#A0988C] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+          aria-hidden
+        />
+      </div>
+      <p className="mt-1 line-clamp-2 whitespace-normal text-[11.5px] leading-relaxed text-[#7A746B]">
+        {reasonOverride ?? pick.tagLine}
+      </p>
+      <span className="mt-1 line-clamp-1 text-[10.5px] font-medium text-[#A0988C]">{pick.ingredientFocus}</span>
+    </a>
+  )
+}
+
 /**
  * English-locale-only Amazon lookbook — mirrors PicksLookbook's card layout but reads
  * from the separate lib/data/amazon-picks.ts dataset (English product data, Amazon
  * affiliate links). The Korean/Coupang path above (PicksLookbook + lib/affiliate-picks.ts)
  * is untouched; this only renders when locale === "en".
+ *
+ * Today's Pick (chosen mainly by review score, per the 2026-09-15 curation spec) is always
+ * pinned leftmost with a highlighted badge and a dynamically generated reason; the other 2
+ * picks (chosen mainly by weather match) keep reusing their static tagLine, unchanged.
  */
-function AmazonPicksLookbook({ picks }: { picks: AmazonPick[] }) {
+function AmazonPicksLookbook({
+  todaysPick,
+  regularPicks,
+  reason,
+}: {
+  todaysPick: AmazonPick
+  regularPicks: AmazonPick[]
+  reason: string
+}) {
   const locale = useLocale()
-  if (picks.length === 0) return null
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-3">
@@ -182,46 +255,9 @@ function AmazonPicksLookbook({ picks }: { picks: AmazonPick[] }) {
           if (e.deltaY !== 0) e.currentTarget.scrollLeft += e.deltaY
         }}
       >
-        {picks.map((pick) => (
-          <a
-            key={pick.id}
-            href={pick.affiliateUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex w-[180px] shrink-0 flex-col rounded-2xl border border-[#E7E4DD] bg-[#F6F5F1] p-3.5 transition-colors hover:border-[#D8D3C8]"
-          >
-            <div className="mb-3 aspect-square w-full overflow-hidden rounded-xl bg-white">
-              {pick.imageUrl && (
-                <img
-                  src={pick.imageUrl}
-                  alt={`${pick.brand} ${pick.name}`}
-                  loading="lazy"
-                  decoding="async"
-                  referrerPolicy="no-referrer"
-                  className="h-full w-full object-contain p-1"
-                  onError={(e) => {
-                    e.currentTarget.remove()
-                  }}
-                />
-              )}
-            </div>
-
-            <span className="text-[11px] font-medium text-[#8A8378]">{pick.category}</span>
-            <span className="mt-0.5 text-[12px] font-semibold text-[#5A544B]">{pick.brand}</span>
-            <div className="mt-0.5 flex items-center gap-1">
-              <span className="line-clamp-1 text-[14px] font-bold break-words text-[#2C2825]">{pick.name}</span>
-              <ArrowUpRight
-                className="size-3 shrink-0 text-[#A0988C] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                aria-hidden
-              />
-            </div>
-            <p className="mt-1 line-clamp-2 whitespace-normal text-[11.5px] leading-relaxed text-[#7A746B]">
-              {pick.tagLine}
-            </p>
-            <span className="mt-1 line-clamp-1 text-[10.5px] font-medium text-[#A0988C]">
-              {pick.ingredientFocus}
-            </span>
-          </a>
+        <AmazonPickCard pick={todaysPick} isTodaysPick reasonOverride={reason} />
+        {regularPicks.map((pick) => (
+          <AmazonPickCard key={pick.id} pick={pick} />
         ))}
       </div>
 
@@ -237,6 +273,12 @@ export function DoSkipCard() {
   const { weather, status } = useSkinWeather()
   const [ageGroup, setAgeGroup] = useAgeGroup()
 
+  const ready = weather !== null && status === "ready"
+  // locale === "ko" → 기존 쿠팡 픽(연령대별), locale === "en" → 별도 아마존 데이터셋(날씨 기반,
+  // Today's Pick 1개 + 일반 추천 2개는 서버 API가 계산 — see app/api/amazon-picks/route.ts).
+  // 두 데이터 소스는 완전히 분리되어 있어 한쪽을 바꿔도 다른 쪽에는 영향이 없다.
+  const { result: amazonResult } = useAmazonPicks(ready && locale === "en" ? weather : null)
+
   // 카드 박스 없이 상단 1px 디바이더 + 여백으로만 앞 섹션과 구분한다(에디토리얼 무드).
   const shell = "border-t border-[#E7E4DD] px-1 pt-6"
 
@@ -248,17 +290,12 @@ export function DoSkipCard() {
     )
   }
 
-  const ready = weather !== null && status === "ready"
-
   // 필수 처방 + 추천 픽 모두 [오늘 날씨 × 선택 연령대]로 계산 — 탭 전환 시 함께 갱신된다.
   const plan = ready
     ? getDoSkipPlan(weather, new Date(), ageGroup)
     : { doItems: [] as CarePlanItem[], skipItems: [] as CarePlanItem[] }
 
-  // locale === "ko" → 기존 쿠팡 픽(연령대별), locale === "en" → 별도 아마존 데이터셋(날씨 기반).
-  // 두 데이터 소스는 완전히 분리되어 있어 한쪽을 바꿔도 다른 쪽에는 영향이 없다.
   const picks = ready && locale !== "en" ? getTodayWeatherPicks(weather, ageGroup) : []
-  const amazonPicks = ready && locale === "en" ? getTodayAmazonPicks(weather, new Date()) : []
 
   return (
     <div className={shell}>
@@ -283,7 +320,13 @@ export function DoSkipCard() {
         {/* 오늘 날씨 맞춤 추천 — [날씨 × 연령대] 큐레이션 3~4개, 가로 스크롤 룩북 (상시 노출)
             locale === "en"일 때만 아마존 데이터셋(lib/data/amazon-picks.ts)으로 분기한다. */}
         {locale === "en"
-          ? amazonPicks.length > 0 && <AmazonPicksLookbook picks={amazonPicks} />
+          ? amazonResult && (
+              <AmazonPicksLookbook
+                todaysPick={amazonResult.todaysPick}
+                regularPicks={amazonResult.regularPicks}
+                reason={amazonResult.reason}
+              />
+            )
           : picks.length > 0 && <PicksLookbook picks={picks} />}
       </div>
     </div>
